@@ -1,5 +1,4 @@
 const BASE_URL = "https://5sim.net/v1";
-
 const FCFA_RATE = 620;
 
 export function usdToFcfa(usd: number): number {
@@ -28,25 +27,43 @@ async function fiveSimRequest<T>(path: string, method = "GET", body?: unknown): 
   return res.json() as Promise<T>;
 }
 
+// ─── Types returned by 5SIM API ───────────────────────────────────────────────
+
 export interface FiveSimProfile {
   id: number;
   email: string;
-  vendor: string;
   balance: number;
   rating: number;
+  frozen_balance: number;
+  total_active_orders: number;
 }
 
-export interface FiveSimCountryProduct {
-  [country: string]: {
-    [category: string]: {
-      [product: string]: {
-        Price: number;
-        Count: number;
-      };
-    };
-  };
+// GET /v1/guest/countries
+// { [countryName]: { iso: {[code]:1}, prefix: {[prefix]:1}, text_en: string, ... } }
+interface FiveSimCountry {
+  iso: Record<string, number>;
+  prefix: Record<string, number>;
+  text_en: string;
+  text_ru: string;
 }
 
+// GET /v1/guest/prices?product=telegram
+// { [product]: { [country]: { [operator]: { cost, count } } } }
+interface FiveSimPriceEntry {
+  cost: number;
+  count: number;
+  rate?: number;
+}
+
+// GET /v1/guest/products/{country}/any
+// { [product]: { Category, Qty, Price } }
+interface FiveSimProductEntry {
+  Category: string;
+  Qty: number;
+  Price: number;
+}
+
+// GET /v1/user/buy/activation/{country}/any/{product}
 export interface FiveSimOrder {
   id: number;
   phone: string;
@@ -65,6 +82,15 @@ export interface FiveSimOrder {
   created_at: string;
 }
 
+// ─── Our service/country types ────────────────────────────────────────────────
+
+export interface ServiceInfo {
+  id: string;
+  name: string;
+  icon: string;
+  category: string;
+}
+
 export interface CountryInfo {
   code: string;
   name: string;
@@ -74,115 +100,158 @@ export interface CountryInfo {
   available: number;
 }
 
-export interface ServiceInfo {
-  id: string;
-  name: string;
-  icon: string;
-  category: string;
-}
+// ─── Static service catalogue ─────────────────────────────────────────────────
 
 const SERVICE_MAP: Record<string, { name: string; icon: string; category: string }> = {
-  telegram: { name: "Telegram", icon: "💬", category: "Messaging" },
-  whatsapp: { name: "WhatsApp", icon: "📱", category: "Messaging" },
-  google: { name: "Gmail / Google", icon: "📧", category: "Email" },
-  facebook: { name: "Facebook", icon: "👤", category: "Social" },
-  instagram: { name: "Instagram", icon: "📸", category: "Social" },
-  twitter: { name: "Twitter / X", icon: "🐦", category: "Social" },
-  tiktok: { name: "TikTok", icon: "🎵", category: "Social" },
-  uber: { name: "Uber", icon: "🚗", category: "Transport" },
-  amazon: { name: "Amazon", icon: "📦", category: "Shopping" },
-  microsoft: { name: "Microsoft", icon: "💻", category: "Tech" },
-  paypal: { name: "PayPal", icon: "💳", category: "Finance" },
-  snapchat: { name: "Snapchat", icon: "👻", category: "Social" },
-  discord: { name: "Discord", icon: "🎮", category: "Gaming" },
-  linkedin: { name: "LinkedIn", icon: "💼", category: "Professional" },
-  binance: { name: "Binance", icon: "₿", category: "Crypto" },
-  airbnb: { name: "Airbnb", icon: "🏠", category: "Travel" },
+  telegram:    { name: "Telegram",        icon: "💬", category: "Messagerie" },
+  whatsapp:    { name: "WhatsApp",        icon: "📱", category: "Messagerie" },
+  google:      { name: "Gmail / Google",  icon: "📧", category: "Email" },
+  facebook:    { name: "Facebook",        icon: "👤", category: "Social" },
+  instagram:   { name: "Instagram",       icon: "📸", category: "Social" },
+  twitter:     { name: "Twitter / X",     icon: "🐦", category: "Social" },
+  tiktok:      { name: "TikTok",          icon: "🎵", category: "Social" },
+  uber:        { name: "Uber",            icon: "🚗", category: "Transport" },
+  amazon:      { name: "Amazon",          icon: "📦", category: "Shopping" },
+  microsoft:   { name: "Microsoft",       icon: "💻", category: "Tech" },
+  paypal:      { name: "PayPal",          icon: "💳", category: "Finance" },
+  snapchat:    { name: "Snapchat",        icon: "👻", category: "Social" },
+  discord:     { name: "Discord",         icon: "🎮", category: "Gaming" },
+  linkedin:    { name: "LinkedIn",        icon: "💼", category: "Pro" },
+  binance:     { name: "Binance",         icon: "₿",  category: "Crypto" },
+  airbnb:      { name: "Airbnb",          icon: "🏠", category: "Voyage" },
+  ebay:        { name: "eBay",            icon: "🛒", category: "Shopping" },
+  netflix:     { name: "Netflix",         icon: "🎬", category: "Streaming" },
+  steam:       { name: "Steam",           icon: "🎮", category: "Gaming" },
+  shopee:      { name: "Shopee",          icon: "🛍️", category: "Shopping" },
 };
 
-const COUNTRY_MAP: Record<string, { name: string; flag: string }> = {
-  russia: { name: "Russie", flag: "🇷🇺" },
-  ukraine: { name: "Ukraine", flag: "🇺🇦" },
-  china: { name: "Chine", flag: "🇨🇳" },
-  usa: { name: "États-Unis", flag: "🇺🇸" },
-  indonesia: { name: "Indonésie", flag: "🇮🇩" },
-  philippines: { name: "Philippines", flag: "🇵🇭" },
-  india: { name: "Inde", flag: "🇮🇳" },
-  brazil: { name: "Brésil", flag: "🇧🇷" },
-  kenya: { name: "Kenya", flag: "🇰🇪" },
-  ghana: { name: "Ghana", flag: "🇬🇭" },
-  nigeria: { name: "Nigeria", flag: "🇳🇬" },
-  cameroon: { name: "Cameroun", flag: "🇨🇲" },
-  senegal: { name: "Sénégal", flag: "🇸🇳" },
-  cotedivoire: { name: "Côte d'Ivoire", flag: "🇨🇮" },
-  france: { name: "France", flag: "🇫🇷" },
-  england: { name: "Royaume-Uni", flag: "🇬🇧" },
-  germany: { name: "Allemagne", flag: "🇩🇪" },
-  vietnam: { name: "Vietnam", flag: "🇻🇳" },
-  thailand: { name: "Thaïlande", flag: "🇹🇭" },
-  cambodia: { name: "Cambodge", flag: "🇰🇭" },
-  myanmar: { name: "Myanmar", flag: "🇲🇲" },
-  pakistan: { name: "Pakistan", flag: "🇵🇰" },
-  bangladesh: { name: "Bangladesh", flag: "🇧🇩" },
-  kazakhstan: { name: "Kazakhstan", flag: "🇰🇿" },
-  uzbekistan: { name: "Ouzbékistan", flag: "🇺🇿" },
-};
+// ISO code → emoji flag
+function isoToFlag(iso: string): string {
+  const code = iso.toLowerCase();
+  const flagMap: Record<string, string> = {
+    af: "🇦🇫", al: "🇦🇱", dz: "🇩🇿", ao: "🇦🇴", ag: "🇦🇬",
+    ar: "🇦🇷", am: "🇦🇲", aw: "🇦🇼", au: "🇦🇺", at: "🇦🇹",
+    az: "🇦🇿", bs: "🇧🇸", bh: "🇧🇭", bd: "🇧🇩", by: "🇧🇾",
+    be: "🇧🇪", bz: "🇧🇿", bj: "🇧🇯", bo: "🇧🇴", ba: "🇧🇦",
+    bw: "🇧🇼", br: "🇧🇷", bn: "🇧🇳", bg: "🇧🇬", bf: "🇧🇫",
+    bi: "🇧🇮", kh: "🇰🇭", cm: "🇨🇲", ca: "🇨🇦", cv: "🇨🇻",
+    cf: "🇨🇫", td: "🇹🇩", cl: "🇨🇱", co: "🇨🇴", km: "🇰🇲",
+    cg: "🇨🇬", cd: "🇨🇩", cr: "🇨🇷", ci: "🇨🇮", hr: "🇭🇷",
+    cy: "🇨🇾", cz: "🇨🇿", dk: "🇩🇰", dj: "🇩🇯", dm: "🇩🇲",
+    do: "🇩🇴", ec: "🇪🇨", eg: "🇪🇬", sv: "🇸🇻", gq: "🇬🇶",
+    er: "🇪🇷", ee: "🇪🇪", sz: "🇸🇿", et: "🇪🇹", fj: "🇫🇯",
+    fi: "🇫🇮", fr: "🇫🇷", ga: "🇬🇦", gm: "🇬🇲", ge: "🇬🇪",
+    de: "🇩🇪", gh: "🇬🇭", gr: "🇬🇷", gd: "🇬🇩", gt: "🇬🇹",
+    gn: "🇬🇳", gw: "🇬🇼", gy: "🇬🇾", ht: "🇭🇹", hn: "🇭🇳",
+    hu: "🇭🇺", is: "🇮🇸", in: "🇮🇳", id: "🇮🇩", ir: "🇮🇷",
+    iq: "🇮🇶", ie: "🇮🇪", il: "🇮🇱", it: "🇮🇹", jm: "🇯🇲",
+    jp: "🇯🇵", jo: "🇯🇴", kz: "🇰🇿", ke: "🇰🇪", ki: "🇰🇮",
+    kp: "🇰🇵", kr: "🇰🇷", kw: "🇰🇼", kg: "🇰🇬", la: "🇱🇦",
+    lv: "🇱🇻", lb: "🇱🇧", ls: "🇱🇸", lr: "🇱🇷", ly: "🇱🇾",
+    lt: "🇱🇹", lu: "🇱🇺", mg: "🇲🇬", mw: "🇲🇼", my: "🇲🇾",
+    mv: "🇲🇻", ml: "🇲🇱", mt: "🇲🇹", mh: "🇲🇭", mr: "🇲🇷",
+    mu: "🇲🇺", mx: "🇲🇽", fm: "🇫🇲", md: "🇲🇩", mc: "🇲🇨",
+    mn: "🇲🇳", me: "🇲🇪", ma: "🇲🇦", mz: "🇲🇿", mm: "🇲🇲",
+    na: "🇳🇦", nr: "🇳🇷", np: "🇳🇵", nl: "🇳🇱", nz: "🇳🇿",
+    ni: "🇳🇮", ne: "🇳🇪", ng: "🇳🇬", no: "🇳🇴", om: "🇴🇲",
+    pk: "🇵🇰", pw: "🇵🇼", pa: "🇵🇦", pg: "🇵🇬", py: "🇵🇾",
+    pe: "🇵🇪", ph: "🇵🇭", pl: "🇵🇱", pt: "🇵🇹", qa: "🇶🇦",
+    ro: "🇷🇴", rw: "🇷🇼", kn: "🇰🇳", lc: "🇱🇨", vc: "🇻🇨",
+    ws: "🇼🇸", sm: "🇸🇲", st: "🇸🇹", sa: "🇸🇦", sn: "🇸🇳",
+    rs: "🇷🇸", sl: "🇸🇱", sg: "🇸🇬", sk: "🇸🇰", si: "🇸🇮",
+    sb: "🇸🇧", so: "🇸🇴", za: "🇿🇦", ss: "🇸🇸", es: "🇪🇸",
+    lk: "🇱🇰", sd: "🇸🇩", sr: "🇸🇷", se: "🇸🇪", ch: "🇨🇭",
+    sy: "🇸🇾", tw: "🇹🇼", tj: "🇹🇯", tz: "🇹🇿", th: "🇹🇭",
+    tl: "🇹🇱", tg: "🇹🇬", to: "🇹🇴", tt: "🇹🇹", tn: "🇹🇳",
+    tr: "🇹🇷", tm: "🇹🇲", tv: "🇹🇻", ug: "🇺🇬", ua: "🇺🇦",
+    ae: "🇦🇪", gb: "🇬🇧", us: "🇺🇸", uy: "🇺🇾", uz: "🇺🇿",
+    vu: "🇻🇺", ve: "🇻🇪", vn: "🇻🇳", ye: "🇾🇪", zm: "🇿🇲",
+    zw: "🇿🇼",
+  };
+  return flagMap[code] ?? "🏳️";
+}
+
+// ─── In-memory cache ──────────────────────────────────────────────────────────
+
+let countryCacheRaw: Record<string, FiveSimCountry> | null = null;
+let countryCacheTime = 0;
+const CACHE_TTL = 10 * 60 * 1000; // 10 min
+
+async function getRawCountries(): Promise<Record<string, FiveSimCountry>> {
+  if (countryCacheRaw && Date.now() - countryCacheTime < CACHE_TTL) {
+    return countryCacheRaw;
+  }
+  const data = await fiveSimRequest<Record<string, FiveSimCountry>>("/guest/countries");
+  countryCacheRaw = data;
+  countryCacheTime = Date.now();
+  return data;
+}
+
+// prices cache: product → data
+const priceCache: Map<string, { data: Record<string, Record<string, FiveSimPriceEntry>>; ts: number }> = new Map();
+
+async function getPricesForProduct(
+  product: string
+): Promise<Record<string, Record<string, FiveSimPriceEntry>>> {
+  const cached = priceCache.get(product);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
+
+  // Response shape: { [product]: { [country]: { [operator]: { cost, count } } } }
+  const raw = await fiveSimRequest<Record<string, Record<string, Record<string, FiveSimPriceEntry>>>>(
+    `/guest/prices?product=${encodeURIComponent(product)}`
+  );
+  const data = raw[product] ?? {};
+  priceCache.set(product, { data, ts: Date.now() });
+  return data;
+}
+
+// ─── Public helpers ───────────────────────────────────────────────────────────
 
 export async function getProfile(): Promise<FiveSimProfile> {
   return fiveSimRequest<FiveSimProfile>("/user/profile");
 }
 
-export async function getAvailableServices(): Promise<ServiceInfo[]> {
-  return Object.entries(SERVICE_MAP).map(([id, info]) => ({
-    id,
-    ...info,
-  }));
+export function getAvailableServices(): ServiceInfo[] {
+  return Object.entries(SERVICE_MAP).map(([id, info]) => ({ id, ...info }));
 }
 
 export async function getCountriesForService(service: string): Promise<CountryInfo[]> {
-  try {
-    const data = await fiveSimRequest<FiveSimCountryProduct>(`/guest/products/${service}/any`);
-    const countries: CountryInfo[] = [];
+  const [rawCountries, prices] = await Promise.all([
+    getRawCountries(),
+    getPricesForProduct(service),
+  ]);
 
-    for (const [countryCode, categories] of Object.entries(data)) {
-      const countryInfo = COUNTRY_MAP[countryCode];
-      if (!countryInfo) continue;
+  const result: CountryInfo[] = [];
 
-      let bestPrice = Infinity;
-      let totalAvailable = 0;
+  for (const [countryCode, operatorMap] of Object.entries(prices)) {
+    const meta = rawCountries[countryCode];
+    if (!meta) continue;
 
-      for (const categoryProducts of Object.values(categories)) {
-        for (const productData of Object.values(categoryProducts)) {
-          if (productData.Price < bestPrice) {
-            bestPrice = productData.Price;
-          }
-          totalAvailable += productData.Count || 0;
-        }
-      }
+    let bestPrice = Infinity;
+    let totalAvailable = 0;
 
-      if (bestPrice === Infinity || totalAvailable === 0) continue;
-
-      countries.push({
-        code: countryCode,
-        name: countryInfo.name,
-        flag: countryInfo.flag,
-        priceUsd: bestPrice,
-        priceFcfa: usdToFcfa(bestPrice),
-        available: totalAvailable,
-      });
+    for (const entry of Object.values(operatorMap)) {
+      if (entry.cost < bestPrice) bestPrice = entry.cost;
+      totalAvailable += entry.count || 0;
     }
 
-    return countries.sort((a, b) => a.priceUsd - b.priceUsd);
-  } catch {
-    return Object.entries(COUNTRY_MAP).slice(0, 10).map(([code, info]) => ({
-      code,
-      name: info.name,
-      flag: info.flag,
-      priceUsd: 0.5,
-      priceFcfa: usdToFcfa(0.5),
-      available: 10,
-    }));
+    if (bestPrice === Infinity) continue;
+
+    const isoCode = Object.keys(meta.iso ?? {})[0] ?? "";
+    const flag = isoToFlag(isoCode);
+
+    result.push({
+      code: countryCode,
+      name: meta.text_en,
+      flag,
+      priceUsd: Math.round(bestPrice * 100) / 100,
+      priceFcfa: usdToFcfa(bestPrice),
+      available: totalAvailable,
+    });
   }
+
+  // Sort by price ascending
+  return result.sort((a, b) => a.priceUsd - b.priceUsd);
 }
 
 export async function buyNumber(service: string, country: string): Promise<FiveSimOrder> {
@@ -197,12 +266,16 @@ export function getServiceName(serviceId: string): string {
   return SERVICE_MAP[serviceId]?.name ?? serviceId;
 }
 
+// Synchronous helper — uses the raw country name key (already text_en from 5SIM)
+// We store the text_en name in the DB so we just return whatever was passed in.
+// If you need to resolve a code dynamically, use getRawCountries() instead.
 export function getCountryName(countryCode: string): string {
-  return COUNTRY_MAP[countryCode]?.name ?? countryCode;
+  // Capitalize the first letter of each word
+  return countryCode.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function mapFiveSimStatus(status: string): string {
-  const statusMap: Record<string, string> = {
+  const map: Record<string, string> = {
     PENDING: "PENDING",
     RECEIVED: "RECEIVED",
     FINISHED: "FINISHED",
@@ -210,5 +283,5 @@ export function mapFiveSimStatus(status: string): string {
     BANNED: "BANNED",
     CANCELED: "CANCELED",
   };
-  return statusMap[status.toUpperCase()] ?? "PENDING";
+  return map[status?.toUpperCase()] ?? "PENDING";
 }

@@ -28,7 +28,7 @@ export default function Register() {
           title: "Account created!",
           description: "Welcome to ZyNum.",
         });
-        setLocation("/");
+        setLocation("/dashboard");
       },
       onError: (error: any) => {
         toast({
