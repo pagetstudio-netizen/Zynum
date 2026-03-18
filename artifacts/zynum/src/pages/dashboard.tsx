@@ -3,9 +3,9 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import {
-  LayoutDashboard, ShoppingCart, History, Code2, User, LogOut,
-  Wallet, Package, TrendingUp, ChevronRight, Copy, RefreshCw,
-  Check, Menu, X, Bell, Shield, Key
+  LayoutDashboard, ShoppingCart, History, User, LogOut,
+  Wallet, Package, TrendingUp, ChevronRight,
+  Check, Menu, X, Shield, HelpCircle, MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,15 +13,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/hooks/use-currency";
 import {
   useGetCurrentUser, useLogoutUser, useGetBalance,
-  useGetOrderHistory, useGetDeveloperApiKey, useRegenerateDeveloperApiKey,
-  getGetDeveloperApiKeyQueryKey
+  useGetOrderHistory,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import BuyNumber from "./buy";
 import OrderHistory from "./history";
-import ApiDocs from "./api-docs";
 
-type Tab = "overview" | "buy" | "history" | "api" | "profile";
+type Tab = "overview" | "buy" | "history" | "profile";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING:  "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -37,7 +35,7 @@ function StatCard({ icon, label, value, sub, color }: {
   sub?: string; color?: string;
 }) {
   return (
-    <div className={`rounded-2xl border border-white/10 p-5 bg-card/40 backdrop-blur-md flex items-start gap-4`}>
+    <div className="rounded-2xl border border-white/10 p-5 bg-card/40 backdrop-blur-md flex items-start gap-4">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${color ?? "bg-primary/20"}`}>
         {icon}
       </div>
@@ -59,95 +57,80 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
 
   const balance = balanceData?.balance ?? 0;
   const orders = history?.orders ?? [];
-  const total = history?.total ?? 0;
-  const received = orders.filter(o => o.status === "RECEIVED" || o.status === "FINISHED").length;
-
-  const balanceDisplay = currency === "FCFA"
-    ? `${Math.round(balance * 620).toLocaleString("fr-FR")} FCFA`
-    : `$${balance.toFixed(2)}`;
+  const received = orders.filter((o) => o.status === "RECEIVED" || o.status === "FINISHED").length;
+  const spent = orders.reduce((sum, o) => sum + o.priceUsd, 0);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-1">Vue d'ensemble</h2>
-        <p className="text-muted-foreground text-sm">Tableau de bord de votre compte ZyNum</p>
-      </div>
-
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <StatCard
           icon={<Wallet className="w-6 h-6 text-primary" />}
           label="Solde 5SIM"
-          value={balanceDisplay}
-          sub={balanceData?.isLow ? "⚠️ Solde faible — recharger" : "Actif"}
-          color="bg-primary/10"
+          value={currency === "FCFA" ? `${Math.round(balance * 620).toLocaleString()} FCFA` : `$${balance.toFixed(2)}`}
+          sub={balance === 0 ? "Rechargez sur 5sim.net" : "Disponible"}
+          color="bg-primary/20"
         />
         <StatCard
-          icon={<Package className="w-6 h-6 text-green-400" />}
+          icon={<Package className="w-6 h-6 text-blue-400" />}
           label="Commandes totales"
-          value={total}
-          sub="Historique complet"
-          color="bg-green-500/10"
+          value={history?.total ?? 0}
+          sub="Depuis votre inscription"
+          color="bg-blue-500/20"
         />
         <StatCard
-          icon={<TrendingUp className="w-6 h-6 text-blue-400" />}
-          label="SMS reçus (5 dern.)"
+          icon={<TrendingUp className="w-6 h-6 text-green-400" />}
+          label="SMS reçus"
           value={received}
-          sub={`sur ${orders.length} récentes`}
-          color="bg-blue-500/10"
+          sub={`$${spent.toFixed(2)} dépensés au total`}
+          color="bg-green-500/20"
         />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
-          className="rounded-xl border border-white/10 bg-card/40 p-4 text-left hover:bg-card/60 transition-colors group"
-        >
-          <ShoppingCart className="w-6 h-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-semibold text-white text-sm">Acheter un numéro</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Telegram, WhatsApp, Gmail…</p>
-        </button>
-        <button
-          onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "history" }))}
-          className="rounded-xl border border-white/10 bg-card/40 p-4 text-left hover:bg-card/60 transition-colors group"
-        >
-          <History className="w-6 h-6 text-accent mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-semibold text-white text-sm">Voir l'historique</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Codes OTP reçus</p>
-        </button>
-      </div>
-
-      {/* Recent Orders */}
+      {/* Recent orders */}
       <div className="rounded-2xl border border-white/10 bg-card/40 backdrop-blur-md overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <h3 className="font-semibold text-white">Commandes récentes</h3>
+          <h3 className="font-semibold text-white text-sm">Commandes récentes</h3>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "history" }))}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
           >
-            Tout voir <ChevronRight className="w-3 h-3" />
+            Voir tout <ChevronRight className="w-3 h-3" />
           </button>
         </div>
         {orders.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">
-            Aucune commande pour l'instant
+          <div className="py-12 text-center text-muted-foreground text-sm">
+            <Package className="w-10 h-10 mx-auto mb-3 opacity-20" />
+            Aucune commande pour le moment
+            <div className="mt-4">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
+                className="text-primary hover:text-primary/80 text-sm font-medium"
+              >
+                Acheter un numéro →
+              </button>
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-white/5">
             {orders.map((order) => (
               <div key={order.id} className="flex items-center justify-between px-5 py-3 hover:bg-white/5 transition-colors">
-                <div>
-                  <p className="text-sm font-medium text-white">{order.serviceName}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{order.phone}</p>
-                </div>
                 <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Package className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{order.serviceName}</p>
+                    <p className="text-xs text-muted-foreground font-mono truncate">{order.phone}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
                   {order.smsCode && (
-                    <span className="font-mono text-green-400 font-bold text-sm bg-green-500/10 px-2 py-0.5 rounded">
+                    <span className="text-xs font-mono font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded">
                       {order.smsCode}
                     </span>
                   )}
-                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${STATUS_COLORS[order.status] ?? STATUS_COLORS.PENDING}`}>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${STATUS_COLORS[order.status] ?? STATUS_COLORS.CANCELED}`}>
                     {order.status}
                   </span>
                 </div>
@@ -156,32 +139,39 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
           </div>
         )}
       </div>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
+          className="rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary/10 p-5 flex items-center gap-4 text-left transition-all group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+            <ShoppingCart className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-semibold text-white">Acheter un numéro</p>
+            <p className="text-xs text-muted-foreground">180+ pays disponibles</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-primary ml-auto group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        <Link href="/aide" className="rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] p-5 flex items-center gap-4 text-left transition-all group">
+          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-semibold text-white">Centre d'aide</p>
+            <p className="text-xs text-muted-foreground">Guides et tutoriels</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
     </div>
   );
 }
 
 function Profile({ user }: { user: { id: number; name: string; email: string; createdAt: string } }) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [copied, setCopied] = useState(false);
-
-  const { data: apiData } = useGetDeveloperApiKey({ query: { retry: false } });
-  const regenMutation = useRegenerateDeveloperApiKey({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetDeveloperApiKeyQueryKey() });
-        toast({ title: "Clé API régénérée avec succès" });
-      },
-    },
-  });
-
-  const copyKey = async (key: string) => {
-    await navigator.clipboard.writeText(key);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast({ title: "Clé API copiée !" });
-  };
-
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -215,32 +205,6 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
         </div>
       </div>
 
-      {/* API Key */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <Key className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-white">Clé API développeur</h3>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Utilisez cette clé pour intégrer ZyNum dans vos applications.
-        </p>
-        {apiData?.apiKey ? (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 font-mono text-xs text-muted-foreground truncate">
-              {apiData.apiKey}
-            </div>
-            <Button size="sm" variant="outline" className="shrink-0" onClick={() => copyKey(apiData.apiKey)}>
-              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            </Button>
-            <Button size="sm" variant="outline" className="shrink-0" onClick={() => regenMutation.mutate({})}>
-              <RefreshCw className={`w-4 h-4 ${regenMutation.isPending ? "animate-spin" : ""}`} />
-            </Button>
-          </div>
-        ) : (
-          <div className="text-sm text-muted-foreground">Chargement…</div>
-        )}
-      </div>
-
       {/* Security */}
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-3">
         <div className="flex items-center gap-3">
@@ -248,18 +212,40 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
           <h3 className="font-semibold text-white">Sécurité</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Votre compte est protégé par un mot de passe chiffré. Ne partagez jamais votre clé API.
+          Votre compte est protégé par un mot de passe chiffré (bcrypt). Ne partagez jamais vos identifiants.
         </p>
         <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
           <Check className="w-3 h-3" /> Compte sécurisé
+        </div>
+      </div>
+
+      {/* Help */}
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <HelpCircle className="w-5 h-5 text-primary" />
+          <h3 className="font-semibold text-white">Besoin d'aide ?</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Consultez notre centre d'aide ou contactez notre support directement.
+        </p>
+        <div className="flex gap-3">
+          <Link href="/aide">
+            <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+              <HelpCircle className="w-4 h-4 mr-2" /> Centre d'aide
+            </Button>
+          </Link>
+          <Link href="/contact">
+            <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">
+              <MessageSquare className="w-4 h-4 mr-2" /> Contacter le support
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
-
+// ─── Main Dashboard ────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -280,7 +266,6 @@ export default function Dashboard() {
     },
   });
 
-  // Listen for tab changes from child components
   React.useEffect(() => {
     const handler = (e: Event) => {
       const tab = (e as CustomEvent).detail as Tab;
@@ -298,55 +283,50 @@ export default function Dashboard() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(222, 47%, 5%)" }}>
         <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   const NAV = [
-    { id: "overview",  label: "Vue d'ensemble", icon: LayoutDashboard },
-    { id: "buy",       label: "Acheter numéro",  icon: ShoppingCart },
-    { id: "history",   label: "Historique",      icon: History },
-    { id: "api",       label: "API Docs",         icon: Code2 },
-    { id: "profile",   label: "Mon profil",       icon: User },
+    { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
+    { id: "buy",      label: "Acheter numéro",  icon: ShoppingCart },
+    { id: "history",  label: "Historique",      icon: History },
+    { id: "profile",  label: "Mon profil",       icon: User },
   ] as const;
 
   const formatPrice = (v: number) =>
     currency === "FCFA" ? `${Math.round(v * 620).toLocaleString()} FCFA` : `$${v.toFixed(2)}`;
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen flex" style={{ background: "hsl(222, 47%, 5%)" }}>
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/60 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={`
-          fixed inset-y-0 left-0 z-30 w-64 bg-card/80 border-r border-white/10 backdrop-blur-xl
-          flex flex-col transition-transform duration-300
-          lg:static lg:translate-x-0
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
+      <aside className={`
+        fixed inset-y-0 left-0 z-30 w-64 border-r border-white/[0.06] backdrop-blur-xl
+        flex flex-col transition-transform duration-300
+        lg:static lg:translate-x-0
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `} style={{ background: "hsl(222, 47%, 7%)" }}>
+
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-bold text-white text-sm">Z</div>
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-500 rounded-lg flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-primary/30">Z</div>
             <span className="font-bold text-white text-lg">ZyNum</span>
           </Link>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-muted-foreground hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-muted-foreground hover:text-white p-1">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* User info */}
-        <div className="px-4 py-3 border-b border-white/10">
+        <div className="px-4 py-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-3 bg-white/5 rounded-xl px-3 py-2">
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center font-bold text-primary text-sm shrink-0">
               {user.name.charAt(0).toUpperCase()}
@@ -379,10 +359,28 @@ export default function Dashboard() {
               </button>
             );
           })}
+
+          {/* Separator */}
+          <div className="pt-3 mt-3 border-t border-white/[0.06] space-y-1">
+            <Link
+              href="/aide"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
+            >
+              <HelpCircle className="w-4 h-4 shrink-0" />
+              Centre d'aide
+            </Link>
+            <Link
+              href="/contact"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
+            >
+              <MessageSquare className="w-4 h-4 shrink-0" />
+              Contacter le support
+            </Link>
+          </div>
         </nav>
 
         {/* Currency toggle */}
-        <div className="px-4 py-3 border-t border-white/10">
+        <div className="px-4 py-3 border-t border-white/[0.06]">
           <div className="flex bg-black/30 rounded-lg p-1 gap-1">
             {(["USD", "FCFA"] as const).map((c) => (
               <button
@@ -399,7 +397,7 @@ export default function Dashboard() {
         </div>
 
         {/* Logout */}
-        <div className="px-4 py-4 border-t border-white/10">
+        <div className="px-4 py-4 border-t border-white/[0.06]">
           <button
             onClick={() => logoutMutation.mutate({})}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-colors font-medium"
@@ -410,29 +408,29 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* Main content */}
+      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-md border-b border-white/10">
-          <button
-            className="lg:hidden text-muted-foreground hover:text-white p-1"
-            onClick={() => setSidebarOpen(true)}
-          >
+        <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-white/[0.06]" style={{ background: "hsl(222, 47%, 5%)/80" }}>
+          <button className="lg:hidden text-muted-foreground hover:text-white p-1" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h1 className="text-base font-semibold text-white capitalize">
-              {NAV.find(n => n.id === activeTab)?.label ?? "Dashboard"}
+            <h1 className="text-base font-semibold text-white">
+              {NAV.find((n) => n.id === activeTab)?.label ?? "Dashboard"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors" title="Centre d'aide">
+              <HelpCircle className="w-4 h-4" />
+            </Link>
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center font-bold text-primary text-sm">
               {user.name.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>
 
-        {/* Page content */}
+        {/* Content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -445,7 +443,6 @@ export default function Dashboard() {
               {activeTab === "overview" && <Overview currency={currency} formatPrice={formatPrice} />}
               {activeTab === "buy"      && <BuyNumber />}
               {activeTab === "history"  && <OrderHistory />}
-              {activeTab === "api"      && <ApiDocs />}
               {activeTab === "profile"  && <Profile user={user} />}
             </motion.div>
           </AnimatePresence>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Menu, X, Phone, History, Code, LogOut, Wallet,
+  Menu, X, Phone, History, LogOut, Wallet,
   ArrowUpRight, MessageSquare, Globe2, Shield, HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +15,7 @@ const FOOTER_LINKS = {
     { label: "Acheter un numéro", href: "/buy" },
     { label: "Historique", href: "/history" },
     { label: "Dashboard", href: "/dashboard" },
-    { label: "Documentation API", href: "/api-docs" },
+    { label: "Centre d'aide", href: "/aide" },
   ],
   Services: [
     { label: "Telegram", href: "/buy" },
@@ -63,7 +63,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: "/buy", label: "Acheter", icon: <Phone className="w-4 h-4 mr-2" /> },
     { href: "/history", label: "Historique", icon: <History className="w-4 h-4 mr-2" /> },
-    { href: "/api-docs", label: "API", icon: <Code className="w-4 h-4 mr-2" /> },
+    { href: "/aide", label: "Aide", icon: <HelpCircle className="w-4 h-4 mr-2" /> },
   ];
 
   return (
@@ -313,6 +313,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+
+      {/* Floating help button */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        <Link href="/contact">
+          <button className="flex items-center gap-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold px-4 py-2.5 rounded-full shadow-2xl shadow-primary/40 transition-all hover:scale-105 active:scale-95">
+            <MessageSquare className="w-4 h-4" />
+            Contact
+          </button>
+        </Link>
+        <Link href="/aide">
+          <button className="w-12 h-12 bg-[hsl(222,47%,12%)] hover:bg-[hsl(222,47%,16%)] border border-white/10 text-white rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center" title="Centre d'aide">
+            <HelpCircle className="w-5 h-5" />
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }

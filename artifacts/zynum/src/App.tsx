@@ -11,13 +11,13 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import BuyNumber from "@/pages/buy";
 import OrderHistory from "@/pages/history";
-import ApiDocs from "@/pages/api-docs";
 import Dashboard from "@/pages/dashboard";
 import About from "@/pages/about";
 import FAQ from "@/pages/faq";
 import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
 import Contact from "@/pages/contact";
+import HelpCenter from "@/pages/aide";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -41,7 +41,7 @@ function Router() {
             <Route path="/register" component={Register} />
             <Route path="/buy" component={BuyNumber} />
             <Route path="/history" component={OrderHistory} />
-            <Route path="/api-docs" component={ApiDocs} />
+            <Route path="/aide" component={HelpCenter} />
             <Route path="/about" component={About} />
             <Route path="/faq" component={FAQ} />
             <Route path="/terms" component={Terms} />
