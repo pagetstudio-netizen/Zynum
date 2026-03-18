@@ -1,174 +1,312 @@
-import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Code, Terminal, Key, Shield, Copy, Check, RefreshCw } from "lucide-react";
-import { useGetDeveloperApiKey, useRegenerateDeveloperApiKey, useGetCurrentUser, getGetDeveloperApiKeyQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  Code2, Zap, Globe2, Lock, Bell, ArrowRight, MessageSquare,
+  Terminal, GitBranch, Webhook, Key, Clock,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
+const FEATURES = [
+  {
+    icon: <Terminal className="w-5 h-5" />,
+    color: "text-blue-400",
+    bg: "bg-blue-400/10 border-blue-400/20",
+    title: "API REST complète",
+    desc: "Achetez des numéros, récupérez les SMS et gérez vos commandes directement depuis votre code.",
+  },
+  {
+    icon: <Webhook className="w-5 h-5" />,
+    color: "text-purple-400",
+    bg: "bg-purple-400/10 border-purple-400/20",
+    title: "Webhooks en temps réel",
+    desc: "Recevez les codes OTP instantanément via webhook dès qu'un SMS arrive sur votre numéro.",
+  },
+  {
+    icon: <Globe2 className="w-5 h-5" />,
+    color: "text-green-400",
+    bg: "bg-green-400/10 border-green-400/20",
+    title: "180+ pays disponibles",
+    desc: "Accédez à tous nos numéros virtuels dans 180 pays via des endpoints simples et bien documentés.",
+  },
+  {
+    icon: <GitBranch className="w-5 h-5" />,
+    color: "text-yellow-400",
+    bg: "bg-yellow-400/10 border-yellow-400/20",
+    title: "SDKs multi-langages",
+    desc: "Librairies officielles pour Node.js, Python, PHP et d'autres langages en préparation.",
+  },
+  {
+    icon: <Key className="w-5 h-5" />,
+    color: "text-pink-400",
+    bg: "bg-pink-400/10 border-pink-400/20",
+    title: "Authentification sécurisée",
+    desc: "Clé API unique par compte, permissions granulaires et logs de chaque appel en temps réel.",
+  },
+  {
+    icon: <Zap className="w-5 h-5" />,
+    color: "text-orange-400",
+    bg: "bg-orange-400/10 border-orange-400/20",
+    title: "Latence ultra-faible",
+    desc: "Infrastructure dédiée avec une latence inférieure à 200ms pour des intégrations réactives.",
+  },
+];
+
+const STEPS = [
+  { num: "01", label: "Inscrivez-vous sur ZyNum", desc: "Créez votre compte gratuitement." },
+  { num: "02", label: "Récupérez votre clé API", desc: "Générée automatiquement dans votre espace développeur." },
+  { num: "03", label: "Appelez notre API", desc: "Un seul endpoint pour acheter un numéro et recevoir un SMS." },
+  { num: "04", label: "Recevez le code OTP", desc: "Via polling ou webhook selon votre architecture." },
+];
+
 export default function ApiDocs() {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [copiedKey, setCopiedKey] = useState(false);
 
-  const { data: user } = useGetCurrentUser({ query: { retry: false } });
-  
-  const { data: apiData, isLoading: isLoadingKey } = useGetDeveloperApiKey({
-    query: { enabled: !!user }
-  });
-
-  const regenMutation = useRegenerateDeveloperApiKey({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetDeveloperApiKeyQueryKey() });
-        toast({ title: "API Key Regenerated", description: "Your old key is no longer valid." });
-      }
+  const handleNotify = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !email.includes("@")) {
+      toast({ title: "Adresse email invalide", variant: "destructive" });
+      return;
     }
-  });
-
-  const copyKey = () => {
-    if (apiData?.apiKey) {
-      navigator.clipboard.writeText(apiData.apiKey);
-      setCopiedKey(true);
-      setTimeout(() => setCopiedKey(false), 2000);
-    }
+    setSubmitted(true);
+    toast({ title: "Vous serez notifié au lancement !" });
   };
 
   return (
-    <div className="container max-w-5xl mx-auto px-4 py-12">
-      <div className="text-center mb-16">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-6">
-          <Code className="w-8 h-8 text-primary" />
+    <div className="w-full">
+      {/* Hero */}
+      <section className="relative overflow-hidden py-24">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/10 blur-[120px] rounded-full" />
+          <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-purple-500/5 blur-[80px] rounded-full" />
+          <div
+            className="absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage:
+                "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+              backgroundSize: "50px 50px",
+            }}
+          />
         </div>
-        <h1 className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight mb-4">Developer API</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Integrate ZyNum directly into your applications. Simple, RESTful, and built for scale.
-        </p>
-      </div>
 
-      {/* Authentication Section */}
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-          <Shield className="text-primary w-6 h-6" /> Authentication
-        </h2>
-        <div className="bg-card border border-white/10 rounded-2xl p-6 md:p-8 shadow-lg">
-          {user ? (
-            <div className="flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
-              <div className="flex-1">
-                <h3 className="text-lg font-medium text-white mb-2">Your API Key</h3>
-                <p className="text-sm text-muted-foreground mb-4">Pass this key in the header: <code className="bg-black/30 px-1 py-0.5 rounded text-accent">X-API-Key: YOUR_KEY</code></p>
-                <div className="flex items-center gap-3 w-full max-w-md">
-                  <div className="flex-1 bg-black/40 border border-white/10 px-4 py-3 rounded-xl font-mono text-sm text-white truncate relative">
-                    {isLoadingKey ? "Loading..." : apiData?.apiKey || "No key generated yet"}
-                    <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-black/40 to-transparent pointer-events-none" />
-                  </div>
-                  <Button variant="secondary" className="shrink-0 bg-white/10 hover:bg-white/20 text-white border-white/10" onClick={copyKey} disabled={!apiData?.apiKey}>
-                    {copiedKey ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                  </Button>
+        <div className="container max-w-4xl mx-auto px-4 text-center relative z-10">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-8">
+              <Clock className="w-3.5 h-3.5 animate-pulse" />
+              En cours de développement
+            </div>
+
+            {/* Icon */}
+            <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-primary/20 to-purple-500/20 border border-primary/20 flex items-center justify-center shadow-2xl shadow-primary/10">
+              <Code2 className="w-10 h-10 text-primary" />
+            </div>
+
+            {/* Title */}
+            <h1 className="text-4xl md:text-6xl font-display font-extrabold text-white mb-6 leading-tight">
+              L'API ZyNum arrive
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-400 to-purple-400">
+                très bientôt.
+              </span>
+            </h1>
+
+            {/* Message */}
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-4">
+              Nous travaillons actuellement à vous ouvrir cette fonctionnalité. Notre équipe développe une API
+              puissante et simple d'utilisation pour que vous puissiez intégrer les numéros virtuels OTP
+              directement dans vos applications, bots et workflows automatisés.
+            </p>
+            <p className="text-muted-foreground text-base max-w-xl mx-auto mb-12">
+              Laissez-nous votre email — vous serez parmi les premiers à y accéder dès le lancement, avec
+              un accès prioritaire et des crédits offerts.
+            </p>
+
+            {/* Email capture */}
+            {!submitted ? (
+              <form onSubmit={handleNotify} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+                <div className="relative flex-1">
+                  <Bell className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="votre@email.com"
+                    className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition"
+                  />
                 </div>
-              </div>
-              <div className="shrink-0 border-l border-white/10 pl-8 hidden md:block">
-                <Button 
-                  variant="outline" 
-                  className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => {
-                    if (confirm("Are you sure? Your old API key will immediately stop working.")) {
-                      regenMutation.mutate();
-                    }
-                  }}
-                  disabled={regenMutation.isPending}
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="h-12 px-6 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-xl shadow-primary/25 shrink-0"
                 >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${regenMutation.isPending ? 'animate-spin' : ''}`} />
-                  Regenerate Key
+                  M'avertir au lancement
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <Key className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-white mb-2">Login to get your API Key</h3>
-              <p className="text-muted-foreground mb-6">You need an account to generate developer credentials.</p>
-              <Link href="/login">
-                <Button className="bg-primary text-white">Log In / Register</Button>
-              </Link>
-            </div>
-          )}
+              </form>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="inline-flex items-center gap-3 bg-green-500/10 border border-green-500/20 text-green-400 font-semibold px-6 py-3 rounded-xl"
+              >
+                <div className="w-5 h-5 rounded-full bg-green-400/20 flex items-center justify-center">
+                  <Zap className="w-3 h-3 text-green-400" />
+                </div>
+                Parfait ! Vous serez notifié dès le lancement.
+              </motion.div>
+            )}
+
+            <p className="text-xs text-muted-foreground/60 mt-4">
+              Pas de spam. Désabonnement en un clic. Lancement prévu au T3 2026.
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      {/* Endpoints */}
-      <section className="space-y-12">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-          <Terminal className="text-primary w-6 h-6" /> Endpoints
-        </h2>
-
-        {/* Buy Number */}
-        <EndpointCard 
-          method="POST" 
-          path="/api/v1/buy" 
-          title="Buy a Virtual Number"
-          description="Purchases a number for a specific service and country."
-          reqBody={`{\n  "service": "telegram",\n  "country": "russia",\n  "currency": "USD"\n}`}
-          resBody={`{\n  "order": {\n    "id": "ord_123abc",\n    "phone": "+79991234567",\n    "status": "PENDING",\n    "priceUsd": 0.50\n    // ...\n  }\n}`}
-        />
-
-        {/* Check SMS */}
-        <EndpointCard 
-          method="GET" 
-          path="/api/v1/check/{orderId}" 
-          title="Check SMS Status"
-          description="Poll this endpoint every 5 seconds to get the SMS code."
-          resBody={`{\n  "order": {\n    "id": "ord_123abc",\n    "status": "RECEIVED",\n    "smsCode": "48151",\n    "smsText": "Your Telegram code is 48151"\n  }\n}`}
-        />
-
-        {/* Balance */}
-        <EndpointCard 
-          method="GET" 
-          path="/api/v1/balance" 
-          title="Get Balance"
-          description="Check your current 5SIM platform balance."
-          resBody={`{\n  "balance": 1450.50,\n  "currency": "RUB",\n  "isLow": false\n}`}
-        />
-      </section>
-    </div>
-  );
-}
-
-function EndpointCard({ method, path, title, description, reqBody, resBody }: any) {
-  const methodColors: any = {
-    GET: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    POST: "bg-green-500/20 text-green-400 border-green-500/30"
-  };
-
-  return (
-    <div className="bg-card border border-white/10 rounded-2xl overflow-hidden shadow-lg">
-      <div className="px-6 py-4 border-b border-white/10 bg-white/5 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <span className={`px-2 py-1 rounded text-xs font-bold border font-mono ${methodColors[method]}`}>{method}</span>
-          <span className="font-mono text-white text-sm bg-black/30 px-3 py-1.5 rounded-lg border border-white/5">{path}</span>
-        </div>
-        <div className="sm:ml-auto text-sm font-medium text-white">{title}</div>
-      </div>
-      <div className="p-6">
-        <p className="text-muted-foreground text-sm mb-6">{description}</p>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          {reqBody && (
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Request Body</div>
-              <pre className="bg-black/40 border border-white/5 rounded-xl p-4 overflow-x-auto">
-                <code className="text-sm font-mono text-blue-300">{reqBody}</code>
-              </pre>
+      {/* Preview code snippet */}
+      <section className="py-8">
+        <div className="container max-w-4xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-2xl border border-white/[0.06] bg-[#0a0f1e] overflow-hidden shadow-2xl"
+          >
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+              <div className="w-3 h-3 rounded-full bg-red-400/60" />
+              <div className="w-3 h-3 rounded-full bg-yellow-400/60" />
+              <div className="w-3 h-3 rounded-full bg-green-400/60" />
+              <span className="ml-3 text-xs text-muted-foreground font-mono">zynum-api.js</span>
+              <span className="ml-auto text-xs text-muted-foreground/50 italic">Aperçu — bientôt disponible</span>
             </div>
-          )}
-          <div className={reqBody ? "" : "md:col-span-2"}>
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Response Example</div>
-            <pre className="bg-black/40 border border-white/5 rounded-xl p-4 overflow-x-auto">
-              <code className="text-sm font-mono text-green-300">{resBody}</code>
+            <pre className="p-6 text-sm font-mono overflow-x-auto leading-relaxed text-left select-none opacity-70">
+              <code>
+                <span className="text-muted-foreground">{"// Acheter un numéro virtuel en quelques lignes\n"}</span>
+                <span className="text-blue-400">{"const "}</span>
+                <span className="text-white">{"client "}</span>
+                <span className="text-muted-foreground">{"= new "}</span>
+                <span className="text-yellow-400">{"ZyNum"}</span>
+                <span className="text-white">{"({ apiKey: "}</span>
+                <span className="text-green-400">{"'zyn_xxxxxxxxxxxx'"}</span>
+                <span className="text-white">{" });\n\n"}</span>
+                <span className="text-muted-foreground">{"// 1. Acheter un numéro Telegram (Sénégal)\n"}</span>
+                <span className="text-blue-400">{"const "}</span>
+                <span className="text-white">{"{ phone, orderId } "}</span>
+                <span className="text-muted-foreground">{"= await "}</span>
+                <span className="text-white">{"client.numbers."}</span>
+                <span className="text-blue-400">{"buy"}</span>
+                <span className="text-white">{"({ service: "}</span>
+                <span className="text-green-400">{"'telegram'"}</span>
+                <span className="text-white">{", country: "}</span>
+                <span className="text-green-400">{"'senegal'"}</span>
+                <span className="text-white">{" });\n\n"}</span>
+                <span className="text-muted-foreground">{"// 2. Attendre le code OTP\n"}</span>
+                <span className="text-blue-400">{"const "}</span>
+                <span className="text-white">{"{ smsCode } "}</span>
+                <span className="text-muted-foreground">{"= await "}</span>
+                <span className="text-white">{"client.orders."}</span>
+                <span className="text-blue-400">{"waitForSms"}</span>
+                <span className="text-white">{"(orderId);\n"}</span>
+                <span className="text-white">{"console.log("}</span>
+                <span className="text-green-400">{"'Code OTP :'"}</span>
+                <span className="text-white">{", smsCode); "}</span>
+                <span className="text-muted-foreground">{"// → 847291"}</span>
+              </code>
             </pre>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-16">
+        <div className="container max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">Ce qui vous attend</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Nous construisons une API pensée pour les développeurs africains — rapide, fiable et en FCFA.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {FEATURES.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.07 }}
+                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 hover:bg-white/[0.04] transition-colors"
+              >
+                <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-4 ${f.bg} ${f.color}`}>
+                  {f.icon}
+                </div>
+                <h3 className="font-bold text-white mb-2">{f.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* How it will work */}
+      <section className="py-8">
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">Comment ça fonctionnera</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {STEPS.map((s, i) => (
+              <motion.div
+                key={s.num}
+                initial={{ opacity: 0, x: i % 2 === 0 ? -12 : 12 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="flex items-start gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02]"
+              >
+                <span className="text-3xl font-extrabold text-primary/30 font-mono leading-none mt-1">{s.num}</span>
+                <div>
+                  <p className="font-bold text-white mb-1">{s.label}</p>
+                  <p className="text-sm text-muted-foreground">{s.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA bottom */}
+      <section className="py-16">
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0d1a35] to-[#060d1f] p-8 md:p-12 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-48 bg-primary/10 blur-[80px] rounded-full pointer-events-none" />
+            <div className="relative z-10">
+              <Lock className="w-10 h-10 text-primary mx-auto mb-5" />
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">
+                En attendant, utilisez l'interface web
+              </h2>
+              <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
+                Toutes les fonctionnalités sont déjà disponibles via notre dashboard. Créez un compte,
+                rechargez votre solde et commencez à recevoir des OTP maintenant.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/register">
+                  <Button size="lg" className="h-12 px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-xl shadow-primary/25">
+                    <Zap className="w-4 h-4 mr-2" /> Créer un compte gratuit
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button size="lg" variant="outline" className="h-12 px-8 border-white/20 text-white hover:bg-white/10 rounded-xl">
+                    <MessageSquare className="w-4 h-4 mr-2" /> Contacter l'équipe
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

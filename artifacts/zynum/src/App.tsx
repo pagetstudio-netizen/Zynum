@@ -18,6 +18,7 @@ import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
 import Contact from "@/pages/contact";
 import HelpCenter from "@/pages/aide";
+import ApiDocs from "@/pages/api-docs";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -47,6 +48,7 @@ function Router() {
             <Route path="/terms" component={Terms} />
             <Route path="/privacy" component={Privacy} />
             <Route path="/contact" component={Contact} />
+            <Route path="/api-docs" component={ApiDocs} />
             <Route component={NotFound} />
           </Switch>
         </Layout>
