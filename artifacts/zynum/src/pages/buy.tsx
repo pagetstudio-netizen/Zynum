@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, MapPin, Loader2, CheckCircle2, Copy, AlertCircle,
   RefreshCw, Lock, Phone, ArrowLeft, Wallet, ChevronRight,
-  Check, X, RotateCcw, Smartphone,
+  Check, X, RotateCcw, Smartphone, Zap, Users,
 } from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,11 @@ import {
   useBuyNumber,
   useCheckSms,
   useCancelOrder,
+  useGetOperators,
   useGetCurrentUser,
   useGetBalance,
   type Order,
+  type OperatorInfo,
 } from "@workspace/api-client-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -63,6 +65,7 @@ export default function BuyNumber() {
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [selectedOperator, setSelectedOperator] = useState<string | null>(null);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [buyCount, setBuyCount] = useState(0); // how many times we've tried for this selection
@@ -72,6 +75,17 @@ export default function BuyNumber() {
     { service: selectedService || undefined },
     { query: { enabled: !!selectedService } }
   );
+  const { data: operatorsData, isLoading: isLoadingOperators } = useGetOperators(
+    selectedService,
+    selectedCountry,
+  );
+
+  // Auto-select cheapest operator when operators load
+  useEffect(() => {
+    if (operatorsData?.operators && operatorsData.operators.length > 0) {
+      setSelectedOperator(operatorsData.operators[0].name);
+    }
+  }, [operatorsData]);
 
   // Buy mutation → goes to "preview" step
   const buyMutation = useBuyNumber({
@@ -130,8 +144,15 @@ export default function BuyNumber() {
   const handleGetNumber = useCallback(() => {
     if (!selectedService || !selectedCountry) return;
     setBuyCount((c) => c + 1);
-    buyMutation.mutate({ data: { service: selectedService, country: selectedCountry, currency: currency as "USD" | "FCFA" } });
-  }, [selectedService, selectedCountry, currency, buyMutation]);
+    buyMutation.mutate({
+      data: {
+        service: selectedService,
+        country: selectedCountry,
+        currency: currency as "USD" | "FCFA",
+        operator: selectedOperator ?? "any",
+      },
+    });
+  }, [selectedService, selectedCountry, selectedOperator, currency, buyMutation]);
 
   const handleConfirmNumber = () => {
     setStep("active");
@@ -472,7 +493,7 @@ export default function BuyNumber() {
                 return (
                   <button
                     key={svc.id}
-                    onClick={() => { setSelectedService(svc.id); setSelectedCountry(null); setShowAll(false); }}
+                    onClick={() => { setSelectedService(svc.id); setSelectedCountry(null); setSelectedOperator(null); setShowAll(false); }}
                     className={`w-full flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all ${
                       active ? "border-primary bg-primary/10 text-white" : "border-transparent bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
                     }`}
@@ -537,7 +558,7 @@ export default function BuyNumber() {
                     return (
                       <button
                         key={country.code}
-                        onClick={() => hasAvail && setSelectedCountry(country.code)}
+                        onClick={() => { if (hasAvail) { setSelectedCountry(country.code); setSelectedOperator(null); } }}
                         className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
                           isSelected ? "border-primary bg-primary/10 text-white"
                           : hasAvail  ? "border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer"
@@ -574,15 +595,61 @@ export default function BuyNumber() {
               </button>
             )}
 
-            {/* Buy footer */}
+            {/* Operators + Buy footer */}
             <AnimatePresence>
               {selectedCountry && selectedCountryInfo && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="mt-3 pt-3 border-t border-white/10"
+                  className="mt-3 pt-3 border-t border-white/10 space-y-3"
                 >
+                  {/* Operator cards */}
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <Zap className="w-3 h-3" /> Opérateur disponibles
+                    </p>
+                    {isLoadingOperators ? (
+                      <div className="flex justify-center py-3">
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : !operatorsData?.operators?.length ? (
+                      <p className="text-xs text-muted-foreground py-2">Aucun opérateur disponible.</p>
+                    ) : (
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {operatorsData.operators.map((op: OperatorInfo) => {
+                          const isOpSelected = selectedOperator === op.name;
+                          return (
+                            <button
+                              key={op.name}
+                              onClick={() => setSelectedOperator(op.name)}
+                              className={`flex-shrink-0 flex flex-col items-start px-3 py-2 rounded-xl border text-left transition-all ${
+                                isOpSelected
+                                  ? "border-primary bg-primary/15 text-white"
+                                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                {isOpSelected && <Check className="w-3 h-3 text-primary" />}
+                                <span className="text-xs font-semibold capitalize">{op.label}</span>
+                              </div>
+                              <span className="font-bold text-sm">
+                                {currency === "FCFA"
+                                  ? `${op.priceFcfa.toLocaleString("fr-FR")} F`
+                                  : `$${op.priceUsd.toFixed(2)}`}
+                              </span>
+                              <span className="text-[10px] opacity-60 flex items-center gap-0.5 mt-0.5">
+                                <Users className="w-2.5 h-2.5" />
+                                {op.available.toLocaleString()} dispo
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Buy summary + button */}
                   <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Récapitulatif</p>
@@ -591,18 +658,20 @@ export default function BuyNumber() {
                       </p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Prix</p>
-                        <p className="text-lg font-bold text-white">
-                          {currency === "FCFA"
-                            ? `${selectedCountryInfo.priceFcfa.toLocaleString("fr-FR")} FCFA`
-                            : `$${selectedCountryInfo.priceUsd.toFixed(2)}`}
-                        </p>
-                      </div>
+                      {selectedOperator && operatorsData?.operators && (
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">Prix</p>
+                          <p className="text-lg font-bold text-white">
+                            {currency === "FCFA"
+                              ? `${(operatorsData.operators.find((o: OperatorInfo) => o.name === selectedOperator)?.priceFcfa ?? selectedCountryInfo.priceFcfa).toLocaleString("fr-FR")} FCFA`
+                              : `$${(operatorsData.operators.find((o: OperatorInfo) => o.name === selectedOperator)?.priceUsd ?? selectedCountryInfo.priceUsd).toFixed(2)}`}
+                          </p>
+                        </div>
+                      )}
                       <Button
                         className="bg-primary hover:bg-primary/90 text-white font-bold px-5 h-11 rounded-xl shadow-lg shadow-primary/20"
                         onClick={handleGetNumber}
-                        disabled={buyMutation.isPending || balance === 0}
+                        disabled={buyMutation.isPending || balance === 0 || !selectedOperator}
                       >
                         {buyMutation.isPending ? (
                           <Loader2 className="w-5 h-5 animate-spin" />

@@ -259,8 +259,43 @@ export async function getCountriesForService(service: string): Promise<CountryIn
   return result.sort((a, b) => a.priceUsd - b.priceUsd);
 }
 
-export async function buyNumber(service: string, country: string): Promise<FiveSimOrder> {
-  return fiveSimRequest<FiveSimOrder>(`/user/buy/activation/${country}/any/${service}`);
+// ─── Operator info ─────────────────────────────────────────────────────────────
+
+export interface OperatorInfo {
+  name: string;
+  label: string;
+  priceUsd: number;
+  priceFcfa: number;
+  available: number;
+}
+
+export async function getOperatorsForServiceCountry(
+  service: string,
+  country: string
+): Promise<OperatorInfo[]> {
+  const prices = await getPricesForProduct(service);
+  const operatorMap = prices[country] ?? {};
+
+  return Object.entries(operatorMap)
+    .filter(([, entry]) => entry.count > 0)
+    .map(([name, entry]) => ({
+      name,
+      label: name === "any" ? "Automatique" : name.replace(/_/g, " "),
+      priceUsd: Math.round(entry.cost * 100) / 100,
+      priceFcfa: usdToFcfa(entry.cost),
+      available: entry.count,
+    }))
+    .sort((a, b) => a.priceUsd - b.priceUsd);
+}
+
+export async function buyNumber(
+  service: string,
+  country: string,
+  operator = "any"
+): Promise<FiveSimOrder> {
+  return fiveSimRequest<FiveSimOrder>(
+    `/user/buy/activation/${country}/${operator}/${service}`
+  );
 }
 
 export async function checkOrder(orderId: number): Promise<FiveSimOrder> {

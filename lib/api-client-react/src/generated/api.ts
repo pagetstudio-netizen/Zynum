@@ -1114,6 +1114,42 @@ export const useRegenerateDeveloperApiKey = <
   return useMutation(getRegenerateDeveloperApiKeyMutationOptions(options));
 };
 
+// ─── Get Operators ────────────────────────────────────────────────────────────
+
+export interface OperatorInfo {
+  name: string;
+  label: string;
+  priceUsd: number;
+  priceFcfa: number;
+  available: number;
+}
+
+export const getOperatorsQueryKey = (service: string, country: string) =>
+  ["operators", service, country] as const;
+
+export const getOperators = async (
+  service: string,
+  country: string
+): Promise<{ operators: OperatorInfo[] }> => {
+  return customFetch<{ operators: OperatorInfo[] }>(
+    `/api/v1/operators?service=${encodeURIComponent(service)}&country=${encodeURIComponent(country)}`
+  );
+};
+
+export const useGetOperators = (
+  service: string | null | undefined,
+  country: string | null | undefined,
+  options?: { query?: UseQueryOptions<{ operators: OperatorInfo[] }, ErrorType<ErrorResponse>> }
+) => {
+  return useQuery({
+    queryKey: getOperatorsQueryKey(service ?? "", country ?? ""),
+    queryFn: () => getOperators(service!, country!),
+    enabled: !!service && !!country,
+    staleTime: 30_000,
+    ...options?.query,
+  });
+};
+
 // ─── Cancel Order ─────────────────────────────────────────────────────────────
 
 export const cancelOrder = async (orderId: string): Promise<{ order: Order }> => {

@@ -8,6 +8,7 @@ import {
   checkOrder,
   cancelOrder,
   finishOrder,
+  getOperatorsForServiceCountry,
   getServiceName,
   getCountryName,
   mapFiveSimStatus,
@@ -36,6 +37,18 @@ function formatOrder(order: typeof ordersTable.$inferSelect) {
   };
 }
 
+// ─── List operators for service + country ─────────────────────────────────────
+router.get("/v1/operators", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const service = typeof req.query.service === "string" ? req.query.service : "";
+  const country = typeof req.query.country === "string" ? req.query.country : "";
+  if (!service || !country) {
+    res.status(400).json({ error: "Validation error", message: "service and country are required" });
+    return;
+  }
+  const operators = await getOperatorsForServiceCountry(service, country);
+  res.json({ operators });
+});
+
 // ─── Buy number ───────────────────────────────────────────────────────────────
 router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const parsed = BuyNumberBody.safeParse(req.body);
@@ -44,12 +57,12 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
     return;
   }
 
-  const { service, country, currency } = parsed.data;
+  const { service, country, currency, operator } = parsed.data;
   const userId = req.userId!;
 
   let fiveSimOrder;
   try {
-    fiveSimOrder = await buyNumber(service, country);
+    fiveSimOrder = await buyNumber(service, country, operator ?? "any");
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat du numéro";
     res.status(400).json({ error: "Purchase failed", message });

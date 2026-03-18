@@ -82,6 +82,7 @@ export interface BuyNumberRequest {
   service: string;
   country: string;
   currency?: BuyNumberRequestCurrency;
+  operator?: string;
 }
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
