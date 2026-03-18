@@ -289,6 +289,14 @@ export async function customFetch<T = unknown>(
 
   const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
 
+  // Attach auth token from localStorage if available
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("zynum_token");
+    if (token && !headers.has("authorization")) {
+      headers.set("authorization", `Bearer ${token}`);
+    }
+  }
+
   if (
     typeof init.body === "string" &&
     !headers.has("content-type") &&
