@@ -267,6 +267,14 @@ export async function checkOrder(orderId: number): Promise<FiveSimOrder> {
   return fiveSimRequest<FiveSimOrder>(`/user/check/${orderId}`);
 }
 
+export async function cancelOrder(orderId: number): Promise<FiveSimOrder> {
+  return fiveSimRequest<FiveSimOrder>(`/user/cancel/${orderId}`);
+}
+
+export async function finishOrder(orderId: number): Promise<FiveSimOrder> {
+  return fiveSimRequest<FiveSimOrder>(`/user/finish/${orderId}`);
+}
+
 export function getServiceName(serviceId: string): string {
   return SERVICE_MAP[serviceId]?.name ?? serviceId;
 }

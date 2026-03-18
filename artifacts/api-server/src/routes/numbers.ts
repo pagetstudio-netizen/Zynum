@@ -6,6 +6,8 @@ import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js"
 import {
   buyNumber,
   checkOrder,
+  cancelOrder,
+  finishOrder,
   getServiceName,
   getCountryName,
   mapFiveSimStatus,
@@ -34,6 +36,7 @@ function formatOrder(order: typeof ordersTable.$inferSelect) {
   };
 }
 
+// ─── Buy number ───────────────────────────────────────────────────────────────
 router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const parsed = BuyNumberBody.safeParse(req.body);
   if (!parsed.success) {
@@ -78,6 +81,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   res.json({ order: formatOrder(order) });
 });
 
+// ─── Check SMS ────────────────────────────────────────────────────────────────
 router.get("/v1/check/:orderId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const rawId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
   const parsed = CheckSmsParams.safeParse({ orderId: rawId });
@@ -121,6 +125,72 @@ router.get("/v1/check/:orderId", requireAuth, async (req: AuthRequest, res): Pro
   res.json({ order: formatOrder(updatedOrder) });
 });
 
+// ─── Cancel order ─────────────────────────────────────────────────────────────
+router.post("/v1/cancel/:orderId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const rawId = req.params.orderId;
+
+  const [dbOrder] = await db
+    .select()
+    .from(ordersTable)
+    .where(and(eq(ordersTable.id, parseInt(rawId, 10)), eq(ordersTable.userId, req.userId!)))
+    .limit(1);
+
+  if (!dbOrder) {
+    res.status(404).json({ error: "Not found", message: "Commande introuvable" });
+    return;
+  }
+
+  if (dbOrder.status !== "PENDING") {
+    res.status(400).json({ error: "Invalid", message: "Seules les commandes en attente peuvent être annulées" });
+    return;
+  }
+
+  try {
+    await cancelOrder(parseInt(dbOrder.externalId, 10));
+  } catch {
+    // ignore 5SIM cancel error — update DB anyway
+  }
+
+  const [updated] = await db
+    .update(ordersTable)
+    .set({ status: "CANCELED" })
+    .where(eq(ordersTable.id, dbOrder.id))
+    .returning();
+
+  res.json({ order: formatOrder(updated) });
+});
+
+// ─── Finish/confirm order ─────────────────────────────────────────────────────
+router.post("/v1/finish/:orderId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const rawId = req.params.orderId;
+
+  const [dbOrder] = await db
+    .select()
+    .from(ordersTable)
+    .where(and(eq(ordersTable.id, parseInt(rawId, 10)), eq(ordersTable.userId, req.userId!)))
+    .limit(1);
+
+  if (!dbOrder) {
+    res.status(404).json({ error: "Not found", message: "Commande introuvable" });
+    return;
+  }
+
+  try {
+    await finishOrder(parseInt(dbOrder.externalId, 10));
+  } catch {
+    // ignore
+  }
+
+  const [updated] = await db
+    .update(ordersTable)
+    .set({ status: "FINISHED" })
+    .where(eq(ordersTable.id, dbOrder.id))
+    .returning();
+
+  res.json({ order: formatOrder(updated) });
+});
+
+// ─── Order history ────────────────────────────────────────────────────────────
 router.get("/v1/orders", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const parsed = GetOrderHistoryQueryParams.safeParse(req.query);
   if (!parsed.success) {

@@ -27,6 +27,7 @@ import type {
   GetOrderHistoryParams,
   HealthStatus,
   LoginRequest,
+  Order,
   OrderHistoryResponse,
   OrderResponse,
   RegisterRequest,
@@ -1111,4 +1112,40 @@ export const useRegenerateDeveloperApiKey = <
   TContext
 > => {
   return useMutation(getRegenerateDeveloperApiKeyMutationOptions(options));
+};
+
+// ─── Cancel Order ─────────────────────────────────────────────────────────────
+
+export const cancelOrder = async (orderId: string): Promise<{ order: Order }> => {
+  return customFetch<{ order: Order }>(`/api/v1/cancel/${orderId}`, { method: "POST" });
+};
+
+export const useCancelOrder = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<{ order: Order }, TError, string, TContext>;
+}): UseMutationResult<{ order: Order }, TError, string, TContext> => {
+  return useMutation({
+    mutationFn: (orderId: string) => cancelOrder(orderId),
+    ...options?.mutation,
+  });
+};
+
+// ─── Finish / Confirm Order ───────────────────────────────────────────────────
+
+export const finishOrder = async (orderId: string): Promise<{ order: Order }> => {
+  return customFetch<{ order: Order }>(`/api/v1/finish/${orderId}`, { method: "POST" });
+};
+
+export const useFinishOrder = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<{ order: Order }, TError, string, TContext>;
+}): UseMutationResult<{ order: Order }, TError, string, TContext> => {
+  return useMutation({
+    mutationFn: (orderId: string) => finishOrder(orderId),
+    ...options?.mutation,
+  });
 };
