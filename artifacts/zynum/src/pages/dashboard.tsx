@@ -62,6 +62,10 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
   const total = history?.total ?? 0;
   const received = orders.filter(o => o.status === "RECEIVED" || o.status === "FINISHED").length;
 
+  const balanceDisplay = currency === "FCFA"
+    ? `${Math.round(balance * 620).toLocaleString("fr-FR")} FCFA`
+    : `$${balance.toFixed(2)}`;
+
   return (
     <div className="space-y-6">
       <div>
@@ -74,8 +78,8 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
         <StatCard
           icon={<Wallet className="w-6 h-6 text-primary" />}
           label="Solde 5SIM"
-          value={`$${balance.toFixed(2)}`}
-          sub={balanceData?.isLow ? "⚠️ Solde faible" : "Actif"}
+          value={balanceDisplay}
+          sub={balanceData?.isLow ? "⚠️ Solde faible — recharger" : "Actif"}
           color="bg-primary/10"
         />
         <StatCard
@@ -286,17 +290,18 @@ export default function Dashboard() {
     return () => window.removeEventListener("zynum:tab", handler);
   }, []);
 
-  if (isLoading) {
+  React.useEffect(() => {
+    if (!isLoading && !user) {
+      setLocation("/login");
+    }
+  }, [isLoading, user, setLocation]);
+
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
-  }
-
-  if (!user) {
-    setLocation("/login");
-    return null;
   }
 
   const NAV = [

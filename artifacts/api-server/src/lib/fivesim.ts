@@ -88,6 +88,7 @@ export interface ServiceInfo {
   id: string;
   name: string;
   icon: string;
+  color: string;
   category: string;
 }
 
@@ -102,27 +103,29 @@ export interface CountryInfo {
 
 // ─── Static service catalogue ─────────────────────────────────────────────────
 
-const SERVICE_MAP: Record<string, { name: string; icon: string; category: string }> = {
-  telegram:    { name: "Telegram",        icon: "💬", category: "Messagerie" },
-  whatsapp:    { name: "WhatsApp",        icon: "📱", category: "Messagerie" },
-  google:      { name: "Gmail / Google",  icon: "📧", category: "Email" },
-  facebook:    { name: "Facebook",        icon: "👤", category: "Social" },
-  instagram:   { name: "Instagram",       icon: "📸", category: "Social" },
-  twitter:     { name: "Twitter / X",     icon: "🐦", category: "Social" },
-  tiktok:      { name: "TikTok",          icon: "🎵", category: "Social" },
-  uber:        { name: "Uber",            icon: "🚗", category: "Transport" },
-  amazon:      { name: "Amazon",          icon: "📦", category: "Shopping" },
-  microsoft:   { name: "Microsoft",       icon: "💻", category: "Tech" },
-  paypal:      { name: "PayPal",          icon: "💳", category: "Finance" },
-  snapchat:    { name: "Snapchat",        icon: "👻", category: "Social" },
-  discord:     { name: "Discord",         icon: "🎮", category: "Gaming" },
-  linkedin:    { name: "LinkedIn",        icon: "💼", category: "Pro" },
-  binance:     { name: "Binance",         icon: "₿",  category: "Crypto" },
-  airbnb:      { name: "Airbnb",          icon: "🏠", category: "Voyage" },
-  ebay:        { name: "eBay",            icon: "🛒", category: "Shopping" },
-  netflix:     { name: "Netflix",         icon: "🎬", category: "Streaming" },
-  steam:       { name: "Steam",           icon: "🎮", category: "Gaming" },
-  shopee:      { name: "Shopee",          icon: "🛍️", category: "Shopping" },
+const CDN = "https://cdn.simpleicons.org";
+
+const SERVICE_MAP: Record<string, { name: string; icon: string; color: string; category: string }> = {
+  telegram:  { name: "Telegram",       icon: `${CDN}/telegram/ffffff`,   color: "#2AABEE", category: "Messagerie" },
+  whatsapp:  { name: "WhatsApp",       icon: `${CDN}/whatsapp/ffffff`,   color: "#25D366", category: "Messagerie" },
+  google:    { name: "Gmail / Google", icon: `${CDN}/gmail/ffffff`,      color: "#EA4335", category: "Email" },
+  facebook:  { name: "Facebook",       icon: `${CDN}/facebook/ffffff`,   color: "#1877F2", category: "Social" },
+  instagram: { name: "Instagram",      icon: `${CDN}/instagram/ffffff`,  color: "#E4405F", category: "Social" },
+  twitter:   { name: "Twitter / X",    icon: `${CDN}/x/ffffff`,          color: "#14171A", category: "Social" },
+  tiktok:    { name: "TikTok",         icon: `${CDN}/tiktok/ffffff`,     color: "#010101", category: "Social" },
+  uber:      { name: "Uber",           icon: `${CDN}/uber/ffffff`,       color: "#000000", category: "Transport" },
+  amazon:    { name: "Amazon",         icon: `${CDN}/amazon/ffffff`,     color: "#FF9900", category: "Shopping" },
+  microsoft: { name: "Microsoft",      icon: `${CDN}/microsoft/ffffff`,  color: "#0078D4", category: "Tech" },
+  paypal:    { name: "PayPal",         icon: `${CDN}/paypal/ffffff`,     color: "#003087", category: "Finance" },
+  snapchat:  { name: "Snapchat",       icon: `${CDN}/snapchat/ffffff`,   color: "#FFFC00", category: "Social" },
+  discord:   { name: "Discord",        icon: `${CDN}/discord/ffffff`,    color: "#5865F2", category: "Gaming" },
+  linkedin:  { name: "LinkedIn",       icon: `${CDN}/linkedin/ffffff`,   color: "#0A66C2", category: "Pro" },
+  binance:   { name: "Binance",        icon: `${CDN}/binance/ffffff`,    color: "#F0B90B", category: "Crypto" },
+  airbnb:    { name: "Airbnb",         icon: `${CDN}/airbnb/ffffff`,     color: "#FF5A5F", category: "Voyage" },
+  ebay:      { name: "eBay",           icon: `${CDN}/ebay/ffffff`,       color: "#E43142", category: "Shopping" },
+  netflix:   { name: "Netflix",        icon: `${CDN}/netflix/ffffff`,    color: "#E50914", category: "Streaming" },
+  steam:     { name: "Steam",          icon: `${CDN}/steam/ffffff`,      color: "#1B2838", category: "Gaming" },
+  shopee:    { name: "Shopee",         icon: `${CDN}/shopee/ffffff`,     color: "#EE4D2D", category: "Shopping" },
 };
 
 // ISO code → emoji flag
@@ -212,7 +215,9 @@ export async function getProfile(): Promise<FiveSimProfile> {
 }
 
 export function getAvailableServices(): ServiceInfo[] {
-  return Object.entries(SERVICE_MAP).map(([id, info]) => ({ id, ...info }));
+  return Object.entries(SERVICE_MAP).map(([id, { name, icon, color, category }]) => ({
+    id, name, icon, color, category,
+  }));
 }
 
 export async function getCountriesForService(service: string): Promise<CountryInfo[]> {

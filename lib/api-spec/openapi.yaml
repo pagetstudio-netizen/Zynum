@@ -405,12 +405,15 @@ components:
           type: string
         icon:
           type: string
+        color:
+          type: string
         category:
           type: string
       required:
         - id
         - name
         - icon
+        - color
         - category
 
     ServicesResponse:
