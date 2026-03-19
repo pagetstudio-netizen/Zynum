@@ -13,6 +13,7 @@ export interface PaxityModalProps {
   amountXof: number;
   userId: string | number;
   onSuccess: () => void;
+  initialTab?: Tab;
 }
 
 type Tab = "mobile" | "card";
@@ -256,10 +257,12 @@ function CountryPicker({
 }
 
 /* ── Main modal ─────────────────────────────────────────────────── */
-export function PaxityModal({ open, onClose, amountXof, userId, onSuccess }: PaxityModalProps) {
-  const [tab, setTab]               = useState<Tab>("mobile");
+export function PaxityModal({ open, onClose, amountXof, userId, onSuccess, initialTab = "mobile" }: PaxityModalProps) {
+  const [tab, setTab]               = useState<Tab>(initialTab);
   const [view, setView]             = useState<View>("form");
   const [state, setState]           = useState<PayState>("idle");
+
+  useEffect(() => { if (open) { setTab(initialTab); setView("form"); reset(); } }, [open, initialTab]);
   const [errorMsg, setErrorMsg]     = useState("");
   const [txData, setTxData]         = useState<PaxityTxData | null>(null);
 

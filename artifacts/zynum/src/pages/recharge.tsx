@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import {
-  Wallet, Bitcoin, Building2,
+  Wallet, Bitcoin, Smartphone, CreditCard,
   ArrowRight, Check, Lock,
   ChevronRight, AlertCircle, ShieldCheck,
 } from "lucide-react";
@@ -27,22 +27,44 @@ export default function Recharge() {
 
   const [selectedAmount, setSelectedAmount] = useState<number | null>(20);
   const [customAmount,   setCustomAmount]   = useState("");
-  const [selectedMethod, setSelectedMethod] = useState<string | null>("paxity");
+  const [selectedMethod, setSelectedMethod] = useState<string | null>("mobile");
   const [modalOpen,      setModalOpen]      = useState(false);
+  const [modalTab,       setModalTab]       = useState<"mobile" | "card">("mobile");
 
-  const METHODS = [
+  const METHODS: {
+    id: string; label: string; sub: string; icon: React.ReactNode;
+    color: string; bg: string; available: boolean; paxityTab?: "mobile" | "card"; soon?: boolean;
+  }[] = [
     {
-      id:        "paxity",
-      icon:      <img src="https://paxity.io/images/fav.svg" alt="Paxity" className="w-6 h-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />,
-      label:     "Mobile Money & Carte",
+      id:        "mobile",
+      icon:      <Smartphone className="w-6 h-6" />,
+      label:     "Mobile Money",
       sub:       "Wave, Orange Money, MTN, Moov, M-Pesa… · 11 pays",
       color:     "text-emerald-400",
       bg:        "bg-emerald-400/10 border-emerald-400/20",
       available: true,
-      badge:     "Paxity",
+      paxityTab: "mobile",
     },
-    { id: "crypto", icon: <Bitcoin   className="w-6 h-6" />, label: t("recharge_crypto"), sub: "USDT, BTC, ETH, BNB…",            color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20", available: false },
-    { id: "bank",   icon: <Building2 className="w-6 h-6" />, label: t("recharge_bank"),   sub: "Transfert SEPA / international",   color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/20", available: false },
+    {
+      id:        "card",
+      icon:      <CreditCard className="w-6 h-6" />,
+      label:     "Carte bancaire",
+      sub:       "Visa, Mastercard — paiement sécurisé",
+      color:     "text-blue-400",
+      bg:        "bg-blue-400/10 border-blue-400/20",
+      available: true,
+      paxityTab: "card",
+    },
+    {
+      id:        "crypto",
+      icon:      <Bitcoin className="w-6 h-6" />,
+      label:     "Cryptomonnaie",
+      sub:       "USDT, BTC, ETH, BNB…",
+      color:     "text-yellow-400",
+      bg:        "bg-yellow-400/10 border-yellow-400/20",
+      available: false,
+      soon:      true,
+    },
   ];
 
   const balance       = balanceData?.balance ?? 0;
@@ -68,11 +90,13 @@ export default function Recharge() {
       toast({ variant: "destructive", title: "Montant invalide", description: "Veuillez saisir un montant supérieur à 0." });
       return;
     }
-    if (selectedMethod === "paxity") {
+    const method = METHODS.find((m) => m.id === selectedMethod);
+    if (method?.available && method.paxityTab) {
       if (!user) {
         toast({ variant: "destructive", title: "Non connecté", description: "Veuillez vous connecter." });
         return;
       }
+      setModalTab(method.paxityTab);
       setModalOpen(true);
       return;
     }
@@ -176,9 +200,9 @@ export default function Recharge() {
                 <div className="text-left">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-white text-sm">{m.label}</p>
-                    {"badge" in m && m.badge && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
-                        {m.badge}
+                    {m.soon && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">
+                        Bientôt
                       </span>
                     )}
                   </div>
@@ -267,6 +291,7 @@ export default function Recharge() {
           amountXof={finalAmountXof}
           userId={user.id}
           onSuccess={handlePaymentSuccess}
+          initialTab={modalTab}
         />
       )}
     </div>
