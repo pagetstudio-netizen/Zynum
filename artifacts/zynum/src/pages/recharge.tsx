@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
-  Wallet, CreditCard, Bitcoin, Building2,
-  ArrowRight, Check, Lock, Zap,
-  ChevronRight, AlertCircle, ShieldCheck, ExternalLink,
+  Wallet, Bitcoin, Building2,
+  ArrowRight, Check, Lock,
+  ChevronRight, AlertCircle, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -109,23 +108,6 @@ export default function Recharge() {
           <ShieldCheck className="w-3.5 h-3.5" /> {t("recharge_verified")}
         </div>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-center gap-4"
-      >
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
-          <Zap className="w-5 h-5 text-emerald-400" />
-        </div>
-        <div className="flex-1">
-          <p className="font-bold text-white mb-0.5">Paiements actifs via Paxity</p>
-          <p className="text-sm text-muted-foreground">Mobile Money (Wave, Orange, MTN) et Carte bancaire disponibles maintenant.</p>
-        </div>
-        <a href="https://paxity.io" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 shrink-0">
-          <ExternalLink className="w-4 h-4" />
-        </a>
-      </motion.div>
 
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-5">
         <h3 className="font-semibold text-white">{t("recharge_amount_title")}</h3>
