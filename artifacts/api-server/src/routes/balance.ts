@@ -5,8 +5,15 @@ import { getProfile } from "../lib/fivesim.js";
 const router: IRouter = Router();
 
 const LOW_BALANCE_THRESHOLD = 5;
+const DEMO_MODE = process.env.DEMO_MODE === "true";
 
 router.get("/v1/balance", requireAuth, async (_req, res): Promise<void> => {
+  // In demo mode return a fake balance so the frontend buy button is not blocked
+  if (DEMO_MODE) {
+    res.json({ balance: 99.99, currency: "USD", lowBalanceThreshold: LOW_BALANCE_THRESHOLD, isLow: false, demo: true });
+    return;
+  }
+
   try {
     const profile = await getProfile();
     const balance = profile.balance;
