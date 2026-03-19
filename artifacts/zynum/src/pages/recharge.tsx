@@ -4,62 +4,58 @@ import { Link } from "wouter";
 import {
   Wallet, CreditCard, Bitcoin, Building2,
   ArrowRight, Check, Lock, Zap,
-  ChevronRight, AlertCircle, ShieldCheck, ExternalLink, Loader2,
+  ChevronRight, AlertCircle, ShieldCheck, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useGetBalance, useGetCurrentUser, getGetBalanceQueryKey } from "@workspace/api-client-react";
-import { usePaxityWidget } from "@/hooks/use-paxity";
 import { useQueryClient } from "@tanstack/react-query";
+import { PaxityModal } from "@/components/paxity-modal";
 
-const AMOUNTS_USD = [5, 10, 20, 50, 100, 200];
-const FCFA_PER_USD = 620;
+const AMOUNTS_USD   = [5, 10, 20, 50, 100, 200];
+const FCFA_PER_USD  = 620;
 
 export default function Recharge() {
-  const { t } = useLanguage();
-  const { currency } = useCurrency();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { data: user } = useGetCurrentUser({ query: { retry: false } });
-  const { data: balanceData, refetch: refetchBalance } = useGetBalance({ query: { enabled: !!user, retry: false } });
+  const { t }         = useLanguage();
+  const { currency }  = useCurrency();
+  const { toast }     = useToast();
+  const queryClient   = useQueryClient();
+  const { data: user }         = useGetCurrentUser({ query: { retry: false } });
+  const { data: balanceData, refetch: refetchBalance } =
+    useGetBalance({ query: { enabled: !!user, retry: false } });
 
   const [selectedAmount, setSelectedAmount] = useState<number | null>(20);
-  const [customAmount, setCustomAmount] = useState("");
+  const [customAmount,   setCustomAmount]   = useState("");
   const [selectedMethod, setSelectedMethod] = useState<string | null>("paxity");
-  const [isPaxityOpen, setIsPaxityOpen] = useState(false);
-  const [launching, setLaunching] = useState(false);
-
-  const { openWidget, ready: widgetReady } = usePaxityWidget();
+  const [modalOpen,      setModalOpen]      = useState(false);
 
   const METHODS = [
     {
-      id: "paxity",
-      icon: <img src="https://paxity.io/images/fav.svg" alt="Paxity" className="w-6 h-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />,
-      fallbackIcon: <CreditCard className="w-6 h-6" />,
-      label: "Mobile Money & Carte",
-      sub: "Wave, Orange Money, MTN, Visa, Mastercard",
-      color: "text-emerald-400",
-      bg: "bg-emerald-400/10 border-emerald-400/20",
+      id:        "paxity",
+      icon:      <img src="https://paxity.io/images/fav.svg" alt="Paxity" className="w-6 h-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />,
+      label:     "Mobile Money & Carte",
+      sub:       "Wave, Orange Money, MTN, Visa, Mastercard",
+      color:     "text-emerald-400",
+      bg:        "bg-emerald-400/10 border-emerald-400/20",
       available: true,
-      badge: "Paxity",
+      badge:     "Paxity",
     },
-    { id: "crypto", icon: <Bitcoin className="w-6 h-6" />, label: t("recharge_crypto"), sub: "USDT, BTC, ETH, BNB…", color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20", available: false },
-    { id: "bank",   icon: <Building2 className="w-6 h-6" />, label: t("recharge_bank"), sub: "Transfert SEPA / international", color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/20", available: false },
+    { id: "crypto", icon: <Bitcoin   className="w-6 h-6" />, label: t("recharge_crypto"), sub: "USDT, BTC, ETH, BNB…",            color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20", available: false },
+    { id: "bank",   icon: <Building2 className="w-6 h-6" />, label: t("recharge_bank"),   sub: "Transfert SEPA / international",   color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/20", available: false },
   ];
 
-  const balance = balanceData?.balance ?? 0;
+  const balance       = balanceData?.balance ?? 0;
   const formatBalance = (v: number) =>
-    currency === "FCFA" ? `${Math.round(v * FCFA_PER_USD).toLocaleString("fr-FR")} FCFA` : `$${v.toFixed(2)}`;
+    currency === "FCFA"
+      ? `${Math.round(v * FCFA_PER_USD).toLocaleString("fr-FR")} FCFA`
+      : `$${v.toFixed(2)}`;
 
-  const finalAmountUsd = customAmount ? parseFloat(customAmount) : selectedAmount;
-  const finalAmountXof = finalAmountUsd
-    ? currency === "FCFA"
-      ? finalAmountUsd
-      : Math.round(finalAmountUsd * FCFA_PER_USD)
+  const finalAmountUsd  = customAmount ? parseFloat(customAmount) : selectedAmount;
+  const finalAmountXof  = finalAmountUsd
+    ? currency === "FCFA" ? finalAmountUsd : Math.round(finalAmountUsd * FCFA_PER_USD)
     : 0;
-
   const finalAmountUsdNorm = currency === "FCFA"
     ? (finalAmountUsd ?? 0) / FCFA_PER_USD
     : (finalAmountUsd ?? 0);
@@ -78,31 +74,18 @@ export default function Recharge() {
         toast({ variant: "destructive", title: "Non connecté", description: "Veuillez vous connecter." });
         return;
       }
-      setLaunching(true);
-      const result = openWidget({
-        amountXof: finalAmountXof,
-        userId: user.id,
-        isOpen: isPaxityOpen,
-        setIsOpen: (v) => {
-          setIsPaxityOpen(v);
-          setLaunching(false);
-          if (!v) {
-            setTimeout(() => {
-              refetchBalance();
-              queryClient.invalidateQueries({ queryKey: getGetBalanceQueryKey() });
-            }, 2000);
-          }
-        },
-      });
-      if (result === "opened") {
-        setLaunching(false);
-      } else {
-        toast({ title: "Ouverture en cours…", description: "Le widget de paiement va s'ouvrir dans un instant." });
-        setTimeout(() => setLaunching(false), 5000);
-      }
+      setModalOpen(true);
       return;
     }
     toast({ title: t("recharge_soon_toast_title"), description: t("recharge_soon_toast_desc") });
+  };
+
+  const handlePaymentSuccess = () => {
+    toast({ title: "Paiement initié !", description: "Votre solde sera mis à jour dans quelques instants." });
+    setTimeout(() => {
+      refetchBalance();
+      queryClient.invalidateQueries({ queryKey: getGetBalanceQueryKey() });
+    }, 3000);
   };
 
   return (
@@ -112,7 +95,6 @@ export default function Recharge() {
         <p className="text-muted-foreground text-sm">{t("recharge_sub")}</p>
       </div>
 
-      {/* Balance card */}
       <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-primary/10 to-blue-500/5 p-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -128,7 +110,6 @@ export default function Recharge() {
         </div>
       </div>
 
-      {/* Paxity powered banner */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -146,13 +127,12 @@ export default function Recharge() {
         </a>
       </motion.div>
 
-      {/* Amount selection */}
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-5">
         <h3 className="font-semibold text-white">{t("recharge_amount_title")}</h3>
         <div className="grid grid-cols-3 gap-2">
           {AMOUNTS_USD.map((amt) => {
             const displayAmt = currency === "FCFA" ? amt * FCFA_PER_USD : amt;
-            const active = selectedAmount === amt && !customAmount;
+            const active     = selectedAmount === amt && !customAmount;
             return (
               <button
                 key={amt}
@@ -193,7 +173,6 @@ export default function Recharge() {
         </div>
       </div>
 
-      {/* Method selection */}
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
         <h3 className="font-semibold text-white">{t("recharge_method_title")}</h3>
         <div className="space-y-2">
@@ -240,7 +219,6 @@ export default function Recharge() {
         </div>
       </div>
 
-      {/* Summary + CTA */}
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
         <h3 className="font-semibold text-white">{t("recharge_summary")}</h3>
         <div className="space-y-2 text-sm">
@@ -270,32 +248,16 @@ export default function Recharge() {
         </div>
 
         <Button
-          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 disabled:opacity-60"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20"
           onClick={handleDeposit}
-          disabled={!finalAmountUsd || finalAmountUsd <= 0 || launching}
+          disabled={!finalAmountUsd || finalAmountUsd <= 0}
         >
-          {launching ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Ouverture du paiement…
-            </>
-          ) : (
-            <>
-              <Lock className="w-4 h-4 mr-2" />
-              {finalAmountUsd && finalAmountUsd > 0
-                ? `${t("recharge_deposit_btn")} ${currency === "FCFA" ? `${Math.round(finalAmountUsd).toLocaleString("fr-FR")} FCFA` : `$${finalAmountUsd}`}`
-                : t("recharge_deposit_btn")}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </>
-          )}
+          <Lock className="w-4 h-4 mr-2" />
+          {finalAmountUsd && finalAmountUsd > 0
+            ? `${t("recharge_deposit_btn")} ${currency === "FCFA" ? `${Math.round(finalAmountUsd).toLocaleString("fr-FR")} FCFA` : `$${finalAmountUsd}`}`
+            : t("recharge_deposit_btn")}
+          <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
-
-        {!widgetReady && selectedMethod === "paxity" && (
-          <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            Préparation du widget de paiement…
-          </p>
-        )}
 
         <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
@@ -303,7 +265,6 @@ export default function Recharge() {
         </p>
       </div>
 
-      {/* Manual fallback */}
       <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 flex items-center gap-4">
         <AlertCircle className="w-8 h-8 text-muted-foreground shrink-0" />
         <div className="flex-1">
@@ -316,6 +277,16 @@ export default function Recharge() {
           </Button>
         </Link>
       </div>
+
+      {user && (
+        <PaxityModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          amountXof={finalAmountXof}
+          userId={user.id}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }
