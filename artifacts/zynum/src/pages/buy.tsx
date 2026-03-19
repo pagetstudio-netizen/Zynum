@@ -168,7 +168,7 @@ export default function BuyNumber() {
   const { toast } = useToast();
 
   const { data: user, isLoading: isUserLoading } = useGetCurrentUser({ query: { retry: false } });
-  const { data: balanceData } = useGetBalance({ query: { enabled: !!user, retry: false } });
+  const { data: balanceData, refetch: refetchBalance } = useGetBalance({ query: { enabled: !!user, retry: false } });
 
   const [step, setStep] = useState<BuyStep>("service");
   const [dir, setDir] = useState(1); // animation direction
@@ -198,10 +198,14 @@ export default function BuyNumber() {
 
   const buyMutation = useBuyNumber({
     mutation: {
-      onSuccess: (data) => { setActiveOrder(data.order); goTo("preview"); },
+      onSuccess: (data) => {
+        setActiveOrder(data.order);
+        goTo("preview");
+        refetchBalance();
+      },
       onError: (error: any) => {
         const msg: string = error?.response?.data?.message ?? "";
-        const isBalance = /balance|no free|insufficient/i.test(msg);
+        const isBalance = /balance|no free|insufficient|solde/i.test(msg);
         toast({
           variant: "destructive",
           title: isBalance ? "Solde insuffisant" : "Erreur d'achat",
@@ -213,8 +217,13 @@ export default function BuyNumber() {
 
   const cancelMutation = useCancelOrder({
     mutation: {
-      onSuccess: () => { setActiveOrder(null); goTo("service", false); },
-      onError:   () => { setActiveOrder(null); goTo("service", false); },
+      onSuccess: () => {
+        setActiveOrder(null);
+        goTo("service", false);
+        refetchBalance();
+        toast({ title: "✅ Remboursé", description: "Le montant a été recrédité sur votre solde." });
+      },
+      onError: () => { setActiveOrder(null); goTo("service", false); },
     },
   });
 

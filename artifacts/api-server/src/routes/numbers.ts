@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, ordersTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { db, ordersTable, usersTable } from "@workspace/db";
+import { eq, and, sql } from "drizzle-orm";
 import { BuyNumberBody, CheckSmsParams, GetOrderHistoryQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js";
 import {
@@ -70,27 +70,36 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
 
   // ── DEMO MODE: skip 5SIM, create a fake order ──────────────────────────────
   if (DEMO_MODE) {
-    const seed = Date.now();
-    const [order] = await db
-      .insert(ordersTable)
-      .values({
+    const priceUsd = 0.15;
+    const priceFcfa = usdToFcfa(priceUsd);
+
+    const order = await db.transaction(async (tx) => {
+      // Check user balance
+      const [user] = await tx.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+      if (!user || user.balanceUsd < priceUsd) {
+        throw new Error("Solde insuffisant. Veuillez recharger votre compte.");
+      }
+      // Deduct balance
+      await tx.update(usersTable).set({ balanceUsd: sql`${usersTable.balanceUsd} - ${priceUsd}` }).where(eq(usersTable.id, userId));
+      // Create order
+      const seed = Date.now();
+      const [newOrder] = await tx.insert(ordersTable).values({
         userId,
         externalId: `demo-${seed}`,
         phone: demoPick(DEMO_PREFIXES, seed),
-        service,
-        serviceName,
-        country,
-        countryName,
+        service, serviceName, country, countryName,
         status: "PENDING",
-        priceUsd: 0.15,
-        priceFcfa: usdToFcfa(0.15),
+        priceUsd, priceFcfa,
         currency: currency ?? "USD",
-      })
-      .returning();
+      }).returning();
+      return newOrder;
+    });
+
     res.json({ order: formatOrder(order) });
     return;
   }
 
+  // ── REAL MODE: call 5SIM then deduct ZyNum balance ─────────────────────────
   let fiveSimOrder;
   try {
     fiveSimOrder = await buyNumber(service, country, operator ?? "any");
@@ -103,22 +112,33 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   const priceUsd = fiveSimOrder.price;
   const priceFcfa = usdToFcfa(priceUsd);
 
-  const [order] = await db
-    .insert(ordersTable)
-    .values({
-      userId,
-      externalId: String(fiveSimOrder.id),
-      phone: fiveSimOrder.phone,
-      service,
-      serviceName,
-      country,
-      countryName,
-      status: mapFiveSimStatus(fiveSimOrder.status),
-      priceUsd,
-      priceFcfa,
-      currency: currency ?? "USD",
-    })
-    .returning();
+  let order;
+  try {
+    order = await db.transaction(async (tx) => {
+      // Check user balance
+      const [user] = await tx.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+      if (!user || user.balanceUsd < priceUsd) {
+        throw new Error("Solde insuffisant. Veuillez recharger votre compte.");
+      }
+      // Deduct balance
+      await tx.update(usersTable).set({ balanceUsd: sql`${usersTable.balanceUsd} - ${priceUsd}` }).where(eq(usersTable.id, userId));
+      // Create order
+      const [newOrder] = await tx.insert(ordersTable).values({
+        userId,
+        externalId: String(fiveSimOrder.id),
+        phone: fiveSimOrder.phone,
+        service, serviceName, country, countryName,
+        status: mapFiveSimStatus(fiveSimOrder.status),
+        priceUsd, priceFcfa,
+        currency: currency ?? "USD",
+      }).returning();
+      return newOrder;
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur lors de l'achat";
+    res.status(400).json({ error: "Purchase failed", message });
+    return;
+  }
 
   res.json({ order: formatOrder(order) });
 });
@@ -210,11 +230,20 @@ router.post("/v1/cancel/:orderId", requireAuth, async (req: AuthRequest, res): P
     }
   }
 
-  const [updated] = await db
-    .update(ordersTable)
-    .set({ status: "CANCELED" })
-    .where(eq(ordersTable.id, dbOrder.id))
-    .returning();
+  // Cancel order + refund balance in one transaction
+  const [updated] = await db.transaction(async (tx) => {
+    // Refund user
+    await tx
+      .update(usersTable)
+      .set({ balanceUsd: sql`${usersTable.balanceUsd} + ${dbOrder.priceUsd}` })
+      .where(eq(usersTable.id, req.userId!));
+    // Mark order canceled
+    return tx
+      .update(ordersTable)
+      .set({ status: "CANCELED" })
+      .where(eq(ordersTable.id, dbOrder.id))
+      .returning();
+  });
 
   res.json({ order: formatOrder(updated) });
 });
