@@ -35,7 +35,7 @@ export default function Recharge() {
       id:        "paxity",
       icon:      <img src="https://paxity.io/images/fav.svg" alt="Paxity" className="w-6 h-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />,
       label:     "Mobile Money & Carte",
-      sub:       "Wave, Orange Money, MTN, Visa, Mastercard",
+      sub:       "Wave, Orange Money, MTN, Moov, M-Pesa… · 11 pays",
       color:     "text-emerald-400",
       bg:        "bg-emerald-400/10 border-emerald-400/20",
       available: true,

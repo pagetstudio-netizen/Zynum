@@ -7,16 +7,52 @@ const router: IRouter = Router();
 const FCFA_PER_USD   = 620;
 const PAXITY_TX_BASE = "https://transaction.paxity.io/api/v1";
 
-// Mapping from our operator keys to Paxity payment method IDs
-const OPERATOR_TO_PAXITY_ID: Record<string, { id: string; prefix: string; country: string }> = {
-  WAVESN:    { id: "WAVESN",  prefix: "221", country: "SN" },
-  OMSN:      { id: "OMSN",   prefix: "221", country: "SN" },
-  WAVE:      { id: "WAVESN",  prefix: "221", country: "SN" },
-  ORANGE:    { id: "OMSN",   prefix: "221", country: "SN" },
-  WAVECI:    { id: "WAVECI",  prefix: "225", country: "CI" },
-  OMCI:      { id: "OMCI",   prefix: "225", country: "CI" },
-  MTNCI:     { id: "MTNCI",  prefix: "225", country: "CI" },
-  MOOVCI:    { id: "MOOVCI", prefix: "225", country: "CI" },
+/**
+ * Real Paxity payment method IDs per operator.
+ * Sourced from GET /payment-method/country/{code} responses.
+ */
+interface PaxityMethodInfo {
+  id: string;
+  prefix: string;
+  country: string;
+  currency: string;
+}
+
+const PAXITY_METHODS: Record<string, PaxityMethodInfo> = {
+  // Bénin
+  MOOVBJ:   { id: "MOOVBJ",   prefix: "229", country: "BJ", currency: "XOF" },
+  MTNBJ:    { id: "MTNBJ",    prefix: "229", country: "BJ", currency: "XOF" },
+  // Burkina Faso
+  MOOVBF:   { id: "MOOVBF",   prefix: "226", country: "BF", currency: "XOF" },
+  OMBF:     { id: "OMBF",     prefix: "226", country: "BF", currency: "XOF" },
+  // Cameroun
+  MTNCM:    { id: "MTNCM",    prefix: "237", country: "CM", currency: "XAF" },
+  OMCM:     { id: "OMCM",     prefix: "237", country: "CM", currency: "XAF" },
+  // Côte d'Ivoire
+  MTNCI:    { id: "MTNCI",    prefix: "225", country: "CI", currency: "XOF" },
+  WAVECI:   { id: "WAVECI",   prefix: "225", country: "CI", currency: "XOF" },
+  OMCI:     { id: "OMCI",     prefix: "225", country: "CI", currency: "XOF" },
+  // Ghana
+  ATGH:     { id: "ATGH",     prefix: "233", country: "GH", currency: "GHS" },
+  MTNGH:    { id: "MTNGH",    prefix: "233", country: "GH", currency: "GHS" },
+  TLGH:     { id: "TLGH",     prefix: "233", country: "GH", currency: "GHS" },
+  // Guinée
+  MTNGN:    { id: "MTNGN",    prefix: "224", country: "GN", currency: "GNF" },
+  OMGN:     { id: "OMGN",     prefix: "224", country: "GN", currency: "GNF" },
+  // Kenya
+  MPESAKE:  { id: "MPESAKE",  prefix: "254", country: "KE", currency: "KES" },
+  // Mali
+  MOOVML:   { id: "MOOVML",   prefix: "223", country: "ML", currency: "XOF" },
+  OMML:     { id: "OMML",     prefix: "223", country: "ML", currency: "XOF" },
+  // Nigeria
+  MTNNG:    { id: "MTNNG",    prefix: "234", country: "NG", currency: "NGN" },
+  OPNG:     { id: "OPNG",     prefix: "234", country: "NG", currency: "NGN" },
+  // Sénégal
+  OMSN:     { id: "OMSN",     prefix: "221", country: "SN", currency: "XOF" },
+  WAVESN:   { id: "WAVESN",   prefix: "221", country: "SN", currency: "XOF" },
+  // Togo (two different prefixes per operator)
+  MOOVTG:   { id: "MOOVTG",   prefix: "226", country: "TG", currency: "XOF" },
+  TMONEYTG: { id: "TMONEYTG", prefix: "228", country: "TG", currency: "XOF" },
 };
 
 function paxityHeaders() {
@@ -43,13 +79,13 @@ async function verifyPaxityTransaction(reference: string): Promise<{
       { headers: paxityHeaders() }
     );
     if (!res.ok) return { verified: false, status: `api_error_${res.status}` };
-    const data = (await res.json()) as Record<string, unknown>;
+    const data  = (await res.json()) as Record<string, unknown>;
     const txData = (data.data ?? data) as Record<string, unknown>;
     const status = String(txData.status ?? data.status ?? "").toUpperCase();
     return {
-      verified: status === "SUCCESS" || status === "COMPLETED" || status === "PAID",
+      verified: ["SUCCESS", "COMPLETED", "PAID"].includes(status),
       status,
-      amount:   Number(txData.amount ?? data.amount ?? 0),
+      amount:   Number(txData.amount  ?? data.amount  ?? 0),
       currency: String(txData.currency ?? data.currency ?? "XOF"),
       idClient: String(txData.idClient ?? data.idClient ?? ""),
     };
@@ -78,17 +114,16 @@ router.get("/v1/payments/paxity/methods", async (req: Request, res: Response): P
 // POST /v1/payments/paxity/initiate
 router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { method, amount, country, currency, userId, ipn, phone, operator,
+    const { method, amount, currency, userId, ipn, phone, operator,
             holderName, cardNumber, expMonth, expYear, cvv } = req.body ?? {};
 
     if (!method || !amount || !userId) {
-      res.status(400).json({ error: "Missing required fields" });
+      res.status(400).json({ error: "Missing required fields: method, amount, userId" });
       return;
     }
 
-    const ipnUrl = ipn || `${process.env.API_BASE_URL ?? ""}/api/v1/webhooks/paxity`;
+    const ipnUrl    = ipn || `${process.env.API_BASE_URL ?? ""}/api/v1/webhooks/paxity`;
     const rawAmount = Math.round(Number(amount));
-
     let paxityRes: globalThis.Response;
 
     if (method === "mobile") {
@@ -97,20 +132,21 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
         return;
       }
 
-      // Resolve the Paxity payment method info
-      const pmInfo = OPERATOR_TO_PAXITY_ID[operator as string];
+      const pmInfo = PAXITY_METHODS[operator as string];
       if (!pmInfo) {
-        res.status(400).json({ error: `Unsupported operator: ${operator}. Supported: ${Object.keys(OPERATOR_TO_PAXITY_ID).join(", ")}` });
+        res.status(400).json({
+          error: `Unsupported operator: ${operator}`,
+          supported: Object.keys(PAXITY_METHODS),
+        });
         return;
       }
 
-      // Strip prefix from phone number if it was included
+      // Strip country prefix from phone number if present
       let phoneNumber = String(phone).replace(/\D/g, "");
-      if (phoneNumber.startsWith(pmInfo.prefix)) {
-        phoneNumber = phoneNumber.slice(pmInfo.prefix.length);
-      }
       if (phoneNumber.startsWith("00" + pmInfo.prefix)) {
         phoneNumber = phoneNumber.slice(2 + pmInfo.prefix.length);
+      } else if (phoneNumber.startsWith(pmInfo.prefix) && phoneNumber.length > 8) {
+        phoneNumber = phoneNumber.slice(pmInfo.prefix.length);
       }
 
       const body = {
@@ -118,19 +154,19 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
         phoneNumber,
         prefixPhone:   pmInfo.prefix,
         amount:        rawAmount,
-        country:       country ?? pmInfo.country,
-        currency:      currency ?? "XOF",
+        country:       pmInfo.country,
+        currency:      currency ?? pmInfo.currency,
         ipn:           ipnUrl,
         idClient:      String(userId),
       };
 
-      console.log("[Paxity initiate/mobile] request body:", body);
-
+      console.log("[Paxity initiate/mobile] body:", body);
       paxityRes = await fetch(`${PAXITY_TX_BASE}/transaction/pay-in-mobile`, {
         method:  "POST",
         headers: paxityHeaders(),
         body:    JSON.stringify(body),
       });
+
     } else if (method === "card") {
       if (!cardNumber || !expMonth || !expYear || !cvv || !holderName) {
         res.status(400).json({ error: "Missing card details" });
@@ -146,14 +182,14 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
           expYear:  String(expYear),
           cvv,
           amount:   rawAmount,
-          country:  country  ?? "SN",
+          country:  "SN",
           currency: currency ?? "XOF",
           ipn:      ipnUrl,
           idClient: String(userId),
         }),
       });
     } else {
-      res.status(400).json({ error: "Invalid payment method" });
+      res.status(400).json({ error: "Invalid method. Use 'mobile' or 'card'" });
       return;
     }
 
@@ -161,8 +197,9 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
     let data: unknown;
     try { data = JSON.parse(rawBody); } catch { data = { raw: rawBody }; }
 
-    console.log(`[Paxity initiate/${method}] status=${paxityRes.status}`, data);
+    console.log(`[Paxity initiate/${method}] status=${paxityRes.status}`, JSON.stringify(data).slice(0, 300));
     res.status(paxityRes.ok ? 200 : paxityRes.status).json(data);
+
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur interne";
     console.error("[Paxity initiate] Error:", message);
@@ -170,7 +207,7 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
   }
 });
 
-// POST /v1/webhooks/paxity  (IPN)
+// POST /v1/webhooks/paxity  (IPN / payment notification)
 router.post("/v1/webhooks/paxity", async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body ?? {};
@@ -219,8 +256,19 @@ router.post("/v1/webhooks/paxity", async (req: Request, res: Response): Promise<
       return;
     }
 
-    const amountUsd  = finalCurrency === "USD" ? finalAmount : finalAmount / FCFA_PER_USD;
-    const amountFcfa = finalCurrency === "XOF" ? finalAmount : Math.round(finalAmount * FCFA_PER_USD);
+    // Normalize any currency to USD for balance
+    const XOF_TO_USD: Record<string, number> = {
+      XOF: 1 / 620,
+      XAF: 1 / 620,
+      GHS: 1 / 15,
+      GNF: 1 / 8700,
+      KES: 1 / 130,
+      NGN: 1 / 1550,
+      USD: 1,
+    };
+    const rate       = XOF_TO_USD[finalCurrency] ?? (1 / 620);
+    const amountUsd  = finalCurrency === "USD" ? finalAmount : finalAmount * rate;
+    const amountFcfa = finalCurrency === "XOF" ? finalAmount : Math.round(amountUsd * 620);
 
     const [user] = await db
       .select({ id: usersTable.id })
@@ -261,8 +309,9 @@ router.post("/v1/webhooks/paxity", async (req: Request, res: Response): Promise<
       metadata:  JSON.stringify({ ipnPayload: body }),
     });
 
-    console.log(`[Paxity IPN] Credited $${amountUsd.toFixed(2)} to user #${userId}`);
+    console.log(`[Paxity IPN] Credited $${amountUsd.toFixed(4)} to user #${userId}`);
     res.json({ received: true, action: "credited", amountUsd, userId });
+
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur webhook";
     console.error("[Paxity IPN] Error:", message);
