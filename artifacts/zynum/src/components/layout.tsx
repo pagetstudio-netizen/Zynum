@@ -81,14 +81,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-between h-18 py-4">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-all">
-                <span className="text-white font-black text-sm">Z</span>
+            {location === "/" ? (
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-primary/30">
+                  <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
+                </div>
+                <span className="font-display font-bold text-xl tracking-tight text-white">ZyNum</span>
               </div>
-              <span className="font-display font-bold text-xl tracking-tight text-white group-hover:text-primary transition-colors">
-                ZyNum
-              </span>
-            </Link>
+            ) : (
+              <Link href="/" className="flex items-center gap-3 group">
+                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-all">
+                  <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
+                </div>
+                <span className="font-display font-bold text-xl tracking-tight text-white group-hover:text-primary transition-colors">ZyNum</span>
+              </Link>
+            )}
 
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center space-x-0.5">
@@ -254,11 +261,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
             {/* Brand column */}
             <div className="lg:col-span-2 space-y-5">
-              <Link href="/" className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center shadow-lg shadow-primary/30">
-                  <span className="text-white font-black text-sm">Z</span>
+              <Link href="/" className="flex items-center gap-3 group">
+                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-all">
+                  <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
                 </div>
-                <span className="font-display font-bold text-xl text-white">ZyNum</span>
+                <span className="font-display font-bold text-xl text-white group-hover:text-primary transition-colors">ZyNum</span>
               </Link>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
                 La plateforme internationale de numéros virtuels. Recevez vos codes OTP dans 180+ pays, instantanément.
