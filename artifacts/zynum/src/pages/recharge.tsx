@@ -2,18 +2,17 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
-  Wallet, CreditCard, Smartphone, Bitcoin, Building2,
-  ArrowRight, Check, Lock, Zap, MessageSquare,
-  ChevronRight, AlertCircle, ShieldCheck, ExternalLink,
+  Wallet, CreditCard, Bitcoin, Building2,
+  ArrowRight, Check, Lock, Zap,
+  ChevronRight, AlertCircle, ShieldCheck, ExternalLink, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
-import { useGetBalance, useGetCurrentUser } from "@workspace/api-client-react";
+import { useGetBalance, useGetCurrentUser, getGetBalanceQueryKey } from "@workspace/api-client-react";
 import { usePaxityWidget } from "@/hooks/use-paxity";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetBalanceQueryKey } from "@workspace/api-client-react";
 
 const AMOUNTS_USD = [5, 10, 20, 50, 100, 200];
 const FCFA_PER_USD = 620;
@@ -30,8 +29,9 @@ export default function Recharge() {
   const [customAmount, setCustomAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState<string | null>("paxity");
   const [isPaxityOpen, setIsPaxityOpen] = useState(false);
+  const [launching, setLaunching] = useState(false);
 
-  const { openWidget } = usePaxityWidget();
+  const { openWidget, ready: widgetReady } = usePaxityWidget();
 
   const METHODS = [
     {
@@ -78,12 +78,14 @@ export default function Recharge() {
         toast({ variant: "destructive", title: "Non connecté", description: "Veuillez vous connecter." });
         return;
       }
-      const opened = openWidget({
+      setLaunching(true);
+      const result = openWidget({
         amountXof: finalAmountXof,
         userId: user.id,
         isOpen: isPaxityOpen,
         setIsOpen: (v) => {
           setIsPaxityOpen(v);
+          setLaunching(false);
           if (!v) {
             setTimeout(() => {
               refetchBalance();
@@ -92,8 +94,11 @@ export default function Recharge() {
           }
         },
       });
-      if (!opened) {
-        toast({ title: "Paiement Paxity", description: "Chargement du widget en cours… Réessayez dans quelques secondes." });
+      if (result === "opened") {
+        setLaunching(false);
+      } else {
+        toast({ title: "Ouverture en cours…", description: "Le widget de paiement va s'ouvrir dans un instant." });
+        setTimeout(() => setLaunching(false), 5000);
       }
       return;
     }
@@ -265,16 +270,32 @@ export default function Recharge() {
         </div>
 
         <Button
-          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 disabled:opacity-60"
           onClick={handleDeposit}
-          disabled={!finalAmountUsd || finalAmountUsd <= 0}
+          disabled={!finalAmountUsd || finalAmountUsd <= 0 || launching}
         >
-          <Lock className="w-4 h-4 mr-2" />
-          {finalAmountUsd && finalAmountUsd > 0
-            ? `${t("recharge_deposit_btn")} ${currency === "FCFA" ? `${Math.round(finalAmountUsd).toLocaleString("fr-FR")} FCFA` : `$${finalAmountUsd}`}`
-            : t("recharge_deposit_btn")}
-          <ArrowRight className="w-4 h-4 ml-2" />
+          {launching ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Ouverture du paiement…
+            </>
+          ) : (
+            <>
+              <Lock className="w-4 h-4 mr-2" />
+              {finalAmountUsd && finalAmountUsd > 0
+                ? `${t("recharge_deposit_btn")} ${currency === "FCFA" ? `${Math.round(finalAmountUsd).toLocaleString("fr-FR")} FCFA` : `$${finalAmountUsd}`}`
+                : t("recharge_deposit_btn")}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
         </Button>
+
+        {!widgetReady && selectedMethod === "paxity" && (
+          <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Préparation du widget de paiement…
+          </p>
+        )}
 
         <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-green-400" />

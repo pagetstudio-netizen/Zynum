@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 declare global {
   interface Window {
@@ -8,38 +8,33 @@ declare global {
   }
 }
 
-interface PaxityCredentials {
-  apikey: string;
-  apiToken: string;
-  isOpen?: boolean;
-  setIsOpen?: (v: boolean) => void;
-}
-
 interface PaxityWidgetOptions {
   amount: number;
   currency: string;
   country: string;
   ipn: string;
   idClient: string;
-  credentials: PaxityCredentials;
+  credentials: {
+    apikey: string;
+    apiToken: string;
+    isOpen?: boolean;
+    setIsOpen?: (v: boolean) => void;
+  };
 }
 
 const WIDGET_SCRIPT = "https://saas.paxity.io/widget/paxity-widget.iife.js";
 const WIDGET_CSS    = "https://paxity.io/widget/style.css";
 
 function getIpnUrl(): string {
-  const domain = window.location.hostname;
-  const protocol = window.location.protocol;
-  return `${protocol}//${domain}/api/v1/webhooks/paxity`;
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}/api/v1/webhooks/paxity`;
 }
 
 export function usePaxityWidget() {
-  const loaded = useRef(false);
+  const [ready, setReady] = useState(false);
+  const pendingCall = useRef<PaxityWidgetOptions | null>(null);
 
   useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
-
     if (!document.querySelector(`link[href="${WIDGET_CSS}"]`)) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
@@ -47,12 +42,35 @@ export function usePaxityWidget() {
       document.head.appendChild(link);
     }
 
-    if (!document.querySelector(`script[src="${WIDGET_SCRIPT}"]`)) {
-      const script = document.createElement("script");
-      script.src = WIDGET_SCRIPT;
-      script.async = true;
-      document.head.appendChild(script);
+    const existing = document.querySelector(`script[src="${WIDGET_SCRIPT}"]`);
+    if (existing) {
+      if (window.PaxityWidget) {
+        setReady(true);
+        if (pendingCall.current) {
+          window.PaxityWidget.open(pendingCall.current);
+          pendingCall.current = null;
+        }
+      }
+      return;
     }
+
+    const script = document.createElement("script");
+    script.src = WIDGET_SCRIPT;
+    script.async = true;
+
+    script.onload = () => {
+      setReady(true);
+      if (pendingCall.current && window.PaxityWidget) {
+        window.PaxityWidget.open(pendingCall.current);
+        pendingCall.current = null;
+      }
+    };
+
+    script.onerror = () => {
+      console.error("[PaxityWidget] Failed to load script");
+    };
+
+    document.head.appendChild(script);
   }, []);
 
   const openWidget = useCallback((options: {
@@ -62,21 +80,10 @@ export function usePaxityWidget() {
     isOpen: boolean;
     setIsOpen: (v: boolean) => void;
   }) => {
-    const apikey    = import.meta.env.VITE_PAXITY_API_KEY    ?? "";
-    const apiToken  = import.meta.env.VITE_PAXITY_API_TOKEN  ?? "";
-    const merchantId = import.meta.env.VITE_PAXITY_MERCHANT_ID ?? String(options.userId);
+    const apikey    = import.meta.env.VITE_PAXITY_API_KEY   ?? "";
+    const apiToken  = import.meta.env.VITE_PAXITY_API_TOKEN ?? "";
 
-    if (!apikey || !apiToken) {
-      console.warn("[PaxityWidget] Missing credentials – set VITE_PAXITY_API_KEY and VITE_PAXITY_API_TOKEN");
-      return false;
-    }
-
-    if (!window.PaxityWidget) {
-      console.warn("[PaxityWidget] Script not yet loaded");
-      return false;
-    }
-
-    window.PaxityWidget.open({
+    const widgetOptions: PaxityWidgetOptions = {
       amount: Math.round(options.amountXof),
       currency: "XOF",
       country: options.country ?? "SN",
@@ -88,10 +95,16 @@ export function usePaxityWidget() {
         isOpen: options.isOpen,
         setIsOpen: options.setIsOpen,
       },
-    });
+    };
 
-    return true;
+    if (window.PaxityWidget) {
+      window.PaxityWidget.open(widgetOptions);
+      return "opened";
+    }
+
+    pendingCall.current = widgetOptions;
+    return "queued";
   }, []);
 
-  return { openWidget };
+  return { openWidget, ready };
 }
