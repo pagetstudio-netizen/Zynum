@@ -49,12 +49,6 @@ router.get("/v1/operators", requireAuth, async (req: AuthRequest, res): Promise<
   res.json({ operators });
 });
 
-// ─── Demo mode helpers ────────────────────────────────────────────────────────
-const DEMO_MODE = process.env.DEMO_MODE === "true";
-const DEMO_PREFIXES = ["+33 6 12 34 56 78", "+44 7700 900123", "+1 555 867 5309", "+49 151 23456789", "+1 438 987 6543"];
-const DEMO_CODES   = ["847291", "193654", "562038", "701483", "920175"];
-function demoPick<T>(arr: T[], seed: number): T { return arr[seed % arr.length]; }
-
 // ─── Buy number ───────────────────────────────────────────────────────────────
 router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const parsed = BuyNumberBody.safeParse(req.body);
@@ -68,38 +62,6 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   const serviceName = getServiceName(service);
   const countryName = getCountryName(country);
 
-  // ── DEMO MODE: skip 5SIM, create a fake order ──────────────────────────────
-  if (DEMO_MODE) {
-    const priceUsd = 0.15;
-    const priceFcfa = usdToFcfa(priceUsd);
-
-    const order = await db.transaction(async (tx) => {
-      // Check user balance
-      const [user] = await tx.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-      if (!user || user.balanceUsd < priceUsd) {
-        throw new Error("Solde insuffisant. Veuillez recharger votre compte.");
-      }
-      // Deduct balance
-      await tx.update(usersTable).set({ balanceUsd: sql`${usersTable.balanceUsd} - ${priceUsd}` }).where(eq(usersTable.id, userId));
-      // Create order
-      const seed = Date.now();
-      const [newOrder] = await tx.insert(ordersTable).values({
-        userId,
-        externalId: `demo-${seed}`,
-        phone: demoPick(DEMO_PREFIXES, seed),
-        service, serviceName, country, countryName,
-        status: "PENDING",
-        priceUsd, priceFcfa,
-        currency: currency ?? "USD",
-      }).returning();
-      return newOrder;
-    });
-
-    res.json({ order: formatOrder(order) });
-    return;
-  }
-
-  // ── REAL MODE: call 5SIM then deduct ZyNum balance ─────────────────────────
   let fiveSimOrder;
   try {
     fiveSimOrder = await buyNumber(service, country, operator ?? "any");
@@ -115,14 +77,11 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   let order;
   try {
     order = await db.transaction(async (tx) => {
-      // Check user balance
       const [user] = await tx.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
       if (!user || user.balanceUsd < priceUsd) {
         throw new Error("Solde insuffisant. Veuillez recharger votre compte.");
       }
-      // Deduct balance
       await tx.update(usersTable).set({ balanceUsd: sql`${usersTable.balanceUsd} - ${priceUsd}` }).where(eq(usersTable.id, userId));
-      // Create order
       const [newOrder] = await tx.insert(ordersTable).values({
         userId,
         externalId: String(fiveSimOrder.id),
@@ -166,36 +125,21 @@ router.get("/v1/check/:orderId", requireAuth, async (req: AuthRequest, res): Pro
   let updatedOrder = dbOrder;
 
   if (dbOrder.status === "PENDING" || dbOrder.status === "RECEIVED") {
-    // ── DEMO MODE: simulate SMS arrival after 20 seconds ────────────────────
-    if (dbOrder.externalId.startsWith("demo-")) {
-      const elapsed = (Date.now() - dbOrder.createdAt.getTime()) / 1000;
-      if (elapsed >= 20) {
-        const seed = parseInt(dbOrder.externalId.replace("demo-", ""), 10);
-        const code = demoPick(DEMO_CODES, seed);
-        const [updated] = await db
-          .update(ordersTable)
-          .set({ status: "RECEIVED", smsCode: code, smsText: `[DÉMO] Votre code de vérification est : ${code}` })
-          .where(eq(ordersTable.id, dbOrder.id))
-          .returning();
-        updatedOrder = updated;
-      }
-    } else {
-      try {
-        const fiveSimOrder = await checkOrder(parseInt(dbOrder.externalId, 10));
-        const newStatus = mapFiveSimStatus(fiveSimOrder.status);
-        const smsCode = fiveSimOrder.sms?.[0]?.code ?? null;
-        const smsText = fiveSimOrder.sms?.[0]?.text ?? null;
+    try {
+      const fiveSimOrder = await checkOrder(parseInt(dbOrder.externalId, 10));
+      const newStatus = mapFiveSimStatus(fiveSimOrder.status);
+      const smsCode = fiveSimOrder.sms?.[0]?.code ?? null;
+      const smsText = fiveSimOrder.sms?.[0]?.text ?? null;
 
-        const [updated] = await db
-          .update(ordersTable)
-          .set({ status: newStatus, smsCode, smsText })
-          .where(eq(ordersTable.id, dbOrder.id))
-          .returning();
+      const [updated] = await db
+        .update(ordersTable)
+        .set({ status: newStatus, smsCode, smsText })
+        .where(eq(ordersTable.id, dbOrder.id))
+        .returning();
 
-        updatedOrder = updated;
-      } catch {
-        // Return existing data if 5SIM check fails
-      }
+      updatedOrder = updated;
+    } catch {
+      // Return existing data if 5SIM check fails
     }
   }
 
@@ -222,12 +166,10 @@ router.post("/v1/cancel/:orderId", requireAuth, async (req: AuthRequest, res): P
     return;
   }
 
-  if (!dbOrder.externalId.startsWith("demo-")) {
-    try {
-      await cancelOrder(parseInt(dbOrder.externalId, 10));
-    } catch {
-      // ignore 5SIM cancel error — update DB anyway
-    }
+  try {
+    await cancelOrder(parseInt(dbOrder.externalId, 10));
+  } catch {
+    // ignore 5SIM cancel error — update DB anyway
   }
 
   // Cancel order + refund balance in one transaction
