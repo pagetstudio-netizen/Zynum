@@ -163,7 +163,7 @@ export default function Recharge() {
                 onClick={() => { setSelectedAmount(amt); setCustomAmount(""); }}
                 className={`py-3 rounded-xl border text-sm font-bold transition-all ${
                   active
-                    ? "border-primary/50 bg-primary/10 text-white shadow-lg shadow-primary/10"
+                    ? "border-primary/50 bg-primary/10 text-primary shadow-lg shadow-primary/10"
                     : "border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:bg-white/[0.06] hover:text-white"
                 }`}
               >

@@ -181,25 +181,33 @@ html.light .text-white\/60 {
 }
 html.light .hover\:text-white:hover { color: hsl(222,47%,5%) !important; }
 
-/* ── 2. Restore white text on colored buttons / badges (same element) ─────── */
-html.light [class*="bg-primary"].text-white,
-html.light [class*="bg-blue-"].text-white,
-html.light [class*="bg-green-"].text-white,
-html.light [class*="bg-red-"].text-white,
-html.light [class*="bg-orange-"].text-white,
-html.light [class*="bg-teal-"].text-white,
-html.light [class*="bg-cyan-"].text-white,
-html.light [class*="bg-indigo-"].text-white,
-html.light [class*="bg-violet-"].text-white,
+/* ── 2. Restore white text on SOLID colored buttons / badges (same element) ── *
+ * Uses exact class selector (.bg-primary) so bg-primary/10, bg-primary/20     *
+ * (very light tints) are NOT matched — they're too pale for white text.        */
+html.light .bg-primary.text-white,
+html.light [class*="bg-blue-5"].text-white,
+html.light [class*="bg-blue-6"].text-white,
+html.light [class*="bg-green-5"].text-white,
+html.light [class*="bg-green-6"].text-white,
+html.light [class*="bg-red-5"].text-white,
+html.light [class*="bg-red-6"].text-white,
+html.light [class*="bg-orange-5"].text-white,
+html.light [class*="bg-teal-5"].text-white,
+html.light [class*="bg-cyan-5"].text-white,
+html.light [class*="bg-indigo-5"].text-white,
+html.light [class*="bg-violet-5"].text-white,
 html.light [class*="from-primary"].text-white { color: #ffffff !important; }
 
-/* ── 3. Restore white text for children INSIDE colored containers ─────────── */
-html.light [class*="bg-primary"] .text-white,
-html.light [class*="bg-blue-"] .text-white,
-html.light [class*="bg-green-"] .text-white,
-html.light [class*="bg-red-"] .text-white,
-html.light [class*="bg-orange-"] .text-white,
-html.light [class*="bg-teal-"] .text-white,
+/* ── 3. Restore white text for children INSIDE solid colored containers ────── */
+html.light .bg-primary .text-white,
+html.light [class*="bg-blue-5"] .text-white,
+html.light [class*="bg-blue-6"] .text-white,
+html.light [class*="bg-green-5"] .text-white,
+html.light [class*="bg-green-6"] .text-white,
+html.light [class*="bg-red-5"] .text-white,
+html.light [class*="bg-red-6"] .text-white,
+html.light [class*="bg-orange-5"] .text-white,
+html.light [class*="bg-teal-5"] .text-white,
 html.light [class*="from-primary"] .text-white { color: #ffffff !important; }
 
 /* ── 4. Elements with explicit dark inline backgrounds keep white text ───── */
