@@ -136,6 +136,27 @@ html.light {
 .bg-surface        { background-color: var(--color-surface) !important; }
 .bg-surface-raised { background-color: var(--color-surface-raised) !important; }
 
+/* ── Grid overlay — adapts dark/light ────────────────────────────────────── */
+.grid-overlay-60 {
+  background-image:
+    linear-gradient(hsl(var(--foreground) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.grid-overlay-50 {
+  background-image:
+    linear-gradient(hsl(var(--foreground) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+html.light .grid-overlay-60,
+html.light .grid-overlay-50 {
+  /* Slightly stronger contrast in light mode so the grid stays visible */
+  background-image:
+    linear-gradient(hsl(var(--foreground) / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.07) 1px, transparent 1px);
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    LIGHT MODE — complete override set
    ════════════════════════════════════════════════════════════════════════════ */

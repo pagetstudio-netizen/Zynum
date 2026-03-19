@@ -82,14 +82,7 @@ export default function ApiDocs() {
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/10 blur-[120px] rounded-full" />
           <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-purple-500/5 blur-[80px] rounded-full" />
-          <div
-            className="absolute inset-0 opacity-[0.025]"
-            style={{
-              backgroundImage:
-                "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
-              backgroundSize: "50px 50px",
-            }}
-          />
+          <div className="absolute inset-0 grid-overlay-50" />
         </div>
 
         <div className="container max-w-4xl mx-auto px-4 text-center relative z-10">

@@ -69,8 +69,7 @@ export default function Home() {
           <div className="absolute bottom-0 right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/15 blur-[100px]" />
           <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] rounded-full bg-cyan-500/10 blur-[80px]" />
           {/* Grid overlay */}
-          <div className="absolute inset-0 opacity-[0.03]"
-            style={{ backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+          <div className="absolute inset-0 grid-overlay-60" />
         </div>
 
         <div className="container max-w-7xl mx-auto px-4 relative z-10 py-24 flex flex-col lg:flex-row items-center gap-16">
