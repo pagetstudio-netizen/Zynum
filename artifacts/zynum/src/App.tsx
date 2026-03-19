@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,7 +10,6 @@ import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import BuyNumber from "@/pages/buy";
-import OrderHistory from "@/pages/history";
 import Dashboard from "@/pages/dashboard";
 import About from "@/pages/about";
 import FAQ from "@/pages/faq";
@@ -41,7 +40,7 @@ function Router() {
             <Route path="/login" component={Login} />
             <Route path="/register" component={Register} />
             <Route path="/buy" component={BuyNumber} />
-            <Route path="/history" component={OrderHistory} />
+            <Route path="/history">{() => <Redirect to="/dashboard" />}</Route>
             <Route path="/aide" component={HelpCenter} />
             <Route path="/about" component={About} />
             <Route path="/faq" component={FAQ} />

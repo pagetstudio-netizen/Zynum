@@ -25,10 +25,11 @@ export default function Register() {
         localStorage.setItem("zynum_token", data.token);
         queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
         toast({
-          title: "Account created!",
-          description: "Welcome to ZyNum.",
+          title: "Compte créé avec succès !",
+          description: "Bienvenue sur ZyNum.",
         });
-        setLocation("/dashboard");
+        const hasPendingBuy = !!sessionStorage.getItem("zynum_buy_intent");
+        setLocation(hasPendingBuy ? "/dashboard?tab=buy" : "/dashboard");
       },
       onError: (error: any) => {
         toast({

@@ -23,10 +23,12 @@ export default function Login() {
         localStorage.setItem("zynum_token", data.token);
         queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
         toast({
-          title: "Welcome back!",
-          description: "You have successfully logged in.",
+          title: "Connecté avec succès !",
+          description: "Bienvenue sur ZyNum.",
         });
-        setLocation("/dashboard");
+        // If there's a pending buy intent, go to dashboard buy tab
+        const hasPendingBuy = !!sessionStorage.getItem("zynum_buy_intent");
+        setLocation(hasPendingBuy ? "/dashboard?tab=buy" : "/dashboard");
       },
       onError: (error: any) => {
         toast({

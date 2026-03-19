@@ -512,6 +512,27 @@ export default function Dashboard() {
     return () => window.removeEventListener("zynum:tab", handler);
   }, []);
 
+  // Handle redirect from public /buy page — auto-switch to buy tab and pre-fill service+country
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tab") === "buy") {
+      setActiveTab("buy");
+      // Replace URL to remove query params without reloading
+      window.history.replaceState({}, "", window.location.pathname);
+      // Dispatch intent to BuyNumber after it mounts
+      const intent = sessionStorage.getItem("zynum_buy_intent");
+      if (intent) {
+        sessionStorage.removeItem("zynum_buy_intent");
+        try {
+          const parsed = JSON.parse(intent);
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("zynum:buy-intent", { detail: parsed }));
+          }, 150);
+        } catch {}
+      }
+    }
+  }, []);
+
   React.useEffect(() => {
     if (!isLoading && !user) {
       setLocation("/login");
@@ -691,7 +712,7 @@ export default function Dashboard() {
               transition={{ duration: 0.2 }}
             >
               {activeTab === "overview"  && <Overview currency={currency} formatPrice={formatPrice} />}
-              {activeTab === "buy"       && <BuyNumber />}
+              {activeTab === "buy"       && <BuyNumber isEmbedded={true} />}
               {activeTab === "history"   && <OrderHistory />}
               {activeTab === "recharge"  && <Recharge />}
               {activeTab === "profile"   && <Profile user={user} />}

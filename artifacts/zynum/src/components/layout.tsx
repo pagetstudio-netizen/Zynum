@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Menu, X, Phone, History, LogOut, Wallet,
+  Menu, X, Phone, LogOut, Wallet,
   ArrowUpRight, MessageSquare, Globe2, Shield, HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -61,9 +61,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   });
 
   const navLinks = [
-    { href: "/buy",     label: "Acheter",    icon: <Phone      className="w-4 h-4 mr-2" /> },
-    { href: "/history", label: "Historique", icon: <History    className="w-4 h-4 mr-2" /> },
-    { href: "/aide",    label: "Aide",       icon: <HelpCircle className="w-4 h-4 mr-2" /> },
+    { href: "/buy",     label: "Acheter",    icon: <Phone         className="w-4 h-4 mr-2" /> },
+    { href: "/aide",    label: "Aide",       icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
     { href: "/contact", label: "Contact",    icon: <MessageSquare className="w-4 h-4 mr-2" /> },
   ];
 

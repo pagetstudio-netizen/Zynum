@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Loader2, CheckCircle2, Copy, AlertCircle,
@@ -163,9 +163,10 @@ function StepPage({ children, dir = 1 }: { children: React.ReactNode; dir?: numb
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-export default function BuyNumber() {
+export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean }) {
   const { currency } = useCurrency();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { data: user, isLoading: isUserLoading } = useGetCurrentUser({ query: { retry: false } });
   const { data: balanceData, refetch: refetchBalance } = useGetBalance({ query: { enabled: !!user, retry: false } });
@@ -179,6 +180,21 @@ export default function BuyNumber() {
   const [selectedOperator, setSelectedOperator] = useState<string | null>(null);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [buyCount, setBuyCount] = useState(0);
+
+  // Listen for buy-intent event dispatched by dashboard when arriving from public /buy page
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { service, country } = (e as CustomEvent<{ service: string; country: string }>).detail;
+      if (service) setSelectedService(service);
+      if (country) {
+        setSelectedCountry(country);
+        setDir(1);
+        setStep("operator");
+      }
+    };
+    window.addEventListener("zynum:buy-intent", handler);
+    return () => window.removeEventListener("zynum:buy-intent", handler);
+  }, []);
 
   const { data: servicesData, isLoading: isLoadingServices } = useGetServices();
   const { data: countriesData, isLoading: isLoadingCountries } = useGetCountries(
@@ -275,24 +291,8 @@ export default function BuyNumber() {
   const selectedCountryInfo  = countriesData?.countries.find((c) => c.code === selectedCountry);
   const operators = operatorsData?.operators ?? [];
 
-  // ── Auth guard ──────────────────────────────────────────────────────────────
-  if (isUserLoading) return <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-20 h-20 bg-card/60 border border-white/10 rounded-2xl flex items-center justify-center mb-6">
-          <Lock className="w-10 h-10 text-muted-foreground" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Connexion requise</h2>
-        <p className="text-muted-foreground mb-6 max-w-sm">Connectez-vous pour acheter des numéros virtuels.</p>
-        <div className="flex gap-3">
-          <Link href="/login"><Button className="bg-primary text-white">Se connecter</Button></Link>
-          <Link href="/register"><Button variant="outline" className="border-white/20 text-white">Créer un compte</Button></Link>
-        </div>
-      </div>
-    );
-  }
+  // Show spinner only in embedded (dashboard) mode while auth loads
+  if (isEmbedded && isUserLoading) return <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   // ── Shared balance pill ─────────────────────────────────────────────────────
   const BalancePill = () => (
@@ -343,7 +343,7 @@ export default function BuyNumber() {
             <h1 className="text-2xl font-bold text-white">Quel service voulez-vous vérifier ?</h1>
             <p className="text-muted-foreground text-sm mt-1">Choisissez l'application pour laquelle vous souhaitez recevoir un code OTP.</p>
           </div>
-          <BalancePill />
+          {user && <BalancePill />}
         </div>
 
         {/* Search */}
@@ -417,7 +417,17 @@ export default function BuyNumber() {
                   <p className="text-xs text-muted-foreground">Service sélectionné</p>
                   <p className="font-bold text-white">{selectedServiceInfo.name}</p>
                 </div>
-                <BalancePill />
+                {user && <BalancePill />}
+              </div>
+            )}
+
+            {/* If not logged in on public page, show login nudge */}
+            {!user && !isEmbedded && (
+              <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl border border-primary/20 bg-primary/5">
+                <Lock className="w-5 h-5 text-primary shrink-0" />
+                <p className="text-sm text-muted-foreground flex-1">
+                  Sélectionnez un pays — vous serez invité à vous connecter pour finaliser.
+                </p>
               </div>
             )}
 
@@ -449,7 +459,24 @@ export default function BuyNumber() {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(i * 0.025, 0.3) }}
-                      onClick={() => { setSelectedCountry(country.code); goTo("operator"); }}
+                      onClick={() => {
+                        setSelectedCountry(country.code);
+                        if (isEmbedded) {
+                          // Inside dashboard: normal flow
+                          goTo("operator");
+                        } else {
+                          // Public page: save intent and redirect
+                          sessionStorage.setItem("zynum_buy_intent", JSON.stringify({
+                            service: selectedService,
+                            country: country.code,
+                          }));
+                          if (user) {
+                            setLocation("/dashboard");
+                          } else {
+                            setLocation("/login");
+                          }
+                        }
+                      }}
                       className="w-full flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 text-left transition-all group"
                     >
                       <div className="flex items-center gap-3">
@@ -506,7 +533,7 @@ export default function BuyNumber() {
                 <p className="font-bold text-white text-lg">{selectedServiceInfo?.name}</p>
                 <p className="text-muted-foreground text-sm">{selectedCountryInfo?.name}</p>
               </div>
-              <BalancePill />
+              {user && <BalancePill />}
             </div>
 
             <div className="mb-5">
