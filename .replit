@@ -29,5 +29,9 @@ timeoutMs = 20000
 
 [userenv.development]
 
+[userenv.shared]
+VITE_PAXITY_API_KEY = "private_3mdRuLok6Pe7rcUm2WhbN7KN6pDD6EVl"
+VITE_PAXITY_API_TOKEN = "4HoB2042mb89DQ2oOd1T9lNv7rAcXjyl"
+
 [nix]
 channel = "stable-25_05"
