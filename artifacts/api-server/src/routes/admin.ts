@@ -294,15 +294,88 @@ router.delete("/v1/admin/social-links/:id", ...auth, async (req, res): Promise<v
 });
 
 /* ─── COUNTRY OVERRIDES ──────────────────────────────────────────────── */
+
+// Admin: get ALL 5SIM countries merged with overrides (for management)
+router.get("/v1/admin/countries/all", ...auth, async (req, res): Promise<void> => {
+  try {
+    const { getCountriesForService } = await import("../lib/fivesim.js");
+    const service = typeof req.query.service === "string" ? req.query.service : "telegram";
+    const [countries, overrides] = await Promise.all([
+      getCountriesForService(service),
+      db.select().from(countryOverridesTable),
+    ]);
+
+    const overrideMap = new Map(overrides.map((o) => [o.countrySlug, o]));
+
+    const merged = countries.map((c) => {
+      const ov = overrideMap.get(c.code);
+      return {
+        code: c.code,
+        name: c.name,
+        flag: c.flag,
+        priceUsd: c.priceUsd,
+        available: c.available,
+        override: ov ?? null,
+        isDisabled: ov?.isDisabled ?? false,
+        priceMultiplier: ov?.priceMultiplier ?? 1.0,
+        overrideId: ov?.id ?? null,
+      };
+    });
+
+    merged.sort((a, b) => a.name.localeCompare(b.name));
+    res.json({ countries: merged, total: merged.length, disabled: merged.filter((c) => c.isDisabled).length });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to load countries" });
+  }
+});
+
+// Admin: list only overrides
 router.get("/v1/admin/countries", ...auth, async (req, res): Promise<void> => {
   const overrides = await db.select().from(countryOverridesTable).orderBy(countryOverridesTable.countryName);
   res.json({ overrides });
 });
 
+// Admin: upsert override for a country (by slug)
 router.post("/v1/admin/countries", ...auth, async (req, res): Promise<void> => {
   const { countrySlug, countryName, isDisabled, priceMultiplier } = req.body;
-  const [c] = await db.insert(countryOverridesTable).values({ countrySlug, countryName, isDisabled: isDisabled ?? false, priceMultiplier: priceMultiplier ?? 1.0 }).onConflictDoUpdate({ target: countryOverridesTable.countrySlug, set: { isDisabled, priceMultiplier, countryName } }).returning();
+  const [c] = await db.insert(countryOverridesTable)
+    .values({ countrySlug, countryName, isDisabled: isDisabled ?? false, priceMultiplier: priceMultiplier ?? 1.0 })
+    .onConflictDoUpdate({
+      target: countryOverridesTable.countrySlug,
+      set: { isDisabled: isDisabled ?? false, priceMultiplier: priceMultiplier ?? 1.0, countryName },
+    })
+    .returning();
   res.json({ success: true, override: c });
+});
+
+// Admin: update override fields (toggle disable, set multiplier)
+router.patch("/v1/admin/countries/by-slug/:slug", ...auth, async (req, res): Promise<void> => {
+  const slug = req.params.slug;
+  const { isDisabled, priceMultiplier, countryName } = req.body;
+
+  const existing = await db.select().from(countryOverridesTable)
+    .where(eq(countryOverridesTable.countrySlug, slug))
+    .then((r) => r[0]);
+
+  if (existing) {
+    const updates: Record<string, unknown> = {};
+    if (isDisabled !== undefined) updates.isDisabled = isDisabled;
+    if (priceMultiplier !== undefined) updates.priceMultiplier = priceMultiplier;
+    if (countryName !== undefined) updates.countryName = countryName;
+    const [c] = await db.update(countryOverridesTable).set(updates as any)
+      .where(eq(countryOverridesTable.countrySlug, slug)).returning();
+    res.json({ success: true, override: c });
+  } else {
+    const [c] = await db.insert(countryOverridesTable)
+      .values({
+        countrySlug: slug,
+        countryName: countryName ?? slug,
+        isDisabled: isDisabled ?? false,
+        priceMultiplier: priceMultiplier ?? 1.0,
+      })
+      .returning();
+    res.json({ success: true, override: c });
+  }
 });
 
 router.patch("/v1/admin/countries/:id", ...auth, async (req, res): Promise<void> => {
