@@ -55,100 +55,103 @@ export default function Register() {
     registerMutation.mutate({ data: { name: fullName, email, password, confirmPassword } });
   };
 
-  return (
-    <div className="min-h-screen w-full flex flex-col px-6 py-10" style={{ background: "#FAFAF5" }}>
+  const inputClass =
+    "w-full h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20";
 
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-8">
-        <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
-          <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-        </div>
-        <span className="font-bold text-lg text-[#1A1A1A] tracking-tight">ZyNum</span>
-      </div>
+  return (
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-10 bg-background">
 
       <div className="w-full max-w-sm">
 
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 mb-8">
+          <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
+            <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
+          </div>
+          <span className="font-bold text-lg text-white tracking-tight">ZyNum</span>
+        </div>
+
         {/* Title */}
-        <h1 className="text-[2.1rem] font-extrabold text-[#1A1A1A] leading-tight mb-2">
+        <h1 className="text-3xl font-extrabold text-white leading-tight mb-2">
           Créer un compte
         </h1>
-        <p className="text-[15px] text-[#555] mb-8">
+        <p className="text-[15px] text-muted-foreground mb-8">
           Déjà utilisateur de ZyNum ?{" "}
-          <Link href="/login" className="text-[#E8A000] font-semibold hover:underline">
+          <Link href="/login" className="text-primary font-semibold hover:underline">
             Connectez-vous ici
           </Link>
         </p>
 
         {/* Error */}
         {registerMutation.isError && (
-          <div className="mb-5 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-sm">
-            {registerMutation.error?.response?.data?.message || "Impossible de créer le compte."}
+          <div className="mb-5 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {(registerMutation.error as any)?.response?.data?.message || "Impossible de créer le compte."}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* First name */}
-          <div>
-            <label className="block text-[13px] font-semibold text-[#333] mb-2">
-              Prénom <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBBBC0]" />
-              <input
-                type="text"
-                placeholder="Jean"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-                className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-[#E8E8E8] text-[#1A1A1A] text-[15px] outline-none transition-all focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 placeholder:text-[#BBBBC0]"
-              />
+          {/* First + Last name row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
+                Prénom <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                <input
+                  type="text"
+                  placeholder="Jean"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Last name */}
-          <div>
-            <label className="block text-[13px] font-semibold text-[#333] mb-2">
-              Nom <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBBBC0]" />
-              <input
-                type="text"
-                placeholder="Dupont"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-                className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-[#E8E8E8] text-[#1A1A1A] text-[15px] outline-none transition-all focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 placeholder:text-[#BBBBC0]"
-              />
+            <div>
+              <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
+                Nom <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                <input
+                  type="text"
+                  placeholder="Dupont"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
             </div>
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-[13px] font-semibold text-[#333] mb-2">
-              Adresse email <span className="text-red-500">*</span>
+            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
+              Adresse email <span className="text-red-400">*</span>
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBBBC0]" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
               <input
                 type="email"
                 placeholder="votre@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-[#E8E8E8] text-[#1A1A1A] text-[15px] outline-none transition-all focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 placeholder:text-[#BBBBC0]"
+                className={inputClass}
               />
             </div>
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-[13px] font-semibold text-[#333] mb-2">
-              Mot de passe <span className="text-red-500">*</span>
+            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
+              Mot de passe <span className="text-red-400">*</span>
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBBBC0]" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
@@ -156,9 +159,13 @@ export default function Register() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white border border-[#E8E8E8] text-[#1A1A1A] text-[15px] outline-none transition-all focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 placeholder:text-[#BBBBC0]"
+                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20"
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#BBBBC0] hover:text-[#888]">
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+              >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
@@ -166,28 +173,35 @@ export default function Register() {
 
           {/* Confirm password */}
           <div>
-            <label className="block text-[13px] font-semibold text-[#333] mb-2">
-              Confirmer le mot de passe <span className="text-red-500">*</span>
+            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
+              Confirmer le mot de passe <span className="text-red-400">*</span>
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBBBC0]" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
               <input
                 type={showConfirm ? "text" : "password"}
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white border border-[#E8E8E8] text-[#1A1A1A] text-[15px] outline-none transition-all focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 placeholder:text-[#BBBBC0]"
+                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20"
               />
-              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#BBBBC0] hover:text-[#888]">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+              >
                 {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            {confirmPassword && password !== confirmPassword && (
+              <p className="text-xs text-red-400 mt-1.5">Les mots de passe ne correspondent pas.</p>
+            )}
           </div>
 
           {/* Terms checkbox */}
-          <label className="flex items-start gap-3 cursor-pointer mt-1">
-            <div className="relative mt-0.5">
+          <label className="flex items-start gap-3 cursor-pointer mt-1 select-none">
+            <div className="relative mt-0.5 shrink-0">
               <input
                 type="checkbox"
                 checked={acceptTerms}
@@ -196,19 +210,21 @@ export default function Register() {
               />
               <div
                 className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                  acceptTerms ? "bg-[#FFC107] border-[#FFC107]" : "border-[#CCCCCC] bg-white"
+                  acceptTerms
+                    ? "bg-primary border-primary"
+                    : "border-white/20 bg-white/5"
                 }`}
               >
                 {acceptTerms && (
-                  <svg className="w-3 h-3 text-[#1A1A1A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 )}
               </div>
             </div>
-            <span className="text-[14px] text-[#555] leading-snug">
+            <span className="text-[14px] text-muted-foreground leading-snug">
               J'accepte les{" "}
-              <Link href="/terms" className="text-[#E8A000] font-semibold hover:underline">
+              <Link href="/terms" className="text-primary font-semibold hover:underline">
                 termes et conditions
               </Link>
             </span>
@@ -217,18 +233,29 @@ export default function Register() {
           {/* CTA */}
           <button
             type="submit"
-            disabled={registerMutation.isPending || !firstName || !email || !password || !confirmPassword || !acceptTerms}
-            className="w-full h-14 rounded-2xl font-extrabold text-[#1A1A1A] text-[16px] transition-all mt-2 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98]"
-            style={{ background: "#FFC107", boxShadow: "0 4px 20px rgba(255,193,7,0.35)" }}
+            disabled={
+              registerMutation.isPending ||
+              !firstName ||
+              !email ||
+              !password ||
+              !confirmPassword ||
+              !acceptTerms ||
+              password !== confirmPassword
+            }
+            className="w-full h-14 rounded-2xl font-extrabold text-white text-[16px] transition-all mt-2 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
           >
-            {registerMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Créer un compte"}
+            {registerMutation.isPending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              "Créer un compte"
+            )}
           </button>
         </form>
 
         {/* Footer */}
-        <p className="text-center text-[13px] text-[#999] mt-8 leading-relaxed">
+        <p className="text-center text-[13px] text-muted-foreground mt-8 leading-relaxed">
           Avez-vous précédemment acheté sur ZyNum ?{" "}
-          <Link href="/login" className="text-[#E8A000] font-semibold hover:underline">
+          <Link href="/login" className="text-primary font-semibold hover:underline">
             Accéder à vos achats ici
           </Link>
         </p>

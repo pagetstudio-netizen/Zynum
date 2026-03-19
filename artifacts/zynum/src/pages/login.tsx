@@ -42,52 +42,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col px-6 py-10" style={{ background: "#FAFAF5" }}>
-
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-10">
-        <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
-          <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-        </div>
-        <span className="font-bold text-lg text-[#1A1A1A] tracking-tight">ZyNum</span>
-      </div>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-10 bg-background">
 
       <div className="w-full max-w-sm">
 
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 mb-10">
+          <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
+            <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
+          </div>
+          <span className="font-bold text-lg text-white tracking-tight">ZyNum</span>
+        </div>
+
         {/* Title */}
-        <h1 className="text-[2.1rem] font-extrabold text-[#1A1A1A] leading-tight mb-2">
+        <h1 className="text-3xl font-extrabold text-white leading-tight mb-2">
           Se connecter
         </h1>
-        <p className="text-[15px] text-[#555] mb-8">
+        <p className="text-[15px] text-muted-foreground mb-8">
           Pas encore de compte ?{" "}
-          <Link href="/register" className="text-[#E8A000] font-semibold hover:underline">
+          <Link href="/register" className="text-primary font-semibold hover:underline">
             Créer un compte
           </Link>
         </p>
 
-        {/* SSO-style button */}
-        <button
-          type="button"
-          onClick={() => toast({ title: "Bientôt disponible", description: "Cette option sera disponible prochainement." })}
-          className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-white border border-[#E8E8E8] shadow-sm hover:shadow-md transition-all mb-6"
-        >
-          <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
-            <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-          </div>
-          <span className="text-[15px] font-semibold text-[#1A1A1A]">Se connecter avec ZyNum SSO</span>
-        </button>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-[#E8E8E8]" />
-          <span className="text-sm text-[#999] font-medium">Ou</span>
-          <div className="flex-1 h-px bg-[#E8E8E8]" />
-        </div>
-
         {/* Error */}
         {loginMutation.isError && (
-          <div className="mb-5 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-sm">
-            {loginMutation.error?.response?.data?.message || "Email ou mot de passe incorrect."}
+          <div className="mb-5 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {(loginMutation.error as any)?.response?.data?.message || "Email ou mot de passe incorrect."}
           </div>
         )}
 
@@ -95,18 +76,18 @@ export default function Login() {
 
           {/* Email */}
           <div>
-            <label className="block text-[13px] font-semibold text-[#333] mb-2">
-              Adresse email <span className="text-red-500">*</span>
+            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
+              Adresse email <span className="text-red-400">*</span>
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBBBC0]" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
               <input
                 type="email"
                 placeholder="votre@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-[#E8E8E8] text-[#1A1A1A] text-[15px] outline-none transition-all focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 placeholder:text-[#BBBBC0]"
+                className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20"
               />
             </div>
           </div>
@@ -114,27 +95,27 @@ export default function Login() {
           {/* Password */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[13px] font-semibold text-[#333]">
-                Mot de passe <span className="text-red-500">*</span>
+              <label className="text-[13px] font-semibold text-muted-foreground">
+                Mot de passe <span className="text-red-400">*</span>
               </label>
-              <a href="#" className="text-[12px] text-[#E8A000] font-semibold hover:underline">
+              <a href="#" className="text-[12px] text-primary font-semibold hover:underline">
                 Mot de passe oublié ?
               </a>
             </div>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBBBC0]" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white border border-[#E8E8E8] text-[#1A1A1A] text-[15px] outline-none transition-all focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 placeholder:text-[#BBBBC0]"
+                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#BBBBC0] hover:text-[#888]"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -145,17 +126,20 @@ export default function Login() {
           <button
             type="submit"
             disabled={loginMutation.isPending || !email || !password}
-            className="w-full h-14 rounded-2xl font-extrabold text-[#1A1A1A] text-[16px] transition-all mt-2 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98]"
-            style={{ background: "#FFC107", boxShadow: "0 4px 20px rgba(255,193,7,0.35)" }}
+            className="w-full h-14 rounded-2xl font-extrabold text-white text-[16px] transition-all mt-2 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
           >
-            {loginMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Se connecter"}
+            {loginMutation.isPending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              "Se connecter"
+            )}
           </button>
         </form>
 
         {/* Footer */}
-        <p className="text-center text-[13px] text-[#999] mt-8 leading-relaxed">
+        <p className="text-center text-[13px] text-muted-foreground mt-8 leading-relaxed">
           Avez-vous précédemment acheté sur ZyNum ?{" "}
-          <Link href="/register" className="text-[#E8A000] font-semibold hover:underline">
+          <Link href="/register" className="text-primary font-semibold hover:underline">
             Accéder à votre compte ici
           </Link>
         </p>
