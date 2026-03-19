@@ -68,7 +68,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-x-hidden" style={{ background: "hsl(222, 47%, 5%)" }}>
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-background">
       {/* Ambient top glow */}
       <div className="absolute top-0 inset-x-0 h-[500px] pointer-events-none z-0">
         <div className="absolute top-[-20%] left-[10%] w-[500px] h-[500px] rounded-full bg-primary/8 blur-[120px]" />
@@ -76,7 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ── Navbar ───────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[hsl(222,47%,5%)]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-background/80 backdrop-blur-xl">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-18 py-4">
 
@@ -190,8 +190,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.25 }}
-            className="md:hidden fixed inset-0 z-50 flex flex-col"
-            style={{ background: "hsl(222, 47%, 5%)" }}
+            className="md:hidden fixed inset-0 z-50 flex flex-col bg-background"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08]">
@@ -311,7 +310,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="relative z-10 border-t border-white/[0.06]" style={{ background: "hsl(222, 47%, 4%)" }}>
+      <footer className="relative z-10 border-t border-white/[0.06] bg-surface"
+        style={{ background: "hsl(var(--surface))" }}>
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Main footer grid */}
@@ -389,7 +389,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </button>
         </Link>
         <Link href="/aide">
-          <button className="w-12 h-12 bg-[hsl(222,47%,12%)] hover:bg-[hsl(222,47%,16%)] border border-white/10 text-white rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center" title="Centre d'aide">
+          <button className="w-12 h-12 bg-card hover:bg-card/80 border border-white/10 text-white rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center" title="Centre d'aide">
             <HelpCircle className="w-5 h-5" />
           </button>
         </Link>

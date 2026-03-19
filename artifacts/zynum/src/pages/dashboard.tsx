@@ -435,7 +435,7 @@ function UserWidget({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-white/10 bg-[hsl(222,47%,8%)] shadow-2xl shadow-black/50 overflow-hidden z-50"
+            className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-white/10 bg-card shadow-2xl shadow-black/50 overflow-hidden z-50"
           >
             {/* User info */}
             <div className="px-4 py-3 border-b border-white/[0.06]">
@@ -520,7 +520,7 @@ export default function Dashboard() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(222, 47%, 5%)" }}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -538,7 +538,7 @@ export default function Dashboard() {
     currency === "FCFA" ? `${Math.round(v * 620).toLocaleString()} FCFA` : `$${v.toFixed(2)}`;
 
   return (
-    <div className="min-h-screen flex" style={{ background: "hsl(222, 47%, 5%)" }}>
+    <div className="min-h-screen flex bg-background">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/60 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
@@ -550,7 +550,7 @@ export default function Dashboard() {
         flex flex-col transition-transform duration-300
         lg:static lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `} style={{ background: "hsl(222, 47%, 7%)" }}>
+      `} style={{ background: "hsl(var(--surface))" }}>
 
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
