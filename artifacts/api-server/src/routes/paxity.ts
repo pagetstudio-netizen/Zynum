@@ -7,6 +7,18 @@ const router: IRouter = Router();
 const FCFA_PER_USD   = 620;
 const PAXITY_TX_BASE = "https://transaction.paxity.io/api/v1";
 
+// Mapping from our operator keys to Paxity payment method IDs
+const OPERATOR_TO_PAXITY_ID: Record<string, { id: string; prefix: string; country: string }> = {
+  WAVESN:    { id: "WAVESN",  prefix: "221", country: "SN" },
+  OMSN:      { id: "OMSN",   prefix: "221", country: "SN" },
+  WAVE:      { id: "WAVESN",  prefix: "221", country: "SN" },
+  ORANGE:    { id: "OMSN",   prefix: "221", country: "SN" },
+  WAVECI:    { id: "WAVECI",  prefix: "225", country: "CI" },
+  OMCI:      { id: "OMCI",   prefix: "225", country: "CI" },
+  MTNCI:     { id: "MTNCI",  prefix: "225", country: "CI" },
+  MOOVCI:    { id: "MOOVCI", prefix: "225", country: "CI" },
+};
+
 function paxityHeaders() {
   return {
     Authorization: `Bearer ${process.env.PAXITY_APP_TOKEN ?? ""}`,
@@ -32,13 +44,14 @@ async function verifyPaxityTransaction(reference: string): Promise<{
     );
     if (!res.ok) return { verified: false, status: `api_error_${res.status}` };
     const data = (await res.json()) as Record<string, unknown>;
-    const status = String(data.status ?? data.transactionStatus ?? "").toUpperCase();
+    const txData = (data.data ?? data) as Record<string, unknown>;
+    const status = String(txData.status ?? data.status ?? "").toUpperCase();
     return {
       verified: status === "SUCCESS" || status === "COMPLETED" || status === "PAID",
       status,
-      amount:   Number(data.amount ?? 0),
-      currency: String(data.currency ?? "XOF"),
-      idClient: String(data.idClient ?? data.clientId ?? ""),
+      amount:   Number(txData.amount ?? data.amount ?? 0),
+      currency: String(txData.currency ?? data.currency ?? "XOF"),
+      idClient: String(txData.idClient ?? data.idClient ?? ""),
     };
   } catch (err) {
     console.error("[Paxity verify]", err);
@@ -46,6 +59,23 @@ async function verifyPaxityTransaction(reference: string): Promise<{
   }
 }
 
+// GET /v1/payments/paxity/methods?country=SN
+router.get("/v1/payments/paxity/methods", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const country = String(req.query.country ?? "SN").toUpperCase();
+    const paxityRes = await fetch(
+      `${PAXITY_TX_BASE}/payment-method/country/${country}`,
+      { headers: paxityHeaders() }
+    );
+    const data = (await paxityRes.json()) as Record<string, unknown>;
+    res.status(paxityRes.ok ? 200 : paxityRes.status).json(data);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    res.status(500).json({ error: message });
+  }
+});
+
+// POST /v1/payments/paxity/initiate
 router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response): Promise<void> => {
   try {
     const { method, amount, country, currency, userId, ipn, phone, operator,
@@ -57,54 +87,80 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
     }
 
     const ipnUrl = ipn || `${process.env.API_BASE_URL ?? ""}/api/v1/webhooks/paxity`;
+    const rawAmount = Math.round(Number(amount));
 
-    let paxityRes: Response;
+    let paxityRes: globalThis.Response;
 
     if (method === "mobile") {
       if (!phone || !operator) {
         res.status(400).json({ error: "Missing phone or operator for mobile payment" });
         return;
       }
+
+      // Resolve the Paxity payment method info
+      const pmInfo = OPERATOR_TO_PAXITY_ID[operator as string];
+      if (!pmInfo) {
+        res.status(400).json({ error: `Unsupported operator: ${operator}. Supported: ${Object.keys(OPERATOR_TO_PAXITY_ID).join(", ")}` });
+        return;
+      }
+
+      // Strip prefix from phone number if it was included
+      let phoneNumber = String(phone).replace(/\D/g, "");
+      if (phoneNumber.startsWith(pmInfo.prefix)) {
+        phoneNumber = phoneNumber.slice(pmInfo.prefix.length);
+      }
+      if (phoneNumber.startsWith("00" + pmInfo.prefix)) {
+        phoneNumber = phoneNumber.slice(2 + pmInfo.prefix.length);
+      }
+
+      const body = {
+        paymentMethod: pmInfo.id,
+        phoneNumber,
+        prefixPhone:   pmInfo.prefix,
+        amount:        rawAmount,
+        country:       country ?? pmInfo.country,
+        currency:      currency ?? "XOF",
+        ipn:           ipnUrl,
+        idClient:      String(userId),
+      };
+
+      console.log("[Paxity initiate/mobile] request body:", body);
+
       paxityRes = await fetch(`${PAXITY_TX_BASE}/transaction/pay-in-mobile`, {
-        method: "POST",
+        method:  "POST",
         headers: paxityHeaders(),
-        body: JSON.stringify({
-          phoneNumber: phone,
-          operator,
-          amount: Math.round(amount),
-          country:  country  ?? "SN",
-          currency: currency ?? "XOF",
-          ipn:      ipnUrl,
-          idClient: String(userId),
-        }),
-      }) as unknown as Response;
+        body:    JSON.stringify(body),
+      });
     } else if (method === "card") {
       if (!cardNumber || !expMonth || !expYear || !cvv || !holderName) {
         res.status(400).json({ error: "Missing card details" });
         return;
       }
       paxityRes = await fetch(`${PAXITY_TX_BASE}/transaction/pay-in-card-bank`, {
-        method: "POST",
+        method:  "POST",
         headers: paxityHeaders(),
-        body: JSON.stringify({
+        body:    JSON.stringify({
           holderName,
-          number:   cardNumber.replace(/\s/g, ""),
+          number:   String(cardNumber).replace(/\s/g, ""),
           expMonth: String(expMonth),
           expYear:  String(expYear),
           cvv,
-          amount:   Math.round(amount),
+          amount:   rawAmount,
           country:  country  ?? "SN",
           currency: currency ?? "XOF",
           ipn:      ipnUrl,
           idClient: String(userId),
         }),
-      }) as unknown as Response;
+      });
     } else {
       res.status(400).json({ error: "Invalid payment method" });
       return;
     }
 
-    const data: unknown = await paxityRes.json();
+    const rawBody = await paxityRes.text();
+    let data: unknown;
+    try { data = JSON.parse(rawBody); } catch { data = { raw: rawBody }; }
+
     console.log(`[Paxity initiate/${method}] status=${paxityRes.status}`, data);
     res.status(paxityRes.ok ? 200 : paxityRes.status).json(data);
   } catch (err: unknown) {
@@ -114,6 +170,7 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
   }
 });
 
+// POST /v1/webhooks/paxity  (IPN)
 router.post("/v1/webhooks/paxity", async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body ?? {};
