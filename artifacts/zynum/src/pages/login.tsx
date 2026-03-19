@@ -4,11 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useLoginUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,8 +27,8 @@ export default function Login() {
       onError: (error: any) => {
         toast({
           variant: "destructive",
-          title: "Échec de connexion",
-          description: error?.response?.data?.message || "Email ou mot de passe incorrect.",
+          title: t("login_error_title"),
+          description: error?.response?.data?.message || t("login_error_default"),
         });
       },
     },
@@ -67,16 +69,14 @@ export default function Login() {
         {/* Headline */}
         <div className="text-center mb-10">
           <h1 className="text-[2rem] leading-tight font-extrabold text-white mb-3">
-            Recevez vos codes{" "}
-            <span className="text-primary">OTP</span>{" "}
-            instantanément
+            {t("login_headline1")}{" "}
+            <span className="text-primary">{t("login_headline_accent")}</span>{" "}
+            {t("login_headline2")}
           </h1>
           {/* Blue underline accent */}
           <div className="mx-auto w-32 h-[3px] rounded-full bg-gradient-to-r from-primary to-primary/30 mb-6" />
-          <p className="text-sm font-semibold text-white mb-1">Connexion / Inscription</p>
-          <p className="text-sm text-white/50">
-            Connectez-vous ou créez un compte automatiquement.
-          </p>
+          <p className="text-sm font-semibold text-white mb-1">{t("login_subtitle")}</p>
+          <p className="text-sm text-white/50">{t("login_desc")}</p>
         </div>
 
         {/* Error banner */}
@@ -94,7 +94,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Email</label>
+              <label className="block text-sm font-medium text-white mb-2">{t("login_email")}</label>
               <input
                 type="email"
                 placeholder="votre@email.com"
@@ -102,10 +102,7 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full h-13 px-4 py-3.5 rounded-2xl text-white text-sm outline-none transition-all"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(59,130,246,0.5)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
               />
@@ -114,10 +111,8 @@ export default function Login() {
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-white">Mot de passe</label>
-                <a href="#" className="text-xs text-primary hover:text-primary/80 transition-colors">
-                  Oublié ?
-                </a>
+                <label className="text-sm font-medium text-white">{t("login_password")}</label>
+                <a href="#" className="text-xs text-primary hover:text-primary/80 transition-colors">{t("login_forgot")}</a>
               </div>
               <input
                 type="password"
@@ -126,10 +121,7 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full h-13 px-4 py-3.5 rounded-2xl text-white text-sm outline-none transition-all"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(59,130,246,0.5)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
               />
@@ -140,25 +132,18 @@ export default function Login() {
               type="submit"
               disabled={loginMutation.isPending || !email || !password}
               className="w-full h-13 rounded-2xl font-bold text-white text-base transition-all mt-2 flex items-center justify-center gap-2 disabled:opacity-60"
-              style={{
-                background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                boxShadow: "0 8px 32px rgba(59,130,246,0.35)",
-              }}
+              style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", boxShadow: "0 8px 32px rgba(59,130,246,0.35)" }}
             >
-              {loginMutation.isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                "Se connecter"
-              )}
+              {loginMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : t("login_btn")}
             </button>
           </form>
         </div>
 
         {/* Register link */}
         <p className="text-center text-sm text-white/40 mt-6">
-          Pas de compte ?{" "}
+          {t("login_no_account")}{" "}
           <Link href="/register" className="text-white/70 font-semibold hover:text-white transition-colors underline underline-offset-4">
-            Créez-en un gratuitement
+            {t("login_create_link")}
           </Link>
         </p>
       </div>

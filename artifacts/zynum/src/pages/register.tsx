@@ -4,11 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useRegisterUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,8 +29,8 @@ export default function Register() {
       onError: (error: any) => {
         toast({
           variant: "destructive",
-          title: "Échec de l'inscription",
-          description: error?.response?.data?.message || "Impossible de créer le compte.",
+          title: t("register_error_title"),
+          description: error?.response?.data?.message || t("register_error_default"),
         });
       },
     },
@@ -37,7 +39,7 @@ export default function Register() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast({ variant: "destructive", title: "Mots de passe différents", description: "Les deux mots de passe doivent correspondre." });
+      toast({ variant: "destructive", title: t("register_pwd_mismatch_title"), description: t("register_pwd_mismatch") });
       return;
     }
     if (!name || !email || !password) return;
@@ -84,14 +86,12 @@ export default function Register() {
         {/* Headline */}
         <div className="text-center mb-8">
           <h1 className="text-[1.85rem] leading-tight font-extrabold text-white mb-3">
-            Créez votre compte{" "}
-            <span className="text-primary">gratuitement</span>
+            {t("register_headline1")}{" "}
+            <span className="text-primary">{t("register_headline_accent")}</span>
           </h1>
           <div className="mx-auto w-28 h-[3px] rounded-full bg-gradient-to-r from-primary to-primary/30 mb-5" />
-          <p className="text-sm font-semibold text-white mb-1">Inscription</p>
-          <p className="text-sm text-white/50">
-            Obtenez vos premiers numéros OTP en quelques secondes.
-          </p>
+          <p className="text-sm font-semibold text-white mb-1">{t("register_subtitle")}</p>
+          <p className="text-sm text-white/50">{t("register_desc")}</p>
         </div>
 
         {/* Error banner */}
@@ -112,7 +112,7 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Nom complet</label>
+              <label className="block text-sm font-medium text-white mb-2">{t("register_name")}</label>
               <input
                 type="text"
                 placeholder="Jean Dupont"
@@ -129,7 +129,7 @@ export default function Register() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Email</label>
+              <label className="block text-sm font-medium text-white mb-2">{t("register_email")}</label>
               <input
                 type="email"
                 placeholder="votre@email.com"
@@ -145,7 +145,7 @@ export default function Register() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Mot de passe</label>
+              <label className="block text-sm font-medium text-white mb-2">{t("register_password")}</label>
               <input
                 type="password"
                 placeholder="••••••••"
@@ -162,7 +162,7 @@ export default function Register() {
 
             {/* Confirm password */}
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Confirmer le mot de passe</label>
+              <label className="block text-sm font-medium text-white mb-2">{t("register_confirm")}</label>
               <input
                 type="password"
                 placeholder="••••••••"
@@ -188,18 +188,16 @@ export default function Register() {
             >
               {registerMutation.isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                "Créer mon compte"
-              )}
+              ) : t("register_btn")}
             </button>
           </form>
         </div>
 
         {/* Login link */}
         <p className="text-center text-sm text-white/40 mt-6">
-          Déjà un compte ?{" "}
+          {t("register_has_account")}{" "}
           <Link href="/login" className="text-white/70 font-semibold hover:text-white transition-colors underline underline-offset-4">
-            Se connecter
+            {t("register_login_link")}
           </Link>
         </p>
       </div>

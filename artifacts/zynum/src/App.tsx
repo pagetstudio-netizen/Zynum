@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { CurrencyProvider } from "@/hooks/use-currency";
+import { LanguageProvider } from "@/hooks/use-language";
 import { Layout } from "@/components/layout";
 
 import Home from "@/pages/home";
@@ -60,12 +61,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <CurrencyProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </CurrencyProvider>
+        <LanguageProvider>
+          <CurrencyProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </CurrencyProvider>
+        </LanguageProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

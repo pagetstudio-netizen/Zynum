@@ -7,39 +7,15 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency } from "@/hooks/use-currency";
+import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useGetCurrentUser, useLogoutUser, getGetCurrentUserQueryKey, useGetBalance } from "@workspace/api-client-react";
-
-const FOOTER_LINKS = {
-  Produit: [
-    { label: "Acheter un numéro", href: "/buy" },
-    { label: "Historique", href: "/history" },
-    { label: "Dashboard", href: "/dashboard" },
-    { label: "Centre d'aide", href: "/aide" },
-  ],
-  Services: [
-    { label: "Telegram", href: "/buy" },
-    { label: "WhatsApp", href: "/buy" },
-    { label: "Gmail / Google", href: "/buy" },
-    { label: "TikTok & Instagram", href: "/buy" },
-  ],
-  Entreprise: [
-    { label: "À propos", href: "/about" },
-    { label: "FAQ", href: "/faq" },
-    { label: "Contact", href: "/contact" },
-    { label: "API Développeur", href: "/api-docs" },
-  ],
-  Légal: [
-    { label: "Conditions d'utilisation", href: "/terms" },
-    { label: "Politique de confidentialité", href: "/privacy" },
-    { label: "FAQ", href: "/faq" },
-  ],
-};
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { currency, setCurrency } = useCurrency();
+  const { lang, setLang, t } = useLanguage();
   const queryClient = useQueryClient();
 
   const { data: user, isLoading: isLoadingUser } = useGetCurrentUser({
@@ -61,10 +37,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
   });
 
   const navLinks = [
-    { href: "/buy",     label: "Acheter",    icon: <Phone         className="w-4 h-4 mr-2" /> },
-    { href: "/aide",    label: "Aide",       icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
-    { href: "/contact", label: "Contact",    icon: <MessageSquare className="w-4 h-4 mr-2" /> },
+    { href: "/buy",     label: t("nav_buy"),     icon: <Phone         className="w-4 h-4 mr-2" /> },
+    { href: "/aide",    label: t("nav_help"),    icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
+    { href: "/contact", label: t("nav_contact"), icon: <MessageSquare className="w-4 h-4 mr-2" /> },
   ];
+
+  const footerLinks = {
+    [t("footer_product")]: [
+      { label: t("footer_buy_number"), href: "/buy" },
+      { label: t("footer_history"), href: "/history" },
+      { label: "Dashboard", href: "/dashboard" },
+      { label: t("footer_help"), href: "/aide" },
+    ],
+    [t("footer_services")]: [
+      { label: "Telegram", href: "/buy" },
+      { label: "WhatsApp", href: "/buy" },
+      { label: "Gmail / Google", href: "/buy" },
+      { label: "TikTok & Instagram", href: "/buy" },
+    ],
+    [t("footer_company")]: [
+      { label: t("footer_about"), href: "/about" },
+      { label: t("footer_faq"), href: "/faq" },
+      { label: t("nav_contact"), href: "/contact" },
+      { label: t("footer_api"), href: "/api-docs" },
+    ],
+    [t("footer_legal")]: [
+      { label: t("footer_terms"), href: "/terms" },
+      { label: t("footer_privacy"), href: "/privacy" },
+      { label: t("footer_faq"), href: "/faq" },
+    ],
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-background">
@@ -74,7 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="absolute top-[-10%] right-[5%] w-[400px] h-[400px] rounded-full bg-blue-800/10 blur-[100px]" />
       </div>
 
-      {/* ── Navbar ───────────────────────────────────────────────────────── */}
+      {/* ── Navbar ────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-background/80 backdrop-blur-xl">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-18 py-4">
@@ -117,15 +119,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="hidden md:flex items-center gap-3">
               {/* Currency toggle */}
               <div className="flex items-center bg-white/5 rounded-lg p-1 border border-white/[0.06]">
-                {["USD", "FCFA"].map((c) => (
+                {(["USD", "FCFA"] as const).map((c) => (
                   <button
                     key={c}
-                    onClick={() => setCurrency(c as "USD" | "FCFA")}
+                    onClick={() => setCurrency(c)}
                     className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
                       currency === c ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-white"
                     }`}
                   >
                     {c}
+                  </button>
+                ))}
+              </div>
+
+              {/* Language toggle */}
+              <div className="flex items-center bg-white/5 rounded-lg p-1 border border-white/[0.06]">
+                {(["fr", "en"] as const).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => setLang(l)}
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition-all uppercase ${
+                      lang === l ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-white"
+                    }`}
+                  >
+                    {l}
                   </button>
                 ))}
               </div>
@@ -158,12 +175,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center gap-2">
                   <Link href="/login">
                     <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white hover:bg-white/5 font-medium">
-                      Connexion
+                      {t("nav_login")}
                     </Button>
                   </Link>
                   <Link href="/register">
                     <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/25 rounded-lg">
-                      S'inscrire
+                      {t("nav_register")}
                     </Button>
                   </Link>
                 </div>
@@ -181,7 +198,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* ── Mobile menu — full screen overlay ────────────────────────────── */}
+      {/* ── Mobile menu — full screen overlay ─────────────────────────────── */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -215,7 +232,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center justify-between px-6 py-4 border-b border-white/[0.06] text-base font-semibold transition-colors ${location === "/" ? "text-primary bg-primary/5" : "text-white/90 hover:text-white hover:bg-white/5"}`}
               >
-                <span>Accueil</span>
+                <span>{t("nav_home")}</span>
                 {location === "/" && <div className="w-2 h-2 rounded-full bg-primary" />}
               </Link>
               {navLinks.map((link) => (
@@ -232,14 +249,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
 
+              {/* Language selector */}
+              <div className="px-6 py-4 border-b border-white/[0.06]">
+                <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wider">{t("menu_language")}</p>
+                <div className="flex items-center gap-2">
+                  {(["fr", "en"] as const).map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => setLang(l)}
+                      className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border uppercase ${
+                        lang === l
+                          ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                          : "text-muted-foreground border-white/10 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      {l === "fr" ? "🇫🇷 Français" : "🇬🇧 English"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Currency */}
               <div className="px-6 py-4 border-b border-white/[0.06]">
-                <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wider">Devise</p>
+                <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wider">{t("menu_currency")}</p>
                 <div className="flex items-center gap-2">
-                  {["USD", "FCFA"].map((c) => (
+                  {(["USD", "FCFA"] as const).map((c) => (
                     <button
                       key={c}
-                      onClick={() => setCurrency(c as "USD" | "FCFA")}
+                      onClick={() => setCurrency(c)}
                       className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border ${
                         currency === c
                           ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
@@ -274,26 +311,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <>
                   <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25">
-                      Mon Dashboard
+                      {t("nav_dashboard")}
                     </Button>
                   </Link>
                   <button
                     onClick={() => { logoutMutation.mutate(); setIsMobileMenuOpen(false); }}
                     className="w-full h-12 flex items-center justify-center gap-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-semibold text-base transition-colors"
                   >
-                    <LogOut className="w-4 h-4" /> Déconnexion
+                    <LogOut className="w-4 h-4" /> {t("nav_logout")}
                   </button>
                 </>
               ) : (
                 <>
                   <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25">
-                      Commencer gratuitement
+                      {t("nav_start_free")}
                     </Button>
                   </Link>
                   <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button variant="outline" className="w-full h-12 border-white/20 text-white hover:bg-white/10 font-semibold text-base rounded-xl">
-                      Se connecter
+                      {t("nav_login")}
                     </Button>
                   </Link>
                 </>
@@ -308,7 +345,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer className="relative z-10 border-t border-white/[0.06] bg-surface"
         style={{ background: "hsl(var(--surface))" }}>
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -325,9 +362,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <span className="font-display font-bold text-xl text-white group-hover:text-primary transition-colors">ZyNum</span>
               </Link>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-                La plateforme internationale de numéros virtuels. Recevez vos codes OTP dans 180+ pays, instantanément.
+                {t("footer_desc")}
               </p>
-              {/* Social / trust links */}
               <div className="flex flex-wrap gap-3 pt-2">
                 <a href="https://t.me/ZyNumSupport" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-white border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-all"
@@ -336,25 +372,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <ArrowUpRight className="w-3 h-3" />
                 </a>
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground border border-white/10 bg-white/5 px-3 py-1.5 rounded-lg">
-                  <Shield className="w-3.5 h-3.5 text-green-400" /> SSL sécurisé
+                  <Shield className="w-3.5 h-3.5 text-green-400" /> {t("footer_ssl")}
                 </div>
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground border border-white/10 bg-white/5 px-3 py-1.5 rounded-lg">
-                  <Globe2 className="w-3.5 h-3.5 text-blue-400" /> 180+ pays
+                  <Globe2 className="w-3.5 h-3.5 text-blue-400" /> {t("footer_countries")}
                 </div>
               </div>
             </div>
 
             {/* Nav columns */}
-            {Object.entries(FOOTER_LINKS).map(([section, links]) => (
+            {Object.entries(footerLinks).map(([section, links]) => (
               <div key={section}>
                 <p className="text-xs font-bold text-white uppercase tracking-widest mb-4">{section}</p>
                 <ul className="space-y-3">
                   {links.map((link) => (
                     <li key={link.label}>
-                      <Link
-                        href={link.href}
-                        className="text-sm text-muted-foreground hover:text-white transition-colors"
-                      >
+                      <Link href={link.href} className="text-sm text-muted-foreground hover:text-white transition-colors">
                         {link.label}
                       </Link>
                     </li>
@@ -366,14 +399,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Bottom bar */}
           <div className="border-t border-white/[0.06] py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-            <p>© {new Date().getFullYear()} ZyNum. Tous droits réservés.</p>
+            <p>© {new Date().getFullYear()} ZyNum. {t("footer_rights")}</p>
             <div className="flex items-center gap-5">
-              <Link href="/terms" className="hover:text-white transition-colors">CGU</Link>
-              <Link href="/privacy" className="hover:text-white transition-colors">Confidentialité</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">{t("footer_cgu")}</Link>
+              <Link href="/privacy" className="hover:text-white transition-colors">{t("footer_confidentiality")}</Link>
               <Link href="/faq" className="hover:text-white transition-colors">
                 <span className="flex items-center gap-1"><HelpCircle className="w-3.5 h-3.5" /> FAQ</span>
               </Link>
-              <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+              <Link href="/contact" className="hover:text-white transition-colors">{t("nav_contact")}</Link>
             </div>
           </div>
         </div>
@@ -384,11 +417,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Link href="/contact">
           <button className="flex items-center gap-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold px-4 py-2.5 rounded-full shadow-2xl shadow-primary/40 transition-all hover:scale-105 active:scale-95">
             <MessageSquare className="w-4 h-4" />
-            Contact
+            {t("nav_contact")}
           </button>
         </Link>
         <Link href="/aide">
-          <button className="w-12 h-12 bg-card hover:bg-card/80 border border-white/10 text-white rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center" title="Centre d'aide">
+          <button className="w-12 h-12 bg-card hover:bg-card/80 border border-white/10 text-white rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center" title={t("footer_help")}>
             <HelpCircle className="w-5 h-5" />
           </button>
         </Link>

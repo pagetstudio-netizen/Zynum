@@ -6,9 +6,10 @@ import {
   LayoutDashboard, ShoppingCart, History, User, LogOut,
   Wallet, Package, TrendingUp, ChevronRight, PlusCircle,
   Check, Menu, X, Shield, HelpCircle, MessageSquare,
-  Eye, EyeOff, Lock, KeyRound, Sun, Moon,
+  Eye, EyeOff, Lock, KeyRound, Sun, Moon, Globe2,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +58,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
     { page: 1, limit: 5 },
     { query: { retry: false } }
   );
+  const { t } = useLanguage();
 
   const balance = balanceData?.balance ?? 0;
   const orders = history?.orders ?? [];
@@ -69,21 +71,21 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <StatCard
           icon={<Wallet className="w-6 h-6 text-primary" />}
-          label="Solde ZyNum"
+          label={t("dash_balance")}
           value={currency === "FCFA" ? `${Math.round(balance * 620).toLocaleString()} FCFA` : `$${balance.toFixed(2)}`}
-          sub={balance === 0 ? "Rechargez votre solde" : "Disponible"}
+          sub={balance === 0 ? t("dash_balance_low") : t("dash_balance_available")}
           color="bg-primary/20"
         />
         <StatCard
           icon={<Package className="w-6 h-6 text-blue-400" />}
-          label="Commandes totales"
+          label={t("dash_orders_total")}
           value={history?.total ?? 0}
-          sub="Depuis votre inscription"
+          sub={t("dash_orders_sub")}
           color="bg-blue-500/20"
         />
         <StatCard
           icon={<TrendingUp className="w-6 h-6 text-green-400" />}
-          label="SMS reçus"
+          label={t("dash_sms_received")}
           value={received}
           sub={`$${spent.toFixed(2)} dépensés au total`}
           color="bg-green-500/20"
@@ -93,24 +95,24 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
       {/* Recent orders */}
       <div className="rounded-2xl border border-white/10 bg-card/40 backdrop-blur-md overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <h3 className="font-semibold text-white text-sm">Commandes récentes</h3>
+          <h3 className="font-semibold text-white text-sm">{t("dash_recent_orders")}</h3>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "history" }))}
             className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
           >
-            Voir tout <ChevronRight className="w-3 h-3" />
+            {t("dash_view_all")} <ChevronRight className="w-3 h-3" />
           </button>
         </div>
         {orders.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-sm">
             <Package className="w-10 h-10 mx-auto mb-3 opacity-20" />
-            Aucune commande pour le moment
+            {t("dash_no_orders")}
             <div className="mt-4">
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
                 className="text-primary hover:text-primary/80 text-sm font-medium"
               >
-                Acheter un numéro →
+                {t("dash_buy_action")}
               </button>
             </div>
           </div>
@@ -153,8 +155,8 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
             <ShoppingCart className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-white">Acheter un numéro</p>
-            <p className="text-xs text-muted-foreground">180+ pays disponibles</p>
+            <p className="font-semibold text-white">{t("dash_buy_number")}</p>
+            <p className="text-xs text-muted-foreground">{t("dash_countries")}</p>
           </div>
           <ChevronRight className="w-4 h-4 text-primary ml-auto group-hover:translate-x-1 transition-transform" />
         </button>
@@ -164,8 +166,8 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
             <HelpCircle className="w-5 h-5 text-muted-foreground" />
           </div>
           <div>
-            <p className="font-semibold text-white">Centre d'aide</p>
-            <p className="text-xs text-muted-foreground">Guides et tutoriels</p>
+            <p className="font-semibold text-white">{t("dash_help_center")}</p>
+            <p className="text-xs text-muted-foreground">{t("dash_guides")}</p>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto group-hover:translate-x-1 transition-transform" />
         </Link>
@@ -199,6 +201,7 @@ function PasswordInput({ value, onChange, placeholder }: { value: string; onChan
 function Profile({ user }: { user: { id: number; name: string; email: string; createdAt: string } }) {
   const { toast } = useToast();
   const { theme, toggle: toggleTheme } = useTheme();
+  const { lang, setLang, t } = useLanguage();
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd]         = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
@@ -239,8 +242,8 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h2 className="text-2xl font-bold text-white mb-1">Mon profil</h2>
-        <p className="text-muted-foreground text-sm">Gérez votre compte et vos paramètres</p>
+        <h2 className="text-2xl font-bold text-white mb-1">{t("profile_title")}</h2>
+        <p className="text-muted-foreground text-sm">{t("profile_sub")}</p>
       </div>
 
       {/* User Info */}
@@ -253,17 +256,17 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
             <p className="text-xl font-bold text-white">{user.name}</p>
             <p className="text-muted-foreground text-sm">{user.email}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Membre depuis {format(new Date(user.createdAt), "MMMM yyyy")}
+              {t("profile_member_since")} {format(new Date(user.createdAt), "MMMM yyyy")}
             </p>
           </div>
         </div>
         <div className="border-t border-white/10 pt-4 grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-muted-foreground mb-1">Nom complet</p>
+            <p className="text-muted-foreground mb-1">{t("profile_full_name")}</p>
             <p className="text-white font-medium">{user.name}</p>
           </div>
           <div>
-            <p className="text-muted-foreground mb-1">Email</p>
+            <p className="text-muted-foreground mb-1">{t("profile_email")}</p>
             <p className="text-white font-medium">{user.email}</p>
           </div>
         </div>
@@ -276,8 +279,8 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
             <KeyRound className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold text-white">Changer le mot de passe</h3>
-            <p className="text-xs text-muted-foreground">Mettez à jour votre mot de passe de connexion</p>
+            <h3 className="font-semibold text-white">{t("profile_change_pwd")}</h3>
+            <p className="text-xs text-muted-foreground">{t("profile_change_pwd_sub")}</p>
           </div>
         </div>
 
@@ -288,22 +291,22 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
             className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3"
           >
             <Check className="w-4 h-4 shrink-0" />
-            Mot de passe modifié avec succès !
+            {t("profile_pwd_updated")}
           </motion.div>
         )}
 
         <form onSubmit={handleChangePassword} className="space-y-4">
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">Mot de passe actuel</label>
+            <label className="text-xs text-muted-foreground mb-1.5 block">{t("profile_current_pwd")}</label>
             <PasswordInput value={currentPwd} onChange={setCurrentPwd} placeholder="••••••••" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">Nouveau mot de passe</label>
-            <PasswordInput value={newPwd} onChange={setNewPwd} placeholder="Min. 8 caractères" />
+            <label className="text-xs text-muted-foreground mb-1.5 block">{t("profile_new_pwd")}</label>
+            <PasswordInput value={newPwd} onChange={setNewPwd} placeholder={t("profile_min_chars")} />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">Confirmer le nouveau mot de passe</label>
-            <PasswordInput value={confirmPwd} onChange={setConfirmPwd} placeholder="Répétez le nouveau mot de passe" />
+            <label className="text-xs text-muted-foreground mb-1.5 block">{t("profile_confirm_pwd")}</label>
+            <PasswordInput value={confirmPwd} onChange={setConfirmPwd} placeholder={t("profile_repeat_pwd")} />
           </div>
 
           {/* Password strength indicator */}
@@ -330,10 +333,10 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
                 })}
               </div>
               <p className="text-[11px] text-muted-foreground">
-                {newPwd.length < 8 ? "Trop court" :
-                 !/[A-Z]/.test(newPwd) ? "Ajoutez une majuscule" :
-                 !/[0-9]/.test(newPwd) ? "Ajoutez un chiffre" :
-                 "Mot de passe fort"}
+                {newPwd.length < 8 ? t("profile_pwd_short") :
+                 !/[A-Z]/.test(newPwd) ? t("profile_pwd_uppercase") :
+                 !/[0-9]/.test(newPwd) ? t("profile_pwd_number") :
+                 t("profile_pwd_strong")}
               </p>
             </div>
           )}
@@ -344,9 +347,9 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
             className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold disabled:opacity-50"
           >
             {loading ? (
-              <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Modification en cours…</span>
+              <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {t("profile_updating")}</span>
             ) : (
-              <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> Mettre à jour le mot de passe</span>
+              <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t("profile_update_pwd")}</span>
             )}
           </Button>
         </form>
@@ -356,11 +359,11 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
       <div className="rounded-2xl border border-white/10 bg-card/40 p-5 flex items-center gap-4">
         <Shield className="w-8 h-8 text-green-400 shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-semibold text-white mb-0.5">Compte sécurisé</p>
-          <p className="text-xs text-muted-foreground">Mot de passe chiffré (bcrypt). Ne partagez jamais vos identifiants.</p>
+          <p className="text-sm font-semibold text-white mb-0.5">{t("profile_secure")}</p>
+          <p className="text-xs text-muted-foreground">{t("profile_secure_desc")}</p>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 shrink-0">
-          <Check className="w-3 h-3" /> Actif
+          <Check className="w-3 h-3" /> {t("profile_active")}
         </div>
       </div>
 
@@ -371,9 +374,9 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
             {theme === "dark" ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
           </div>
           <div>
-            <p className="text-sm font-semibold text-white">Apparence</p>
+            <p className="text-sm font-semibold text-white">{t("profile_theme")}</p>
             <p className="text-xs text-muted-foreground">
-              Thème actuel : {theme === "dark" ? "Mode sombre" : "Mode clair"}
+              {t("profile_theme_sub")} {theme === "dark" ? t("profile_theme_dark") : t("profile_theme_light")}
             </p>
           </div>
         </div>
@@ -389,24 +392,50 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
         </button>
       </div>
 
+      {/* Language selector */}
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Globe2 className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">{t("profile_language")}</p>
+            <p className="text-xs text-muted-foreground">{t("profile_language_sub")}</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          {(["fr", "en"] as const).map((l) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+                lang === l
+                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                  : "text-muted-foreground border-white/10 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              {l === "fr" ? "🇫🇷 Français" : "🇬🇧 English"}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Help */}
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
         <div className="flex items-center gap-3">
           <HelpCircle className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-white">Besoin d'aide ?</h3>
+          <h3 className="font-semibold text-white">{t("profile_need_help")}</h3>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Consultez notre centre d'aide ou contactez notre support directement.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("profile_help_desc")}</p>
         <div className="flex gap-3">
           <Link href="/aide">
             <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
-              <HelpCircle className="w-4 h-4 mr-2" /> Centre d'aide
+              <HelpCircle className="w-4 h-4 mr-2" /> {t("profile_help_center")}
             </Button>
           </Link>
           <Link href="/contact">
             <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">
-              <MessageSquare className="w-4 h-4 mr-2" /> Contacter le support
+              <MessageSquare className="w-4 h-4 mr-2" /> {t("profile_contact_support")}
             </Button>
           </Link>
         </div>
@@ -427,6 +456,7 @@ function UserWidget({
 }) {
   const [open, setOpen] = useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   React.useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -482,13 +512,13 @@ function UserWidget({
                 onClick={() => { onProfileClick(); setOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/5 transition-colors text-left"
               >
-                <User className="w-4 h-4 text-muted-foreground" /> Mon profil
+                <User className="w-4 h-4 text-muted-foreground" /> {t("widget_my_profile")}
               </button>
               <button
                 onClick={() => { window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" })); setOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/5 transition-colors text-left"
               >
-                <PlusCircle className="w-4 h-4 text-muted-foreground" /> Recharger
+                <PlusCircle className="w-4 h-4 text-muted-foreground" /> {t("widget_recharge")}
               </button>
             </div>
 
@@ -497,7 +527,7 @@ function UserWidget({
                 onClick={() => { onLogout(); setOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-400 hover:bg-red-400/10 transition-colors text-left"
               >
-                <LogOut className="w-4 h-4" /> Déconnexion
+                <LogOut className="w-4 h-4" /> {t("widget_logout")}
               </button>
             </div>
           </motion.div>
@@ -516,6 +546,7 @@ export default function Dashboard() {
   const { currency, setCurrency } = useCurrency();
   const queryClient = useQueryClient();
 
+  const { t } = useLanguage();
   const { data: user, isLoading } = useGetCurrentUser({ query: { retry: false } });
   const logoutMutation = useLogoutUser({
     mutation: {
@@ -523,7 +554,7 @@ export default function Dashboard() {
         localStorage.removeItem("zynum_token");
         queryClient.clear();
         setLocation("/");
-        toast({ title: "Déconnecté avec succès" });
+        toast({ title: t("nav_logout") });
       },
     },
   });
@@ -573,11 +604,11 @@ export default function Dashboard() {
   }
 
   const NAV = [
-    { id: "overview",  label: "Vue d'ensemble", icon: LayoutDashboard },
-    { id: "buy",       label: "Acheter numéro",  icon: ShoppingCart },
-    { id: "history",   label: "Historique",      icon: History },
-    { id: "recharge",  label: "Recharger",       icon: PlusCircle },
-    { id: "profile",   label: "Mon profil",      icon: User },
+    { id: "overview",  label: t("dash_tab_overview"), icon: LayoutDashboard },
+    { id: "buy",       label: t("dash_tab_buy"),      icon: ShoppingCart },
+    { id: "history",   label: t("dash_tab_history"),  icon: History },
+    { id: "recharge",  label: t("dash_tab_recharge"), icon: PlusCircle },
+    { id: "profile",   label: t("dash_tab_profile"),  icon: User },
   ] as const;
 
   const formatPrice = (v: number) =>
@@ -653,14 +684,14 @@ export default function Dashboard() {
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
             >
               <HelpCircle className="w-4 h-4 shrink-0" />
-              Centre d'aide
+              {t("dash_help_center")}
             </Link>
             <Link
               href="/contact"
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
             >
               <MessageSquare className="w-4 h-4 shrink-0" />
-              Contacter le support
+              {t("profile_contact_support")}
             </Link>
           </div>
         </nav>
@@ -689,7 +720,7 @@ export default function Dashboard() {
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-colors font-medium"
           >
             <LogOut className="w-4 h-4" />
-            {logoutMutation.isPending ? "Déconnexion…" : "Déconnexion"}
+            {logoutMutation.isPending ? t("loading") : t("nav_logout")}
           </button>
         </div>
       </aside>
