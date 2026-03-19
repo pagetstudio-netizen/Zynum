@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Loader2, CheckCircle2, Copy, AlertCircle,
   RefreshCw, Lock, Phone, ArrowLeft, Wallet,
-  Check, X, RotateCcw, Smartphone, ChevronRight,
+  Check, X, RotateCcw, Smartphone, ChevronRight, Clock, History,
 } from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,72 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type BuyStep = "service" | "country" | "operator" | "preview" | "active";
+
+// ─── Countdown hook (based on createdAt ISO string) ───────────────────────────
+const DURATION = 360; // 6 minutes in seconds
+function useCountdown(createdAt: string | undefined) {
+  const [remaining, setRemaining] = useState<number>(DURATION);
+  useEffect(() => {
+    if (!createdAt) return;
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+      setRemaining(Math.max(0, DURATION - elapsed));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [createdAt]);
+  const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
+  const ss = String(remaining % 60).padStart(2, "0");
+  const pct = remaining / DURATION; // 1 → 0
+  const urgent = remaining <= 60;
+  const expired = remaining === 0;
+  return { remaining, mm, ss, pct, urgent, expired };
+}
+
+// ─── Countdown ring UI ────────────────────────────────────────────────────────
+function CountdownRing({ createdAt, onExpired }: { createdAt: string; onExpired?: () => void }) {
+  const { mm, ss, pct, urgent, expired } = useCountdown(createdAt);
+  const prevExpired = useRef(false);
+  useEffect(() => {
+    if (expired && !prevExpired.current) { prevExpired.current = true; onExpired?.(); }
+  }, [expired, onExpired]);
+
+  const r = 38; const circ = 2 * Math.PI * r;
+  const dash = circ * pct;
+  const color = expired ? "#ef4444" : urgent ? "#f97316" : "#3b82f6";
+
+  return (
+    <div className="flex flex-col items-center gap-3 py-2">
+      <div className="relative w-24 h-24">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 88 88">
+          <circle cx="44" cy="44" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+          <circle
+            cx="44" cy="44" r={r} fill="none"
+            stroke={color} strokeWidth="6" strokeLinecap="round"
+            strokeDasharray={`${dash} ${circ}`}
+            style={{ transition: "stroke-dasharray 1s linear, stroke 0.5s" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <Clock className="w-4 h-4 mb-0.5" style={{ color }} />
+          <span className="text-lg font-bold font-mono" style={{ color }}>
+            {mm}:{ss}
+          </span>
+        </div>
+      </div>
+      <div className="text-center">
+        {expired ? (
+          <p className="text-sm font-semibold text-red-400">Délai expiré</p>
+        ) : urgent ? (
+          <p className="text-sm font-semibold text-orange-400">⚠️ Moins d'une minute !</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">Temps restant pour recevoir le SMS</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ─── Service Logo ─────────────────────────────────────────────────────────────
 function ServiceLogo({ icon, color, name, size = 40 }: { icon: string; color: string; name: string; size?: number }) {
@@ -667,19 +733,49 @@ export default function BuyNumber() {
               {/* SMS area */}
               <div className="px-6 py-8">
                 {isPending && (
-                  <div className="flex flex-col items-center text-center">
-                    <div className="relative w-16 h-16 mb-5">
+                  <div className="flex flex-col items-center text-center gap-4">
+                    {/* Spinner */}
+                    <div className="relative w-14 h-14">
                       <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
                       <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-                      <Smartphone className="absolute inset-0 m-auto w-6 h-6 text-primary" />
+                      <Smartphone className="absolute inset-0 m-auto w-5 h-5 text-primary" />
                     </div>
-                    <p className="font-bold text-white text-xl mb-2">En attente du SMS…</p>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                      Entrez ce numéro dans <strong className="text-white">{activeOrder.serviceName}</strong> pour déclencher l'envoi du code OTP.
+                    <div>
+                      <p className="font-bold text-white text-lg mb-1">En attente du SMS…</p>
+                      <p className="text-sm text-muted-foreground max-w-xs">
+                        Entrez ce numéro dans <strong className="text-white">{activeOrder.serviceName}</strong> pour déclencher l'envoi du code.
+                      </p>
+                    </div>
+
+                    {/* Countdown ring */}
+                    <CountdownRing
+                      createdAt={activeOrder.createdAt}
+                      onExpired={() => {
+                        toast({ title: "⏱ Délai expiré", description: "Le numéro n'a pas reçu de SMS. Vous pouvez annuler pour être remboursé.", variant: "destructive" });
+                      }}
+                    />
+
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row gap-2 w-full mt-1">
+                      <Button variant="outline" size="sm" onClick={() => refetchSms()} className="flex-1 border-white/20 text-white hover:bg-white/10">
+                        <RefreshCw className="w-4 h-4 mr-2" /> Vérifier maintenant
+                      </Button>
+                      <Button
+                        variant="ghost" size="sm"
+                        className="flex-1 text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+                        onClick={() => cancelMutation.mutate(activeOrder.id)}
+                        disabled={cancelMutation.isPending}
+                      >
+                        {cancelMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <X className="w-4 h-4 mr-2" />}
+                        Annuler &amp; rembourser
+                      </Button>
+                    </div>
+
+                    {/* History tip */}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-2 w-full text-left">
+                      <History className="w-3.5 h-3.5 shrink-0 text-primary" />
+                      Si vous quittez cette page, vérifiez votre <strong className="text-white">Historique</strong> — vous pourrez y annuler la commande.
                     </p>
-                    <Button variant="outline" size="sm" onClick={() => refetchSms()} className="border-white/20 text-white hover:bg-white/10">
-                      <RefreshCw className="w-4 h-4 mr-2" /> Vérifier maintenant
-                    </Button>
                   </div>
                 )}
 

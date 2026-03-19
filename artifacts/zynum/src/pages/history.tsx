@@ -1,14 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
   History, RefreshCcw, Lock, ChevronLeft, ChevronRight,
   Package, CheckCircle2, Clock, XCircle, Copy, Check,
+  X, Loader2,
 } from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
 import { Button } from "@/components/ui/button";
-import { useGetOrderHistory, useGetCurrentUser } from "@workspace/api-client-react";
+import { useGetOrderHistory, useGetCurrentUser, useCancelOrder } from "@workspace/api-client-react";
+
+// ─── Countdown logic (same 6-min window as buy page) ──────────────────────────
+const DURATION = 360;
+function useTimeLeft(createdAt: string): number {
+  const [left, setLeft] = useState(() => {
+    const elapsed = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+    return Math.max(0, DURATION - elapsed);
+  });
+  useEffect(() => {
+    if (left === 0) return;
+    const id = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+      setLeft(Math.max(0, DURATION - elapsed));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [createdAt, left]);
+  return left;
+}
+
+function TimerBadge({ createdAt }: { createdAt: string }) {
+  const left = useTimeLeft(createdAt);
+  const mm = String(Math.floor(left / 60)).padStart(2, "0");
+  const ss = String(left % 60).padStart(2, "0");
+  if (left === 0) return (
+    <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
+      <XCircle className="w-3 h-3" /> Délai expiré
+    </span>
+  );
+  const urgent = left <= 60;
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${
+      urgent
+        ? "text-orange-400 bg-orange-500/10 border-orange-500/20"
+        : "text-yellow-400 bg-yellow-500/10 border-yellow-500/20"
+    }`}>
+      <Clock className="w-3 h-3" />
+      {urgent ? `⚠️ ${mm}:${ss}` : `${mm}:${ss}`}
+    </span>
+  );
+}
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 const STATUS_MAP: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
@@ -47,10 +88,36 @@ function CopyCode({ code }: { code: string }) {
   );
 }
 
-// ─── Mobile card ───────────────────────────────────────────────────────────────
-function OrderCard({ order, formatPrice }: { order: any; formatPrice: (usd: number, fcfa?: number) => string }) {
+// ─── Cancel button for PENDING orders ─────────────────────────────────────────
+function CancelPendingButton({ orderId, refetch }: { orderId: string; refetch: () => void }) {
+  const cancel = useCancelOrder({
+    mutation: {
+      onSuccess: () => refetch(),
+    },
+  });
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4 space-y-3">
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-7 px-2.5 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+      onClick={() => cancel.mutate(orderId)}
+      disabled={cancel.isPending}
+    >
+      {cancel.isPending
+        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        : <><X className="w-3.5 h-3.5 mr-1" />Annuler & rembourser</>
+      }
+    </Button>
+  );
+}
+
+// ─── Mobile card ───────────────────────────────────────────────────────────────
+function OrderCard({ order, formatPrice, refetch }: { order: any; formatPrice: (usd: number, fcfa?: number) => string; refetch: () => void }) {
+  const isPending = order.status === "PENDING";
+  const timeLeft = useTimeLeft(order.createdAt);
+
+  return (
+    <div className={`bg-white/[0.02] border rounded-2xl p-4 space-y-3 transition-colors ${isPending ? "border-yellow-500/20" : "border-white/[0.06]"}`}>
       {/* Top row: service + status */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -62,7 +129,10 @@ function OrderCard({ order, formatPrice }: { order: any; formatPrice: (usd: numb
             <p className="text-xs text-muted-foreground">{order.countryName}</p>
           </div>
         </div>
-        <StatusBadge status={order.status} />
+        <div className="flex flex-col items-end gap-1">
+          <StatusBadge status={order.status} />
+          {isPending && <TimerBadge createdAt={order.createdAt} />}
+        </div>
       </div>
 
       {/* Number */}
@@ -70,15 +140,19 @@ function OrderCard({ order, formatPrice }: { order: any; formatPrice: (usd: numb
         {order.phone}
       </div>
 
-      {/* SMS code (if any) */}
+      {/* SMS code / PENDING actions */}
       {order.smsCode ? (
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs text-muted-foreground">Code SMS</span>
           <CopyCode code={order.smsCode} />
         </div>
-      ) : order.status === "PENDING" ? (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <RefreshCcw className="w-3 h-3 animate-spin" /> En attente du SMS…
+      ) : isPending ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <RefreshCcw className="w-3 h-3 animate-spin" />
+            En attente du SMS… {timeLeft > 0 ? `(${String(Math.floor(timeLeft / 60)).padStart(2,"0")}:${String(timeLeft % 60).padStart(2,"0")} restant)` : "(délai expiré)"}
+          </div>
+          <CancelPendingButton orderId={order.id} refetch={refetch} />
         </div>
       ) : null}
 
@@ -202,7 +276,7 @@ export default function OrderHistory() {
         <>
           <div className="flex flex-col gap-3 md:hidden">
             {orders.map((order) => (
-              <OrderCard key={order.id} order={order} formatPrice={formatPrice} />
+              <OrderCard key={order.id} order={order} formatPrice={formatPrice} refetch={refetch} />
             ))}
           </div>
 
@@ -212,38 +286,49 @@ export default function OrderHistory() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/[0.03]">
-                    {["Date", "Service", "Pays", "Numéro", "Statut", "Code SMS", "Prix"].map((h, i) => (
+                    {["Date", "Service", "Pays", "Numéro", "Statut", "Code SMS / Action", "Prix"].map((h, i) => (
                       <th key={h} className={`px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider ${i === 6 ? "text-right" : ""}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
-                  {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-5 py-3.5 whitespace-nowrap">
-                        <p className="text-sm text-white">{format(new Date(order.createdAt), "dd MMM yyyy", { locale: fr })}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{format(new Date(order.createdAt), "HH:mm:ss")}</p>
-                      </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-sm font-medium text-white">{order.serviceName}</td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-sm text-white">{order.countryName}</td>
-                      <td className="px-5 py-3.5 whitespace-nowrap font-mono text-sm text-white/80">{order.phone}</td>
-                      <td className="px-5 py-3.5 whitespace-nowrap"><StatusBadge status={order.status} /></td>
-                      <td className="px-5 py-3.5">
-                        {order.smsCode ? (
-                          <CopyCode code={order.smsCode} />
-                        ) : order.status === "PENDING" ? (
-                          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <RefreshCcw className="w-3 h-3 animate-spin" /> En attente…
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-right font-mono text-sm font-semibold text-white">
-                        {formatPrice(order.priceUsd, order.priceFcfa)}
-                      </td>
-                    </tr>
-                  ))}
+                  {orders.map((order) => {
+                    const isPending = order.status === "PENDING";
+                    return (
+                      <tr key={order.id} className={`hover:bg-white/[0.02] transition-colors ${isPending ? "bg-yellow-500/[0.02]" : ""}`}>
+                        <td className="px-5 py-3.5 whitespace-nowrap">
+                          <p className="text-sm text-white">{format(new Date(order.createdAt), "dd MMM yyyy", { locale: fr })}</p>
+                          <p className="text-xs text-muted-foreground font-mono">{format(new Date(order.createdAt), "HH:mm:ss")}</p>
+                        </td>
+                        <td className="px-5 py-3.5 whitespace-nowrap text-sm font-medium text-white">{order.serviceName}</td>
+                        <td className="px-5 py-3.5 whitespace-nowrap text-sm text-white">{order.countryName}</td>
+                        <td className="px-5 py-3.5 whitespace-nowrap font-mono text-sm text-white/80">{order.phone}</td>
+                        <td className="px-5 py-3.5 whitespace-nowrap">
+                          <div className="flex flex-col gap-1">
+                            <StatusBadge status={order.status} />
+                            {isPending && <TimerBadge createdAt={order.createdAt} />}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          {order.smsCode ? (
+                            <CopyCode code={order.smsCode} />
+                          ) : isPending ? (
+                            <div className="flex flex-col gap-1.5">
+                              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <RefreshCcw className="w-3 h-3 animate-spin" /> En attente…
+                              </span>
+                              <CancelPendingButton orderId={order.id} refetch={refetch} />
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3.5 whitespace-nowrap text-right font-mono text-sm font-semibold text-white">
+                          {formatPrice(order.priceUsd, order.priceFcfa)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
