@@ -198,6 +198,7 @@ function PasswordInput({ value, onChange, placeholder }: { value: string; onChan
 
 function Profile({ user }: { user: { id: number; name: string; email: string; createdAt: string } }) {
   const { toast } = useToast();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd]         = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
@@ -363,6 +364,31 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
         </div>
       </div>
 
+      {/* Theme toggle */}
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            {theme === "dark" ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">Apparence</p>
+            <p className="text-xs text-muted-foreground">
+              Thème actuel : {theme === "dark" ? "Mode sombre" : "Mode clair"}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={toggleTheme}
+          className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
+            theme === "dark" ? "bg-primary" : "bg-muted"
+          }`}
+        >
+          <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${
+            theme === "dark" ? "translate-x-7" : "translate-x-1"
+          }`} />
+        </button>
+      </div>
+
       {/* Help */}
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
         <div className="flex items-center gap-3">
@@ -488,7 +514,6 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
   const { currency, setCurrency } = useCurrency();
-  const { theme, toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const { data: user, isLoading } = useGetCurrentUser({ query: { retry: false } });
@@ -682,17 +707,6 @@ export default function Dashboard() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
-              className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors"
-            >
-              {theme === "dark"
-                ? <Sun className="w-4 h-4" />
-                : <Moon className="w-4 h-4" />
-              }
-            </button>
             <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors" title="Centre d'aide">
               <HelpCircle className="w-4 h-4" />
             </Link>
