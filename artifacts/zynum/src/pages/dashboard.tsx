@@ -6,6 +6,7 @@ import {
   LayoutDashboard, ShoppingCart, History, User, LogOut,
   Wallet, Package, TrendingUp, ChevronRight, PlusCircle,
   Check, Menu, X, Shield, HelpCircle, MessageSquare,
+  Eye, EyeOff, Lock, KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -172,7 +173,67 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
   );
 }
 
+function PasswordInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full h-11 pl-4 pr-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition"
+      />
+      <button
+        type="button"
+        onClick={() => setShow((s) => !s)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+      >
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+}
+
 function Profile({ user }: { user: { id: number; name: string; email: string; createdAt: string } }) {
+  const { toast } = useToast();
+  const [currentPwd, setCurrentPwd] = useState("");
+  const [newPwd, setNewPwd]         = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [loading, setLoading]       = useState(false);
+  const [success, setSuccess]       = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPwd.length < 8) {
+      toast({ variant: "destructive", title: "Mot de passe trop court", description: "Au moins 8 caractères requis." });
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      toast({ variant: "destructive", title: "Mots de passe différents", description: "Le nouveau mot de passe et la confirmation ne correspondent pas." });
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("zynum_token");
+      const res = await fetch("/api/v1/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Erreur inconnue");
+      setSuccess(true);
+      setCurrentPwd(""); setNewPwd(""); setConfirmPwd("");
+      toast({ title: "Mot de passe modifié !", description: "Votre mot de passe a été mis à jour avec succès." });
+      setTimeout(() => setSuccess(false), 4000);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Échec", description: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -206,17 +267,98 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
         </div>
       </div>
 
-      {/* Security */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-3">
+      {/* Change password */}
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-5">
         <div className="flex items-center gap-3">
-          <Shield className="w-5 h-5 text-green-400" />
-          <h3 className="font-semibold text-white">Sécurité</h3>
+          <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <KeyRound className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-white">Changer le mot de passe</h3>
+            <p className="text-xs text-muted-foreground">Mettez à jour votre mot de passe de connexion</p>
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Votre compte est protégé par un mot de passe chiffré (bcrypt). Ne partagez jamais vos identifiants.
-        </p>
-        <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
-          <Check className="w-3 h-3" /> Compte sécurisé
+
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3"
+          >
+            <Check className="w-4 h-4 shrink-0" />
+            Mot de passe modifié avec succès !
+          </motion.div>
+        )}
+
+        <form onSubmit={handleChangePassword} className="space-y-4">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">Mot de passe actuel</label>
+            <PasswordInput value={currentPwd} onChange={setCurrentPwd} placeholder="••••••••" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">Nouveau mot de passe</label>
+            <PasswordInput value={newPwd} onChange={setNewPwd} placeholder="Min. 8 caractères" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">Confirmer le nouveau mot de passe</label>
+            <PasswordInput value={confirmPwd} onChange={setConfirmPwd} placeholder="Répétez le nouveau mot de passe" />
+          </div>
+
+          {/* Password strength indicator */}
+          {newPwd.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex gap-1">
+                {[...Array(4)].map((_, i) => {
+                  const strength = Math.min(4, Math.floor(
+                    (newPwd.length >= 8 ? 1 : 0) +
+                    (/[A-Z]/.test(newPwd) ? 1 : 0) +
+                    (/[0-9]/.test(newPwd) ? 1 : 0) +
+                    (/[^A-Za-z0-9]/.test(newPwd) ? 1 : 0)
+                  ));
+                  return (
+                    <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${
+                      i < strength
+                        ? strength <= 1 ? "bg-red-500"
+                        : strength <= 2 ? "bg-yellow-500"
+                        : strength <= 3 ? "bg-blue-500"
+                        : "bg-green-500"
+                        : "bg-white/10"
+                    }`} />
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {newPwd.length < 8 ? "Trop court" :
+                 !/[A-Z]/.test(newPwd) ? "Ajoutez une majuscule" :
+                 !/[0-9]/.test(newPwd) ? "Ajoutez un chiffre" :
+                 "Mot de passe fort"}
+              </p>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={loading || !currentPwd || !newPwd || !confirmPwd}
+            className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold disabled:opacity-50"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Modification en cours…</span>
+            ) : (
+              <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> Mettre à jour le mot de passe</span>
+            )}
+          </Button>
+        </form>
+      </div>
+
+      {/* Security info */}
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-5 flex items-center gap-4">
+        <Shield className="w-8 h-8 text-green-400 shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-white mb-0.5">Compte sécurisé</p>
+          <p className="text-xs text-muted-foreground">Mot de passe chiffré (bcrypt). Ne partagez jamais vos identifiants.</p>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 shrink-0">
+          <Check className="w-3 h-3" /> Actif
         </div>
       </div>
 

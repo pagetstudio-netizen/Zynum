@@ -100,4 +100,35 @@ router.get("/v1/auth/me", requireAuth, async (req: AuthRequest, res): Promise<vo
   });
 });
 
+router.post("/v1/auth/change-password", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: "Validation error", message: "Mot de passe actuel et nouveau mot de passe requis" });
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: "Validation error", message: "Le nouveau mot de passe doit contenir au moins 8 caractères" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId!)).limit(1);
+  if (!user) {
+    res.status(401).json({ error: "Unauthorized", message: "Utilisateur introuvable" });
+    return;
+  }
+
+  const valid = verifyPassword(currentPassword, user.passwordHash);
+  if (!valid) {
+    res.status(401).json({ error: "Unauthorized", message: "Mot de passe actuel incorrect" });
+    return;
+  }
+
+  const newHash = hashPassword(newPassword);
+  await db.update(usersTable).set({ passwordHash: newHash }).where(eq(usersTable.id, req.userId!));
+
+  res.json({ success: true, message: "Mot de passe modifié avec succès" });
+});
+
 export default router;

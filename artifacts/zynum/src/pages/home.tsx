@@ -162,15 +162,28 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Floating badge */}
+            {/* Floating badge – top right */}
             <div className="absolute -top-4 -right-4 bg-primary rounded-2xl px-4 py-3 shadow-xl shadow-primary/30 flex items-center gap-2">
               <Zap className="w-4 h-4 text-white" />
               <span className="text-white text-sm font-bold">Instantané</span>
             </div>
-            <div className="absolute -bottom-4 -left-4 bg-[#0d1526] border border-white/10 rounded-2xl px-4 py-3 shadow-xl flex items-center gap-2">
-              <span className="text-lg">🌍</span>
-              <span className="text-white text-sm font-bold">180+ pays</span>
-            </div>
+            {/* Floating badge – bottom left – clickable users widget */}
+            <Link href="/register">
+              <div className="absolute -bottom-4 -left-4 bg-[#0d1526] border border-white/10 rounded-2xl px-4 py-3 shadow-xl flex items-center gap-2 cursor-pointer hover:bg-[#111d38] hover:border-white/20 transition-all group">
+                <div className="relative">
+                  <div className="flex -space-x-2">
+                    {["#3b82f6","#10b981","#f59e0b"].map((c, i) => (
+                      <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0d1526] flex items-center justify-center text-[9px] font-bold text-white" style={{ background: c, zIndex: 3 - i }} />
+                    ))}
+                  </div>
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-[#0d1526] animate-pulse" />
+                </div>
+                <div>
+                  <p className="text-white text-xs font-bold group-hover:text-primary transition-colors">50K+ utilisateurs</p>
+                  <p className="text-[10px] text-muted-foreground leading-none">Rejoindre →</p>
+                </div>
+              </div>
+            </Link>
           </motion.div>
         </div>
       </section>
