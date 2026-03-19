@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const API = "/api";
 
+const n = (v: unknown): number => Number(v) || 0;
+
 function useAdminFetch<T>(endpoint: string, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -159,24 +161,24 @@ function AdminStats() {
             <StatCard label="Utilisateurs total" value={s.users?.total ?? 0} sub={`${s.users?.newToday ?? 0} nouveaux aujourd'hui`} icon={<Users className="w-6 h-6 text-blue-400" />} color="bg-blue-500/20" />
             <StatCard label="Utilisateurs actifs" value={s.users?.active ?? 0} sub={`${s.users?.banned ?? 0} bannis`} icon={<Shield className="w-6 h-6 text-green-400" />} color="bg-green-500/20" />
             <StatCard label="Nouveaux ce mois" value={s.users?.newMonth ?? 0} icon={<TrendingUp className="w-6 h-6 text-cyan-400" />} color="bg-cyan-500/20" />
-            <StatCard label="Soldes totaux" value={`$${(s.revenue?.totalUsd ?? 0).toFixed(2)}`} sub="Revenus totaux" icon={<Wallet className="w-6 h-6 text-primary" />} color="bg-primary/20" />
+            <StatCard label="Soldes totaux" value={`$${n(s.revenue?.totalUsd).toFixed(2)}`} sub="Revenus totaux" icon={<Wallet className="w-6 h-6 text-primary" />} color="bg-primary/20" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <StatCard label="Commandes total" value={s.orders?.total ?? 0} sub={`${s.orders?.completed ?? 0} complétées`} icon={<Package className="w-6 h-6 text-orange-400" />} color="bg-orange-500/20" />
-            <StatCard label="Commandes aujourd'hui" value={s.orders?.today?.count ?? 0} sub={`$${(s.orders?.today?.revenueUsd ?? 0).toFixed(2)} générés`} icon={<Zap className="w-6 h-6 text-yellow-400" />} color="bg-yellow-500/20" />
-            <StatCard label="Commandes ce mois" value={s.orders?.month?.count ?? 0} sub={`$${(s.orders?.month?.revenueUsd ?? 0).toFixed(2)} générés`} icon={<BarChart3 className="w-6 h-6 text-purple-400" />} color="bg-purple-500/20" />
-            <StatCard label="Commandes cette année" value={s.orders?.year?.count ?? 0} sub={`$${(s.orders?.year?.revenueUsd ?? 0).toFixed(2)} générés`} icon={<Star className="w-6 h-6 text-pink-400" />} color="bg-pink-500/20" />
+            <StatCard label="Commandes aujourd'hui" value={s.orders?.today?.count ?? 0} sub={`$${n(s.orders?.today?.revenueUsd).toFixed(2)} générés`} icon={<Zap className="w-6 h-6 text-yellow-400" />} color="bg-yellow-500/20" />
+            <StatCard label="Commandes ce mois" value={s.orders?.month?.count ?? 0} sub={`$${n(s.orders?.month?.revenueUsd).toFixed(2)} générés`} icon={<BarChart3 className="w-6 h-6 text-purple-400" />} color="bg-purple-500/20" />
+            <StatCard label="Commandes cette année" value={s.orders?.year?.count ?? 0} sub={`$${n(s.orders?.year?.revenueUsd).toFixed(2)} générés`} icon={<Star className="w-6 h-6 text-pink-400" />} color="bg-pink-500/20" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <StatCard label="Revenus USD total" value={`$${(s.revenue?.totalUsd ?? 0).toFixed(2)}`} icon={<DollarSign className="w-6 h-6 text-green-400" />} color="bg-green-500/20" />
-            <StatCard label="Revenus FCFA total" value={`${Math.round(s.revenue?.totalFcfa ?? 0).toLocaleString()} F`} icon={<DollarSign className="w-6 h-6 text-green-400" />} color="bg-green-500/20" />
-            <StatCard label="Rechargements total" value={`$${(s.revenue?.totalRechargeUsd ?? 0).toFixed(2)}`} icon={<CreditCard className="w-6 h-6 text-blue-400" />} color="bg-blue-500/20" />
+            <StatCard label="Revenus USD total" value={`$${n(s.revenue?.totalUsd).toFixed(2)}`} icon={<DollarSign className="w-6 h-6 text-green-400" />} color="bg-green-500/20" />
+            <StatCard label="Revenus FCFA total" value={`${Math.round(n(s.revenue?.totalFcfa)).toLocaleString()} F`} icon={<DollarSign className="w-6 h-6 text-green-400" />} color="bg-green-500/20" />
+            <StatCard label="Rechargements total" value={`$${n(s.revenue?.totalRechargeUsd).toFixed(2)}`} icon={<CreditCard className="w-6 h-6 text-blue-400" />} color="bg-blue-500/20" />
             <StatCard label="Transactions" value={s.transactions?.total ?? 0} icon={<Database className="w-6 h-6 text-muted-foreground" />} color="bg-white/10" />
           </div>
           {queryStr && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <StatCard label="Commandes (période)" value={s.orders?.range?.count ?? 0} icon={<Clock className="w-6 h-6 text-cyan-400" />} color="bg-cyan-500/20" />
-              <StatCard label="Revenus (période)" value={`$${(s.orders?.range?.revenueUsd ?? 0).toFixed(2)}`} icon={<TrendingUp className="w-6 h-6 text-primary" />} color="bg-primary/20" />
+              <StatCard label="Revenus (période)" value={`$${n(s.orders?.range?.revenueUsd).toFixed(2)}`} icon={<TrendingUp className="w-6 h-6 text-primary" />} color="bg-primary/20" />
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -248,6 +250,12 @@ function AdminUsers() {
     refetch();
     if (selectedUser?.id === u.id) refetchDetail();
   };
+  const toggleAdmin = async (u: any) => {
+    await adminPatch(`/v1/admin/users/${u.id}`, { isAdmin: !u.isAdmin });
+    toast({ title: u.isAdmin ? "Droits admin retirés" : `${u.name} est maintenant administrateur` });
+    refetch();
+    if (selectedUser?.id === u.id) refetchDetail();
+  };
 
   if (selectedUser && userDetail) {
     const u = userDetail.user;
@@ -258,6 +266,9 @@ function AdminUsers() {
           <h2 className="text-lg font-bold text-white">Profil utilisateur</h2>
           <div className="ml-auto flex gap-2">
             <Button onClick={() => openEdit(u)} size="sm" className="bg-primary hover:bg-primary/90 text-white"><Edit3 className="w-3.5 h-3.5 mr-1" /> Modifier</Button>
+            <Button onClick={() => toggleAdmin(u)} size="sm" variant="outline" className={`border-white/10 ${u.isAdmin ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:bg-white/5"}`}>
+              <Shield className="w-3.5 h-3.5 mr-1" /> {u.isAdmin ? "Retirer admin" : "Rendre admin"}
+            </Button>
             <Button onClick={() => toggleBan(u)} size="sm" variant="outline" className={`border-white/10 ${u.isBanned ? "text-green-400 hover:bg-green-500/10" : "text-red-400 hover:bg-red-500/10"}`}>
               <Ban className="w-3.5 h-3.5 mr-1" /> {u.isBanned ? "Débannir" : "Bannir"}
             </Button>
@@ -301,7 +312,7 @@ function AdminUsers() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="rounded-2xl border border-white/10 bg-card/40 p-5 space-y-3">
             <h3 className="font-semibold text-white">Informations</h3>
-            {[["ID", u.id], ["Nom", u.name], ["Email", u.email], ["Solde", `$${u.balanceUsd?.toFixed(2)}`], ["Créé le", new Date(u.createdAt).toLocaleString("fr")]].map(([l, v]) => (
+            {[["ID", u.id], ["Nom", u.name], ["Email", u.email], ["Solde", `$${n(u.balanceUsd).toFixed(2)}`], ["Créé le", new Date(u.createdAt).toLocaleString("fr")]].map(([l, v]) => (
               <div key={l as string} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{l}</span>
                 <span className="text-white font-medium">{v as string}</span>
@@ -331,7 +342,7 @@ function AdminUsers() {
                     <td className="px-4 py-2.5 text-muted-foreground">{o.countryName}</td>
                     <td className="px-4 py-2.5 text-white font-mono text-xs">{o.phone}</td>
                     <td className="px-4 py-2.5"><StatusBadge status={o.status} /></td>
-                    <td className="px-4 py-2.5 text-white">${o.priceUsd?.toFixed(3)}</td>
+                    <td className="px-4 py-2.5 text-white">${n(o.priceUsd).toFixed(3)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground text-xs">{new Date(o.createdAt).toLocaleString("fr")}</td>
                   </tr>
                 ))}
@@ -369,13 +380,14 @@ function AdminUsers() {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground text-sm">{u.email}</td>
-                <td className="px-4 py-3 text-white font-semibold text-sm">${u.balanceUsd?.toFixed(2)}</td>
+                <td className="px-4 py-3 text-white font-semibold text-sm">${n(u.balanceUsd).toFixed(2)}</td>
                 <td className="px-4 py-3">{u.isBanned ? <StatusBadge status="BANNED" /> : <StatusBadge status="RECEIVED" />}</td>
                 <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(u.createdAt).toLocaleDateString("fr")}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
                     <button onClick={() => setSelectedUser(u)} className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10" title="Voir"><Search className="w-3.5 h-3.5" /></button>
                     <button onClick={() => { setSelectedUser(u); openEdit(u); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10" title="Modifier"><Edit3 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => toggleAdmin(u)} className={`p-1.5 rounded-lg ${u.isAdmin ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/10"}`} title={u.isAdmin ? "Retirer admin" : "Rendre admin"}><Shield className="w-3.5 h-3.5" /></button>
                     <button onClick={() => toggleBan(u)} className={`p-1.5 rounded-lg ${u.isBanned ? "text-green-400 hover:bg-green-500/10" : "text-red-400 hover:bg-red-500/10"}`} title={u.isBanned ? "Débannir" : "Bannir"}><Ban className="w-3.5 h-3.5" /></button>
                   </div>
                 </td>
@@ -412,7 +424,7 @@ function AdminOrders() {
                 <td className="px-4 py-3 text-muted-foreground text-sm">{o.country}</td>
                 <td className="px-4 py-3 text-white font-mono text-xs">{o.phone}</td>
                 <td className="px-4 py-3"><StatusBadge status={o.status} /></td>
-                <td className="px-4 py-3 text-white text-sm">${o.priceUsd?.toFixed(3)}</td>
+                <td className="px-4 py-3 text-white text-sm">${n(o.priceUsd).toFixed(3)}</td>
                 <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(o.createdAt).toLocaleString("fr")}</td>
               </tr>
             ))}
@@ -445,7 +457,7 @@ function AdminTransactions() {
                 <td className="px-4 py-3"><div><p className="text-white text-sm">{t.userName}</p><p className="text-xs text-muted-foreground">{t.userEmail}</p></div></td>
                 <td className="px-4 py-3 text-white text-sm capitalize">{t.type}</td>
                 <td className="px-4 py-3 text-muted-foreground text-sm">{t.method} {t.provider ? `• ${t.provider}` : ""}</td>
-                <td className="px-4 py-3"><div><p className="text-white font-semibold text-sm">${t.amountUsd?.toFixed(2)}</p><p className="text-xs text-muted-foreground">{Math.round(t.amountFcfa).toLocaleString()} FCFA</p></div></td>
+                <td className="px-4 py-3"><div><p className="text-white font-semibold text-sm">${n(t.amountUsd).toFixed(2)}</p><p className="text-xs text-muted-foreground">{Math.round(n(t.amountFcfa)).toLocaleString()} FCFA</p></div></td>
                 <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
                 <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{t.reference ?? "-"}</td>
                 <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(t.createdAt).toLocaleString("fr")}</td>
