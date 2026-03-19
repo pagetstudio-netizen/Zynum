@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { db, usersTable, socialLinksTable } from "./index.js";
+import { db, usersTable, socialLinksTable, paymentProvidersTable } from "./index.js";
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -49,6 +49,41 @@ async function seed() {
   }
 
   console.log("Social links ready");
+
+  const providers = [
+    {
+      category: "mobile_money",
+      name: "Paxity – Mobile Money",
+      slug: "paxity",
+      isActive: true,
+      isSelected: true,
+      config: JSON.stringify({
+        countries: ["SN","CI","CM","BJ","BF","GH","GN","KE","ML","NG","TG"],
+        operators: ["WAVESN","OMSN","MTNCI","WAVECI","OMCI","MTNCM","OMCM","MOOVBJ","MTNBJ","MOOVBF","OMBF","ATGH","MTNGH","TLGH","MTNGN","OMGN","MPESAKE","MOOVML","OMML","MTNNG","OPNG","TMONEYTG","MOOVTG"],
+        apiUrl: "https://transaction.paxity.io/api/v1",
+      }),
+    },
+    {
+      category: "card",
+      name: "Paxity – Carte bancaire",
+      slug: "paxity_card",
+      isActive: true,
+      isSelected: true,
+      config: JSON.stringify({ currencies: ["XOF","XAF"], apiUrl: "https://transaction.paxity.io/api/v1" }),
+    },
+  ];
+
+  for (const p of providers) {
+    await db
+      .insert(paymentProvidersTable)
+      .values(p)
+      .onConflictDoUpdate({
+        target: paymentProvidersTable.slug,
+        set: { name: p.name, isActive: p.isActive, isSelected: p.isSelected, config: p.config },
+      });
+  }
+
+  console.log("Payment providers ready");
   process.exit(0);
 }
 
