@@ -131,6 +131,15 @@ PENDING → RECEIVED → FINISHED / TIMEOUT / BANNED / CANCELED
 3. `custom-fetch.ts` injecte automatiquement le token dans les headers
 4. API key développeur pour les intégrations tierces (format: `zyn_...`)
 
+## Internationalisation (i18n)
+
+- Système bilingue FR/EN via `useLanguage()` hook (`artifacts/zynum/src/hooks/use-language.tsx`)
+- Clés dans `artifacts/zynum/src/lib/i18n.ts` (objet `translations.fr` + `translations.en`)
+- Provider `LanguageProvider` dans `App.tsx`; langue sauvegardée dans `zynum_lang` localStorage
+- **Import correct** : `import { useLanguage } from "@/hooks/use-language"` (pas `@/lib/i18n-context`)
+- Pages bilingues avec données localisées : faq.tsx (FAQS FR/EN), api-docs.tsx (FEATURES/STEPS FR/EN), aide.tsx (CATEGORIES/POPULAR FR/EN)
+- Toutes les pages publiques traduites : home, contact, faq, about, api-docs, aide, privacy, terms, login, register
+
 ## TypeScript & Composite Projects
 
 Every package extends `tsconfig.base.json` which sets `composite: true`. Run codegen: `pnpm --filter @workspace/api-spec run codegen`
