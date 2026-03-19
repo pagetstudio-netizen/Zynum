@@ -32,6 +32,7 @@ timeoutMs = 20000
 [userenv.shared]
 VITE_PAXITY_API_KEY = "private_3mdRuLok6Pe7rcUm2WhbN7KN6pDD6EVl"
 VITE_PAXITY_API_TOKEN = "4HoB2042mb89DQ2oOd1T9lNv7rAcXjyl"
+PAXITY_APP_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJTZW5kYXZhUGF5Iiwicm9sZXMiOlsiQVBQIl0sImlhdCI6MTc3MzY2MzcwNX0.zxTqxbxjhOgji-4vNTIkLcmKFdJRYEDoKqs8nCrdJmEnYGpBx5Mtx5OIWv0oqs83VIe5uFxssE8i0yYxXKJrTQ"
 
 [nix]
 channel = "stable-25_05"
