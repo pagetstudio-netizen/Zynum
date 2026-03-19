@@ -33,12 +33,12 @@ function Router() {
   return (
     <Switch>
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       <Route>
         <Layout>
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/login" component={Login} />
-            <Route path="/register" component={Register} />
             <Route path="/buy" component={BuyNumber} />
             <Route path="/history">{() => <Redirect to="/dashboard" />}</Route>
             <Route path="/aide" component={HelpCenter} />
