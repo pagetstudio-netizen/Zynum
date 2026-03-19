@@ -269,25 +269,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
 
-              {/* Currency */}
-              <div className="px-6 py-4 border-b border-white/[0.06]">
-                <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wider">{t("menu_currency")}</p>
-                <div className="flex items-center gap-2">
-                  {(["USD", "FCFA"] as const).map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setCurrency(c)}
-                      className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border ${
-                        currency === c
-                          ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                          : "text-muted-foreground border-white/10 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Logged in user info */}
               {user && (
