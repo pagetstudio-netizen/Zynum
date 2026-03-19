@@ -6,8 +6,9 @@ import {
   LayoutDashboard, ShoppingCart, History, User, LogOut,
   Wallet, Package, TrendingUp, ChevronRight, PlusCircle,
   Check, Menu, X, Shield, HelpCircle, MessageSquare,
-  Eye, EyeOff, Lock, KeyRound,
+  Eye, EyeOff, Lock, KeyRound, Sun, Moon,
 } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -487,6 +488,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
   const { currency, setCurrency } = useCurrency();
+  const { theme, toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const { data: user, isLoading } = useGetCurrentUser({ query: { retry: false } });
@@ -649,7 +651,7 @@ export default function Dashboard() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-white/[0.06]" style={{ background: "hsl(222, 47%, 5%)/80" }}>
+        <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-white/[0.06] bg-background/80">
           <button className="lg:hidden text-muted-foreground hover:text-white p-1" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
@@ -659,6 +661,17 @@ export default function Dashboard() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+              className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors"
+            >
+              {theme === "dark"
+                ? <Sun className="w-4 h-4" />
+                : <Moon className="w-4 h-4" />
+              }
+            </button>
             <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors" title="Centre d'aide">
               <HelpCircle className="w-4 h-4" />
             </Link>
