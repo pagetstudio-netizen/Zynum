@@ -7,6 +7,7 @@ import balanceRouter from "./balance.js";
 import developerRouter from "./developer.js";
 import adminRouter from "./admin.js";
 import contactRouter from "./contact.js";
+import paxityRouter from "./paxity.js";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(balanceRouter);
 router.use(developerRouter);
 router.use(adminRouter);
 router.use(contactRouter);
+router.use(paxityRouter);
 
 export default router;
