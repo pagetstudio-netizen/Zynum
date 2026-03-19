@@ -10,6 +10,7 @@ import { useCurrency } from "@/hooks/use-currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 import {
   useGetServices,
   useGetCountries,
@@ -22,11 +23,9 @@ import {
   type Order,
 } from "@workspace/api-client-react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 type BuyStep = "service" | "country" | "operator" | "preview" | "active";
 
-// ─── Countdown hook (based on createdAt ISO string) ───────────────────────────
-const DURATION = 360; // 6 minutes in seconds
+const DURATION = 360;
 function useCountdown(createdAt: string | undefined) {
   const [remaining, setRemaining] = useState<number>(DURATION);
   useEffect(() => {
@@ -41,14 +40,14 @@ function useCountdown(createdAt: string | undefined) {
   }, [createdAt]);
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
-  const pct = remaining / DURATION; // 1 → 0
+  const pct = remaining / DURATION;
   const urgent = remaining <= 60;
   const expired = remaining === 0;
   return { remaining, mm, ss, pct, urgent, expired };
 }
 
-// ─── Countdown ring UI ────────────────────────────────────────────────────────
 function CountdownRing({ createdAt, onExpired }: { createdAt: string; onExpired?: () => void }) {
+  const { t } = useLanguage();
   const { mm, ss, pct, urgent, expired } = useCountdown(createdAt);
   const prevExpired = useRef(false);
   useEffect(() => {
@@ -73,25 +72,22 @@ function CountdownRing({ createdAt, onExpired }: { createdAt: string; onExpired?
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <Clock className="w-4 h-4 mb-0.5" style={{ color }} />
-          <span className="text-lg font-bold font-mono" style={{ color }}>
-            {mm}:{ss}
-          </span>
+          <span className="text-lg font-bold font-mono" style={{ color }}>{mm}:{ss}</span>
         </div>
       </div>
       <div className="text-center">
         {expired ? (
-          <p className="text-sm font-semibold text-red-400">Délai expiré</p>
+          <p className="text-sm font-semibold text-red-400">{t("buy_countdown_expired")}</p>
         ) : urgent ? (
-          <p className="text-sm font-semibold text-orange-400">⚠️ Moins d'une minute !</p>
+          <p className="text-sm font-semibold text-orange-400">{t("buy_countdown_urgent")}</p>
         ) : (
-          <p className="text-xs text-muted-foreground">Temps restant pour recevoir le SMS</p>
+          <p className="text-xs text-muted-foreground">{t("buy_countdown_waiting")}</p>
         )}
       </div>
     </div>
   );
 }
 
-// ─── Service Logo ─────────────────────────────────────────────────────────────
 function ServiceLogo({ icon, color, name, size = 40 }: { icon: string; color: string; name: string; size?: number }) {
   const [failed, setFailed] = useState(false);
   const lightBg = ["#FFFC00", "#F0B90B"].includes(color.toUpperCase());
@@ -108,16 +104,15 @@ function ServiceLogo({ icon, color, name, size = 40 }: { icon: string; color: st
   );
 }
 
-// ─── Step Indicator ───────────────────────────────────────────────────────────
-const STEPS_INFO = [
-  { key: "service",  label: "Service" },
-  { key: "country",  label: "Pays" },
-  { key: "operator", label: "Opérateur" },
-  { key: "preview",  label: "Numéro" },
-  { key: "active",   label: "SMS" },
-];
-
 function StepIndicator({ current }: { current: BuyStep }) {
+  const { t } = useLanguage();
+  const STEPS_INFO = [
+    { key: "service",  label: t("buy_step_service") },
+    { key: "country",  label: t("buy_step_country") },
+    { key: "operator", label: t("buy_step_operator") },
+    { key: "preview",  label: t("buy_step_number") },
+    { key: "active",   label: t("buy_step_sms") },
+  ];
   const idx = STEPS_INFO.findIndex((s) => s.key === current);
   return (
     <div className="flex items-center gap-1 mb-8">
@@ -148,7 +143,6 @@ function StepIndicator({ current }: { current: BuyStep }) {
   );
 }
 
-// ─── Page container with animation ───────────────────────────────────────────
 function StepPage({ children, dir = 1 }: { children: React.ReactNode; dir?: number }) {
   return (
     <motion.div
@@ -162,8 +156,8 @@ function StepPage({ children, dir = 1 }: { children: React.ReactNode; dir?: numb
   );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean }) {
+  const { t } = useLanguage();
   const { currency } = useCurrency();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -172,7 +166,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   const { data: balanceData, refetch: refetchBalance } = useGetBalance({ query: { enabled: !!user, retry: false } });
 
   const [step, setStep] = useState<BuyStep>("service");
-  const [dir, setDir] = useState(1); // animation direction
+  const [dir, setDir] = useState(1);
   const [searchService, setSearchService] = useState("");
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -181,16 +175,11 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [buyCount, setBuyCount] = useState(0);
 
-  // Listen for buy-intent event dispatched by dashboard when arriving from public /buy page
   useEffect(() => {
     const handler = (e: Event) => {
       const { service, country } = (e as CustomEvent<{ service: string; country: string }>).detail;
       if (service) setSelectedService(service);
-      if (country) {
-        setSelectedCountry(country);
-        setDir(1);
-        setStep("operator");
-      }
+      if (country) { setSelectedCountry(country); setDir(1); setStep("operator"); }
     };
     window.addEventListener("zynum:buy-intent", handler);
     return () => window.removeEventListener("zynum:buy-intent", handler);
@@ -204,9 +193,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   const { data: operatorsData, isLoading: isLoadingOperators } = useGetOperators(selectedService, selectedCountry);
 
   useEffect(() => {
-    if (operatorsData?.operators?.length) {
-      setSelectedOperator(operatorsData.operators[0].name);
-    }
+    if (operatorsData?.operators?.length) setSelectedOperator(operatorsData.operators[0].name);
   }, [operatorsData]);
 
   const goTo = (next: BuyStep, forward = true) => { setDir(forward ? 1 : -1); setStep(next); };
@@ -224,8 +211,8 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         const isBalance = /balance|no free|insufficient|solde/i.test(msg);
         toast({
           variant: "destructive",
-          title: isBalance ? "Solde insuffisant" : "Erreur d'achat",
-          description: isBalance ? "Rechargez votre solde ZyNum depuis votre tableau de bord." : msg || "Impossible d'obtenir un numéro. Réessayez.",
+          title: isBalance ? t("buy_insufficient") : t("buy_error_title"),
+          description: isBalance ? t("buy_error_desc") : msg || t("buy_error_generic"),
         });
       },
     },
@@ -237,7 +224,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         setActiveOrder(null);
         goTo("service", false);
         refetchBalance();
-        toast({ title: "✅ Remboursé", description: "Le montant a été recrédité sur votre solde." });
+        toast({ title: t("buy_refunded"), description: t("buy_refunded_desc") });
       },
       onError: () => { setActiveOrder(null); goTo("service", false); },
     },
@@ -254,11 +241,11 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     if (!smsData?.order) return;
     setActiveOrder(smsData.order);
     if (smsData.order.status === "RECEIVED" || smsData.order.status === "FINISHED") {
-      toast({ title: "📨 SMS reçu !", description: `Code OTP : ${smsData.order.smsCode}` });
+      toast({ title: t("buy_sms_toast"), description: `${t("buy_sms_code_toast")} ${smsData.order.smsCode}` });
     } else if (["TIMEOUT", "BANNED", "CANCELED"].includes(smsData.order.status)) {
-      toast({ variant: "destructive", title: "Expiré", description: "Le numéro n'a pas reçu de SMS." });
+      toast({ variant: "destructive", title: t("buy_expired_toast"), description: t("buy_expired_desc") });
     }
-  }, [smsData, toast]);
+  }, [smsData, toast, t]);
 
   const handleGetNumber = useCallback(() => {
     if (!selectedService || !selectedCountry) return;
@@ -279,7 +266,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: `${label} copié !` });
+    toast({ title: `${label} ${t("buy_copied")}` });
   };
 
   const balance = balanceData?.balance ?? 0;
@@ -291,10 +278,8 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   const selectedCountryInfo  = countriesData?.countries.find((c) => c.code === selectedCountry);
   const operators = operatorsData?.operators ?? [];
 
-  // Show spinner only in embedded (dashboard) mode while auth loads
   if (isEmbedded && isUserLoading) return <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
-  // ── Shared balance pill ─────────────────────────────────────────────────────
   const BalancePill = () => (
     <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${
       balance === 0 ? "bg-red-500/10 border-red-500/20 text-red-300"
@@ -302,21 +287,18 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
       :               "bg-green-500/10 border-green-500/20 text-green-300"
     }`}>
       <Wallet className="w-4 h-4 shrink-0" />
-      Solde : {formatBalance()}
-      {balance === 0 && <button onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))} className="underline ml-1 hover:text-white">Recharger →</button>}
+      {t("buy_balance_pill")} {formatBalance()}
+      {balance === 0 && <button onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))} className="underline ml-1 hover:text-white">{t("buy_top_up_pill")}</button>}
     </div>
   );
 
-  // ── Breadcrumb trail ────────────────────────────────────────────────────────
   const Breadcrumb = () => (
     <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6 flex-wrap">
       {selectedServiceInfo && (
-        <>
-          <span className="flex items-center gap-1">
-            <ServiceLogo icon={selectedServiceInfo.icon} color={selectedServiceInfo.color} name={selectedServiceInfo.name} size={16} />
-            <span className="text-white font-medium">{selectedServiceInfo.name}</span>
-          </span>
-        </>
+        <span className="flex items-center gap-1">
+          <ServiceLogo icon={selectedServiceInfo.icon} color={selectedServiceInfo.color} name={selectedServiceInfo.name} size={16} />
+          <span className="text-white font-medium">{selectedServiceInfo.name}</span>
+        </span>
       )}
       {selectedCountryInfo && (
         <>
@@ -327,9 +309,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     </div>
   );
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // STEP 1 — SELECT SERVICE
-  // ════════════════════════════════════════════════════════════════════════════
+  // ── STEP 1 — SERVICE ────────────────────────────────────────────────────────
   if (step === "service") {
     const filtered = (servicesData?.services ?? []).filter((s) =>
       s.name.toLowerCase().includes(searchService.toLowerCase())
@@ -337,27 +317,22 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     return (
       <div className="max-w-3xl mx-auto">
         <StepIndicator current="service" />
-
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-white">Quel service voulez-vous vérifier ?</h1>
-            <p className="text-muted-foreground text-sm mt-1">Choisissez l'application pour laquelle vous souhaitez recevoir un code OTP.</p>
+            <h1 className="text-2xl font-bold text-white">{t("buy_s1_title")}</h1>
+            <p className="text-muted-foreground text-sm mt-1">{t("buy_s1_sub")}</p>
           </div>
           {user && <BalancePill />}
         </div>
-
-        {/* Search */}
         <div className="relative mb-5">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher un service… Telegram, WhatsApp, Gmail…"
+            placeholder={t("buy_s1_placeholder")}
             className="pl-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-primary/50"
             value={searchService}
             onChange={(e) => setSearchService(e.target.value)}
           />
         </div>
-
-        {/* Grid */}
         {isLoadingServices ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : (
@@ -368,12 +343,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                onClick={() => {
-                  setSelectedService(svc.id);
-                  setSelectedCountry(null);
-                  setSelectedOperator(null);
-                  goTo("country");
-                }}
+                onClick={() => { setSelectedService(svc.id); setSelectedCountry(null); setSelectedOperator(null); goTo("country"); }}
                 className="group flex flex-col items-center gap-3 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 text-center transition-all hover:scale-[1.02]"
               >
                 <ServiceLogo icon={svc.icon} color={svc.color} name={svc.name} size={48} />
@@ -382,7 +352,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
             ))}
             {filtered.length === 0 && (
               <div className="col-span-full py-16 text-center text-muted-foreground">
-                Aucun service trouvé pour "<strong className="text-white">{searchService}</strong>"
+                {t("buy_no_service_for")} "<strong className="text-white">{searchService}</strong>"
               </div>
             )}
           </div>
@@ -391,9 +361,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     );
   }
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // STEP 2 — SELECT COUNTRY
-  // ════════════════════════════════════════════════════════════════════════════
+  // ── STEP 2 — COUNTRY ────────────────────────────────────────────────────────
   if (step === "country") {
     const allCountries = countriesData?.countries ?? [];
     const filtered = allCountries
@@ -405,47 +373,38 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         <StepPage key="country" dir={dir}>
           <div className="max-w-3xl mx-auto">
             <StepIndicator current="country" />
-
             <button onClick={() => goBack("service")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-5 transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Changer de service
+              <ArrowLeft className="w-4 h-4" /> {t("buy_change_service")}
             </button>
-
             {selectedServiceInfo && (
               <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
                 <ServiceLogo icon={selectedServiceInfo.icon} color={selectedServiceInfo.color} name={selectedServiceInfo.name} size={40} />
                 <div>
-                  <p className="text-xs text-muted-foreground">Service sélectionné</p>
+                  <p className="text-xs text-muted-foreground">{t("buy_service_selected")}</p>
                   <p className="font-bold text-white">{selectedServiceInfo.name}</p>
                 </div>
                 {user && <BalancePill />}
               </div>
             )}
-
-            {/* If not logged in on public page, show login nudge */}
             {!user && !isEmbedded && (
               <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl border border-primary/20 bg-primary/5">
                 <Lock className="w-5 h-5 text-primary shrink-0" />
-                <p className="text-sm text-muted-foreground flex-1">
-                  Sélectionnez un pays — vous serez invité à vous connecter pour finaliser.
-                </p>
+                <p className="text-sm text-muted-foreground flex-1">{t("buy_login_nudge")}</p>
               </div>
             )}
-
             <div className="mb-5">
-              <h2 className="text-2xl font-bold text-white mb-1">Dans quel pays ?</h2>
-              <p className="text-muted-foreground text-sm">Sélectionnez le pays pour lequel vous souhaitez un numéro virtuel.</p>
+              <h2 className="text-2xl font-bold text-white mb-1">{t("buy_s2_title")}</h2>
+              <p className="text-muted-foreground text-sm">{t("buy_s2_sub")}</p>
             </div>
-
             <div className="relative mb-5">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher un pays…"
+                placeholder={t("buy_s2_placeholder")}
                 className="pl-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-primary/50"
                 value={searchCountry}
                 onChange={(e) => setSearchCountry(e.target.value)}
               />
             </div>
-
             {isLoadingCountries ? (
               <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
             ) : (
@@ -462,19 +421,10 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                       onClick={() => {
                         setSelectedCountry(country.code);
                         if (isEmbedded) {
-                          // Inside dashboard: normal flow
                           goTo("operator");
                         } else {
-                          // Public page: save intent and redirect
-                          sessionStorage.setItem("zynum_buy_intent", JSON.stringify({
-                            service: selectedService,
-                            country: country.code,
-                          }));
-                          if (user) {
-                            setLocation("/dashboard");
-                          } else {
-                            setLocation("/login");
-                          }
+                          sessionStorage.setItem("zynum_buy_intent", JSON.stringify({ service: selectedService, country: country.code }));
+                          if (user) { setLocation("/dashboard"); } else { setLocation("/login"); }
                         }
                       }}
                       className="w-full flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 text-left transition-all group"
@@ -483,7 +433,9 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                         <span className="text-2xl">{country.flag ?? "🌐"}</span>
                         <div>
                           <p className="font-semibold text-white group-hover:text-primary transition-colors">{country.name}</p>
-                          <p className="text-xs text-muted-foreground">{country.available} numéro{country.available > 1 ? "s" : ""} disponible{country.available > 1 ? "s" : ""}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {country.available} {country.available > 1 ? t("buy_num_available_plural") : t("buy_num_available_single")}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
@@ -498,9 +450,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                   );
                 })}
                 {filtered.length === 0 && (
-                  <div className="py-16 text-center text-muted-foreground">
-                    Aucun pays disponible pour ce service.
-                  </div>
+                  <div className="py-16 text-center text-muted-foreground">{t("buy_no_country_for")}</div>
                 )}
               </div>
             )}
@@ -510,23 +460,17 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     );
   }
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // STEP 3 — SELECT OPERATOR & BUY
-  // ════════════════════════════════════════════════════════════════════════════
+  // ── STEP 3 — OPERATOR ───────────────────────────────────────────────────────
   if (step === "operator") {
     return (
       <AnimatePresence mode="wait">
         <StepPage key="operator" dir={dir}>
           <div className="max-w-2xl mx-auto">
             <StepIndicator current="operator" />
-
             <button onClick={() => goBack("country")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-5 transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Changer de pays
+              <ArrowLeft className="w-4 h-4" /> {t("buy_change_country")}
             </button>
-
             <Breadcrumb />
-
-            {/* Summary card */}
             <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {selectedServiceInfo && <ServiceLogo icon={selectedServiceInfo.icon} color={selectedServiceInfo.color} name={selectedServiceInfo.name} size={48} />}
               <div className="flex-1">
@@ -535,16 +479,14 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
               </div>
               {user && <BalancePill />}
             </div>
-
             <div className="mb-5">
-              <h2 className="text-2xl font-bold text-white mb-1">Choisir un opérateur</h2>
-              <p className="text-muted-foreground text-sm">Sélectionnez l'opérateur réseau. Nous présélectionnons le moins cher.</p>
+              <h2 className="text-2xl font-bold text-white mb-1">{t("buy_s3_title")}</h2>
+              <p className="text-muted-foreground text-sm">{t("buy_s3_sub")}</p>
             </div>
-
             {isLoadingOperators ? (
               <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
             ) : operators.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">Aucun opérateur disponible pour ce pays.</div>
+              <div className="py-12 text-center text-muted-foreground">{t("buy_no_operator")}</div>
             ) : (
               <div className="space-y-3 mb-8">
                 {operators.map((op, i) => {
@@ -557,36 +499,28 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                       transition={{ delay: i * 0.07 }}
                       onClick={() => setSelectedOperator(op.name)}
                       className={`w-full flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border text-left transition-all ${
-                        active
-                          ? "border-primary/50 bg-primary/10 shadow-lg shadow-primary/10"
-                          : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10"
+                        active ? "border-primary/50 bg-primary/10 shadow-lg shadow-primary/10" : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10"
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border ${
-                          active ? "bg-primary/20 border-primary/30 text-primary" : "bg-white/5 border-white/10 text-muted-foreground"
-                        }`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border ${active ? "bg-primary/20 border-primary/30 text-primary" : "bg-white/5 border-white/10 text-muted-foreground"}`}>
                           {op.label?.slice(0, 1).toUpperCase() ?? "?"}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="font-semibold text-white">{op.label ?? op.name}</p>
-                            {i === 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400">Recommandé</span>}
+                            {i === 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400">{t("buy_recommended")}</span>}
                           </div>
-                          <p className="text-xs text-muted-foreground">{op.available} numéro{op.available > 1 ? "s" : ""} dispo</p>
+                          <p className="text-xs text-muted-foreground">{op.available} {t("buy_num_dispo")}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="text-right">
                           <p className="font-bold text-white">
-                            {currency === "FCFA"
-                              ? `${op.priceFcfa?.toLocaleString("fr-FR")} FCFA`
-                              : `$${op.priceUsd?.toFixed(2)}`}
+                            {currency === "FCFA" ? `${op.priceFcfa?.toLocaleString("fr-FR")} FCFA` : `$${op.priceUsd?.toFixed(2)}`}
                           </p>
                         </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                          active ? "border-primary bg-primary" : "border-white/20"
-                        }`}>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${active ? "border-primary bg-primary" : "border-white/20"}`}>
                           {active && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
@@ -595,28 +529,22 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                 })}
               </div>
             )}
-
-            {/* Buy button */}
             <Button
               className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/25"
               disabled={!selectedOperator || buyMutation.isPending || balance === 0}
               onClick={handleGetNumber}
             >
               {buyMutation.isPending ? (
-                <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Attribution en cours…</>
+                <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> {t("buy_assigning")}</>
               ) : (
-                <><Phone className="w-5 h-5 mr-2" /> Obtenir un numéro</>
+                <><Phone className="w-5 h-5 mr-2" /> {t("buy_get_number")}</>
               )}
             </Button>
-
             {balance === 0 && (
               <p className="text-center text-xs text-red-400 mt-3">
-                Solde insuffisant.{" "}
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))}
-                  className="underline hover:text-white"
-                >
-                  Recharger mon solde →
+                {t("buy_insufficient")}.{" "}
+                <button onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))} className="underline hover:text-white">
+                  {t("buy_insufficient_top_up")}
                 </button>
               </p>
             )}
@@ -626,9 +554,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     );
   }
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // STEP 4 — PREVIEW NUMBER
-  // ════════════════════════════════════════════════════════════════════════════
+  // ── STEP 4 — PREVIEW ────────────────────────────────────────────────────────
   if (step === "preview" && activeOrder) {
     const svc = selectedServiceInfo;
     return (
@@ -636,58 +562,49 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         <StepPage key="preview" dir={dir}>
           <div className="max-w-lg mx-auto">
             <StepIndicator current="preview" />
-
             <button
               onClick={() => { cancelMutation.mutate(activeOrder.id); }}
               disabled={cancelMutation.isPending}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-6 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Changer de pays / service
+              <ArrowLeft className="w-4 h-4" /> {t("buy_change_country_service")}
             </button>
-
             <div className="rounded-3xl border border-white/10 bg-card/60 backdrop-blur-xl overflow-hidden shadow-2xl">
-              {/* Header */}
               <div className="px-6 pt-6 pb-4 border-b border-white/10 flex items-center gap-4" style={{ background: svc ? `${svc.color}12` : undefined }}>
                 {svc && <ServiceLogo icon={svc.icon} color={svc.color} name={svc.name} size={48} />}
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Numéro assigné</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("buy_assigned")}</p>
                   <p className="font-bold text-white text-lg">{activeOrder.serviceName}</p>
                   <p className="text-sm text-muted-foreground">{activeOrder.countryName}</p>
                 </div>
                 <div className="ml-auto text-right">
-                  <p className="text-xs text-muted-foreground">Prix</p>
+                  <p className="text-xs text-muted-foreground">{t("buy_price")}</p>
                   <p className="font-bold text-white text-lg">
-                    {currency === "FCFA"
-                      ? `${activeOrder.priceFcfa.toLocaleString("fr-FR")} FCFA`
-                      : `$${activeOrder.priceUsd.toFixed(2)}`}
+                    {currency === "FCFA" ? `${activeOrder.priceFcfa.toLocaleString("fr-FR")} FCFA` : `$${activeOrder.priceUsd.toFixed(2)}`}
                   </p>
                 </div>
               </div>
-
-              {/* Number */}
               <div className="px-6 py-8 text-center">
                 <div className="mb-3 inline-flex items-center gap-2 bg-primary/10 border border-primary/30 text-primary text-xs px-3 py-1 rounded-full font-medium">
-                  <Smartphone className="w-3 h-3" /> Votre numéro virtuel
+                  <Smartphone className="w-3 h-3" /> {t("buy_virtual_number")}
                 </div>
                 <div className="flex items-center justify-center gap-4 bg-black/40 border border-white/10 rounded-2xl px-6 py-5 mb-3">
                   <Phone className="w-6 h-6 text-primary shrink-0" />
                   <span className="text-3xl sm:text-4xl font-bold text-white font-mono tracking-wider select-all">{activeOrder.phone}</span>
-                  <button onClick={() => copy(activeOrder.phone, "Numéro")} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                  <button onClick={() => copy(activeOrder.phone, t("buy_phone"))} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                     <Copy className="w-5 h-5 text-muted-foreground hover:text-white" />
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Utilisez ce numéro dans <span className="text-white font-medium">{activeOrder.serviceName}</span> pour recevoir le code OTP.
+                  {t("buy_use_number_hint")} <span className="text-white font-medium">{activeOrder.serviceName}</span> {t("buy_use_number_hint2")}
                 </p>
               </div>
-
-              {/* Actions */}
               <div className="px-6 pb-6 space-y-3">
                 <Button
                   className="w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base shadow-lg shadow-green-500/20"
-                  onClick={() => { setStep("active"); toast({ title: "✅ Numéro confirmé", description: "En attente du SMS…" }); }}
+                  onClick={() => { setStep("active"); toast({ title: t("buy_confirmed"), description: t("buy_confirmed_desc") }); }}
                 >
-                  <Check className="w-5 h-5 mr-2" /> Utiliser ce numéro — attendre le SMS
+                  <Check className="w-5 h-5 mr-2" /> {t("buy_confirm_btn")}
                 </Button>
                 <Button
                   variant="outline"
@@ -696,7 +613,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                   disabled={buyMutation.isPending || cancelMutation.isPending}
                 >
                   {buyMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
-                  Obtenir un autre numéro {buyCount > 1 && `(essai ${buyCount})`}
+                  {t("buy_get_another")} {buyCount > 1 && `(${t("buy_try_label")} ${buyCount})`}
                 </Button>
                 <Button
                   variant="ghost"
@@ -704,11 +621,9 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                   onClick={() => cancelMutation.mutate(activeOrder.id)}
                   disabled={cancelMutation.isPending}
                 >
-                  <X className="w-4 h-4 mr-2" /> Annuler et rembourser
+                  <X className="w-4 h-4 mr-2" /> {t("buy_cancel_refund")}
                 </Button>
-                <p className="text-center text-xs text-muted-foreground pt-1">
-                  💡 "Obtenir un autre numéro" annule le numéro actuel et en assigne un nouveau automatiquement.
-                </p>
+                <p className="text-center text-xs text-muted-foreground pt-1">💡 {t("buy_another_tip")}</p>
               </div>
             </div>
           </div>
@@ -717,9 +632,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     );
   }
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // STEP 5 — ACTIVE / SMS POLLING
-  // ════════════════════════════════════════════════════════════════════════════
+  // ── STEP 5 — ACTIVE / SMS POLLING ───────────────────────────────────────────
   if (step === "active" && activeOrder) {
     const svc = selectedServiceInfo;
     const isPending = activeOrder.status === "PENDING";
@@ -731,16 +644,13 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         <StepPage key="active" dir={dir}>
           <div className="max-w-lg mx-auto">
             <StepIndicator current="active" />
-
             <button
               onClick={() => { setActiveOrder(null); goTo("service", false); setBuyCount(0); }}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-6 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Acheter un autre numéro
+              <ArrowLeft className="w-4 h-4" /> {t("buy_buy_another")}
             </button>
-
             <div className="rounded-3xl border border-white/10 bg-card/60 backdrop-blur-xl overflow-hidden shadow-2xl">
-              {/* Header */}
               <div className="px-6 pt-5 pb-4 border-b border-white/10 flex items-center gap-4" style={{ background: svc ? `${svc.color}12` : undefined }}>
                 {svc && <ServiceLogo icon={svc.icon} color={svc.color} name={svc.name} size={44} />}
                 <div className="flex-1">
@@ -753,48 +663,39 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                   "bg-red-500/10 text-red-400 border-red-500/30"
                 }`}>{activeOrder.status}</span>
               </div>
-
-              {/* Phone */}
               <div className="px-6 py-4 border-b border-white/10">
-                <p className="text-xs text-muted-foreground mb-2">Numéro virtuel</p>
+                <p className="text-xs text-muted-foreground mb-2">{t("buy_virtual_num_label")}</p>
                 <div className="flex items-center gap-3 bg-black/30 border border-white/5 rounded-xl px-4 py-3">
                   <Phone className="w-5 h-5 text-primary shrink-0" />
                   <span className="font-bold text-white font-mono text-2xl tracking-wider flex-1 select-all">{activeOrder.phone}</span>
-                  <button onClick={() => copy(activeOrder.phone, "Numéro")} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                  <button onClick={() => copy(activeOrder.phone, t("buy_phone"))} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
                     <Copy className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
               </div>
-
-              {/* SMS area */}
               <div className="px-6 py-8">
                 {isPending && (
                   <div className="flex flex-col items-center text-center gap-4">
-                    {/* Spinner */}
                     <div className="relative w-14 h-14">
                       <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
                       <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
                       <Smartphone className="absolute inset-0 m-auto w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-bold text-white text-lg mb-1">En attente du SMS…</p>
+                      <p className="font-bold text-white text-lg mb-1">{t("buy_waiting_sms")}</p>
                       <p className="text-sm text-muted-foreground max-w-xs">
-                        Entrez ce numéro dans <strong className="text-white">{activeOrder.serviceName}</strong> pour déclencher l'envoi du code.
+                        {t("buy_enter_number_hint")} <strong className="text-white">{activeOrder.serviceName}</strong> {t("buy_enter_number_hint2")}
                       </p>
                     </div>
-
-                    {/* Countdown ring */}
                     <CountdownRing
                       createdAt={activeOrder.createdAt}
                       onExpired={() => {
-                        toast({ title: "⏱ Délai expiré", description: "Le numéro n'a pas reçu de SMS. Vous pouvez annuler pour être remboursé.", variant: "destructive" });
+                        toast({ title: t("buy_time_expired_title"), description: t("buy_time_expired_desc"), variant: "destructive" });
                       }}
                     />
-
-                    {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-2 w-full mt-1">
                       <Button variant="outline" size="sm" onClick={() => refetchSms()} className="flex-1 border-white/20 text-white hover:bg-white/10">
-                        <RefreshCw className="w-4 h-4 mr-2" /> Vérifier maintenant
+                        <RefreshCw className="w-4 h-4 mr-2" /> {t("buy_check_now")}
                       </Button>
                       <Button
                         variant="ghost" size="sm"
@@ -803,44 +704,40 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                         disabled={cancelMutation.isPending}
                       >
                         {cancelMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <X className="w-4 h-4 mr-2" />}
-                        Annuler &amp; rembourser
+                        {t("buy_cancel_refund2")}
                       </Button>
                     </div>
-
-                    {/* History tip */}
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-2 w-full text-left">
                       <History className="w-3.5 h-3.5 shrink-0 text-primary" />
-                      Si vous quittez cette page, vérifiez votre <strong className="text-white">Historique</strong> — vous pourrez y annuler la commande.
+                      {t("buy_history_tip")} <strong className="text-white mx-1">{t("buy_history_link")}</strong> {t("buy_history_tip2")}
                     </p>
                   </div>
                 )}
-
                 {isSuccess && (
                   <div className="flex flex-col items-center text-center">
                     <CheckCircle2 className="w-16 h-16 text-green-400 mb-4" />
-                    <p className="font-bold text-white text-2xl mb-5">SMS reçu !</p>
+                    <p className="font-bold text-white text-2xl mb-5">{t("buy_sms_received")}</p>
                     <div className="flex items-center gap-4 bg-green-500/10 border border-green-500/30 rounded-2xl px-8 py-5 mb-5">
                       <span className="text-4xl font-bold text-green-400 font-mono tracking-widest select-all">{activeOrder.smsCode}</span>
-                      <button onClick={() => copy(activeOrder.smsCode || "", "Code OTP")} className="p-2 hover:bg-green-500/20 rounded-lg transition-colors">
+                      <button onClick={() => copy(activeOrder.smsCode || "", t("buy_sms_code"))} className="p-2 hover:bg-green-500/20 rounded-lg transition-colors">
                         <Copy className="w-5 h-5 text-green-400" />
                       </button>
                     </div>
                     {activeOrder.smsText && (
                       <div className="bg-black/40 border border-white/5 rounded-xl p-4 text-left w-full">
-                        <p className="text-xs text-muted-foreground mb-1">Message complet :</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t("buy_full_message")}</p>
                         <p className="text-sm text-white font-mono leading-relaxed">{activeOrder.smsText}</p>
                       </div>
                     )}
                   </div>
                 )}
-
                 {isFailed && (
                   <div className="flex flex-col items-center text-center">
                     <AlertCircle className="w-16 h-16 text-red-400 mb-4" />
-                    <p className="font-bold text-white text-xl mb-2">Numéro expiré</p>
-                    <p className="text-sm text-muted-foreground mb-6">Essayez un autre pays ou un autre service.</p>
+                    <p className="font-bold text-white text-xl mb-2">{t("buy_number_expired")}</p>
+                    <p className="text-sm text-muted-foreground mb-6">{t("buy_try_another")}</p>
                     <Button className="bg-primary text-white hover:bg-primary/90" onClick={() => { setActiveOrder(null); goTo("service", false); setBuyCount(0); }}>
-                      Recommencer
+                      {t("buy_restart")}
                     </Button>
                   </div>
                 )}
