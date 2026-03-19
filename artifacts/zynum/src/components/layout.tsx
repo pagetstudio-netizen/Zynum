@@ -174,73 +174,131 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* Mobile menu btn */}
             <button
               className="md:hidden p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => setIsMobileMenuOpen(true)}
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Menu className="w-5 h-5" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile menu */}
+      {/* ── Mobile menu — full screen overlay ────────────────────────────── */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
-            className="md:hidden fixed top-[73px] left-0 w-full bg-[hsl(222,47%,7%)]/95 backdrop-blur-xl border-b border-white/[0.06] z-40 shadow-2xl"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.25 }}
+            className="md:hidden fixed inset-0 z-50 flex flex-col"
+            style={{ background: "hsl(222, 47%, 5%)" }}
           >
-            <div className="p-4 space-y-3">
-              <div className="flex items-center bg-white/5 rounded-lg p-1 border border-white/[0.06] w-full">
-                {["USD", "FCFA"].map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCurrency(c as "USD" | "FCFA")}
-                    className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${
-                      currency === c ? "bg-primary text-white" : "text-muted-foreground"
-                    }`}
-                  >{c}</button>
-                ))}
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-primary/30">
+                  <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
+                </div>
+                <span className="font-display font-bold text-xl text-white">ZyNum</span>
               </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/8 hover:bg-white/15 text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Nav items */}
+            <nav className="flex-1 overflow-y-auto">
+              {/* Accueil */}
+              <Link
+                href="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center justify-between px-6 py-4 border-b border-white/[0.06] text-base font-semibold transition-colors ${location === "/" ? "text-primary bg-primary/5" : "text-white/90 hover:text-white hover:bg-white/5"}`}
+              >
+                <span>Accueil</span>
+                {location === "/" && <div className="w-2 h-2 rounded-full bg-primary" />}
+              </Link>
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center px-4 py-3 rounded-xl text-sm font-medium ${
-                    location === link.href ? "bg-primary/20 text-primary border border-primary/30" : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                  className={`flex items-center justify-between px-6 py-4 border-b border-white/[0.06] text-base font-semibold transition-colors ${
+                    location === link.href ? "text-primary bg-primary/5" : "text-white/90 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  {link.icon}{link.label}
+                  <span>{link.label}</span>
+                  {location === link.href && <div className="w-2 h-2 rounded-full bg-primary" />}
                 </Link>
               ))}
-              <div className="h-px w-full bg-white/[0.06]" />
-              {user ? (
-                <div className="space-y-2">
-                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-white/5">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-blue-400 flex items-center justify-center text-white text-sm font-bold">
+
+              {/* Currency */}
+              <div className="px-6 py-4 border-b border-white/[0.06]">
+                <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wider">Devise</p>
+                <div className="flex items-center gap-2">
+                  {["USD", "FCFA"].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCurrency(c as "USD" | "FCFA")}
+                      className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border ${
+                        currency === c
+                          ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                          : "text-muted-foreground border-white/10 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Logged in user info */}
+              {user && (
+                <div className="px-6 py-4 border-b border-white/[0.06]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-blue-400 flex items-center justify-center text-white font-bold">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-white text-sm font-medium">{user.name}</p>
+                      <p className="text-white font-semibold text-sm">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
+                  </div>
+                </div>
+              )}
+            </nav>
+
+            {/* Bottom CTA */}
+            <div className="px-5 py-6 space-y-3 border-t border-white/[0.08]">
+              {user ? (
+                <>
+                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25">
+                      Mon Dashboard
+                    </Button>
                   </Link>
-                  <button onClick={() => { logoutMutation.mutate(); setIsMobileMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-red-400 hover:bg-red-400/10 text-sm font-medium transition-colors">
+                  <button
+                    onClick={() => { logoutMutation.mutate(); setIsMobileMenuOpen(false); }}
+                    className="w-full h-12 flex items-center justify-center gap-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-semibold text-base transition-colors"
+                  >
                     <LogOut className="w-4 h-4" /> Déconnexion
                   </button>
-                </div>
+                </>
               ) : (
-                <div className="space-y-2 pt-1">
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10">Connexion</Button>
-                  </Link>
+                <>
                   <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button className="w-full bg-primary hover:bg-primary/90 text-white font-semibold">S'inscrire</Button>
+                    <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25">
+                      Commencer gratuitement
+                    </Button>
                   </Link>
-                </div>
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full h-12 border-white/20 text-white hover:bg-white/10 font-semibold text-base rounded-xl">
+                      Se connecter
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           </motion.div>

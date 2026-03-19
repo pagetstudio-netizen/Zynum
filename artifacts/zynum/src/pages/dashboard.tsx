@@ -554,12 +554,12 @@ export default function Dashboard() {
 
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-all">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-primary/30">
               <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
             </div>
-            <span className="font-bold text-white text-lg group-hover:text-primary transition-colors">ZyNum</span>
-          </Link>
+            <span className="font-bold text-white text-lg">ZyNum</span>
+          </div>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-muted-foreground hover:text-white p-1">
             <X className="w-5 h-5" />
           </button>
