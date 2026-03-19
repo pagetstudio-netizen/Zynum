@@ -36,7 +36,7 @@ export default function About() {
                 Nous croyons que chaque personne a le droit de protéger sa vie privée en ligne. Avec ZyNum, vous pouvez créer des comptes sur n'importe quelle plateforme sans exposer votre vrai numéro de téléphone.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                Notre infrastructure connectée à 5SIM vous donne accès à plus de 180 pays et 200 services, avec des prix transparents et une livraison en moins de 5 secondes.
+                Notre infrastructure mondiale vous donne accès à plus de 180 pays et 200 services, avec des prix transparents et une livraison en moins de 5 secondes.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">

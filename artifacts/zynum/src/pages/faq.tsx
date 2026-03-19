@@ -15,7 +15,7 @@ const FAQS = [
   },
   {
     q: "Quels modes de paiement sont acceptés ?",
-    a: "ZyNum affiche les prix en FCFA pour votre confort. Le paiement se fait via votre solde 5SIM que vous rechargez directement sur 5sim.net. Plusieurs méthodes sont disponibles (cartes, crypto, Mobile Money selon votre région).",
+    a: "Le paiement se fait via votre solde ZyNum. Vous rechargez votre compte directement sur la plateforme. Plusieurs méthodes seront disponibles : carte bancaire, Mobile Money, cryptomonnaie et virement.",
   },
   {
     q: "Combien de temps mon numéro reste-t-il actif ?",
@@ -43,7 +43,7 @@ const FAQS = [
   },
   {
     q: "Comment recharger mon solde ?",
-    a: "Rendez-vous sur 5sim.net pour recharger votre solde 5SIM. Plusieurs méthodes sont disponibles. Une fois rechargé, votre solde est disponible instantanément sur ZyNum.",
+    a: "Rendez-vous dans la section 'Recharger' de votre tableau de bord ZyNum. Plusieurs méthodes de paiement seront disponibles (carte, Mobile Money, crypto…). Une fois rechargé, votre solde est disponible instantanément.",
   },
 ];
 

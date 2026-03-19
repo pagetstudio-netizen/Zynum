@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import {
   LayoutDashboard, ShoppingCart, History, User, LogOut,
-  Wallet, Package, TrendingUp, ChevronRight,
+  Wallet, Package, TrendingUp, ChevronRight, PlusCircle,
   Check, Menu, X, Shield, HelpCircle, MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import BuyNumber from "./buy";
 import OrderHistory from "./history";
+import Recharge from "./recharge";
 
-type Tab = "overview" | "buy" | "history" | "profile";
+type Tab = "overview" | "buy" | "history" | "recharge" | "profile";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING:  "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -66,9 +67,9 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <StatCard
           icon={<Wallet className="w-6 h-6 text-primary" />}
-          label="Solde 5SIM"
+          label="Solde ZyNum"
           value={currency === "FCFA" ? `${Math.round(balance * 620).toLocaleString()} FCFA` : `$${balance.toFixed(2)}`}
-          sub={balance === 0 ? "Rechargez sur 5sim.net" : "Disponible"}
+          sub={balance === 0 ? "Rechargez votre solde" : "Disponible"}
           color="bg-primary/20"
         />
         <StatCard
@@ -290,10 +291,11 @@ export default function Dashboard() {
   }
 
   const NAV = [
-    { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
-    { id: "buy",      label: "Acheter numéro",  icon: ShoppingCart },
-    { id: "history",  label: "Historique",      icon: History },
-    { id: "profile",  label: "Mon profil",       icon: User },
+    { id: "overview",  label: "Vue d'ensemble", icon: LayoutDashboard },
+    { id: "buy",       label: "Acheter numéro",  icon: ShoppingCart },
+    { id: "history",   label: "Historique",      icon: History },
+    { id: "recharge",  label: "Recharger",       icon: PlusCircle },
+    { id: "profile",   label: "Mon profil",      icon: User },
   ] as const;
 
   const formatPrice = (v: number) =>
@@ -440,10 +442,11 @@ export default function Dashboard() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === "overview" && <Overview currency={currency} formatPrice={formatPrice} />}
-              {activeTab === "buy"      && <BuyNumber />}
-              {activeTab === "history"  && <OrderHistory />}
-              {activeTab === "profile"  && <Profile user={user} />}
+              {activeTab === "overview"  && <Overview currency={currency} formatPrice={formatPrice} />}
+              {activeTab === "buy"       && <BuyNumber />}
+              {activeTab === "history"   && <OrderHistory />}
+              {activeTab === "recharge"  && <Recharge />}
+              {activeTab === "profile"   && <Profile user={user} />}
             </motion.div>
           </AnimatePresence>
         </main>

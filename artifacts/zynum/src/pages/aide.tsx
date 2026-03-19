@@ -72,7 +72,7 @@ const CATEGORIES: Category[] = [
     desc: "Rechargez votre solde et gérez vos paiements.",
     count: 4,
     articles: [
-      { id: "c1", title: "Comment recharger mon solde 5SIM", desc: "Méthodes disponibles pour ajouter du crédit.", readTime: "3 min" },
+      { id: "c1", title: "Comment recharger mon solde ZyNum", desc: "Méthodes disponibles pour ajouter du crédit.", readTime: "3 min" },
       { id: "c2", title: "Prix en FCFA — comment ça marche ?", desc: "Conversion automatique USD ↔ FCFA sur ZyNum.", readTime: "2 min" },
       { id: "c3", title: "Comprendre mon historique de commandes", desc: "Retrouver toutes vos transactions passées.", readTime: "2 min" },
       { id: "c4", title: "Pourquoi mon paiement a-t-il échoué ?", desc: "Raisons courantes d'échec et solutions.", readTime: "3 min" },
@@ -129,7 +129,7 @@ const CATEGORIES: Category[] = [
 const POPULAR = [
   { cat: "Acheter un numéro", title: "Je n'ai pas reçu mon SMS — que faire ?", readTime: "4 min" },
   { cat: "Démarrer", title: "Qu'est-ce qu'un numéro virtuel ?", readTime: "3 min" },
-  { cat: "Paiements", title: "Comment recharger mon solde 5SIM", readTime: "3 min" },
+  { cat: "Paiements", title: "Comment recharger mon solde ZyNum", readTime: "3 min" },
   { cat: "Services", title: "Vérification Telegram — guide complet", readTime: "4 min" },
   { cat: "Problèmes", title: "Le numéro est déjà utilisé par quelqu'un", readTime: "3 min" },
 ];
@@ -163,7 +163,7 @@ function ArticleView({ article, category, onBack }: { article: Article; category
         <div>
           <h3 className="text-white font-bold text-lg mb-3">Étape 1 — Vérifiez les prérequis</h3>
           <ul className="space-y-2 list-none">
-            {["Assurez-vous d'être connecté à votre compte ZyNum.", "Vérifiez que votre solde 5SIM est suffisant.", "Utilisez un navigateur récent (Chrome, Firefox, Safari)."].map((item) => (
+            {["Assurez-vous d'être connecté à votre compte ZyNum.", "Vérifiez que votre solde ZyNum est suffisant.", "Utilisez un navigateur récent (Chrome, Firefox, Safari)."].map((item) => (
               <li key={item} className="flex items-start gap-2">
                 <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
                 <span>{item}</span>

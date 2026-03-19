@@ -139,7 +139,7 @@ export default function BuyNumber() {
         toast({
           variant: "destructive",
           title: isBalance ? "Solde insuffisant" : "Erreur d'achat",
-          description: isBalance ? "Rechargez votre solde sur 5sim.net." : msg || "Impossible d'obtenir un numéro. Réessayez.",
+          description: isBalance ? "Rechargez votre solde ZyNum depuis votre tableau de bord." : msg || "Impossible d'obtenir un numéro. Réessayez.",
         });
       },
     },
@@ -228,7 +228,7 @@ export default function BuyNumber() {
     }`}>
       <Wallet className="w-4 h-4 shrink-0" />
       Solde : {formatBalance()}
-      {balance === 0 && <a href="https://5sim.net" target="_blank" rel="noopener noreferrer" className="underline ml-1 hover:text-white">Recharger →</a>}
+      {balance === 0 && <button onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))} className="underline ml-1 hover:text-white">Recharger →</button>}
     </div>
   );
 
@@ -510,9 +510,12 @@ export default function BuyNumber() {
             {balance === 0 && (
               <p className="text-center text-xs text-red-400 mt-3">
                 Solde insuffisant.{" "}
-                <a href="https://5sim.net" target="_blank" rel="noopener noreferrer" className="underline">
-                  Recharger sur 5sim.net →
-                </a>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))}
+                  className="underline hover:text-white"
+                >
+                  Recharger mon solde →
+                </button>
               </p>
             )}
           </div>

@@ -16,7 +16,7 @@ export default function Terms() {
           </Section>
 
           <Section title="2. Description du service">
-            ZyNum est une plateforme permettant l'achat de numéros de téléphone virtuels temporaires pour la réception de codes OTP (One-Time Password) par SMS. Le service est fourni via l'infrastructure 5SIM.
+            ZyNum est une plateforme permettant l'achat de numéros de téléphone virtuels temporaires pour la réception de codes OTP (One-Time Password) par SMS.
           </Section>
 
           <Section title="3. Utilisation autorisée">
