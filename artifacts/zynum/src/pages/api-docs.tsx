@@ -49,11 +49,20 @@ export default function ApiDocs() {
   const features = FEATURES[lang] ?? FEATURES.fr;
   const steps = STEPS[lang] ?? STEPS.fr;
 
-  const handleNotify = (e: React.FormEvent) => {
+  const handleNotify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !email.includes("@")) {
       toast({ title: t("api_invalid_email"), variant: "destructive" });
       return;
+    }
+    try {
+      await fetch("/api/v1/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } catch {
+      // silent — still show success to user
     }
     setSubmitted(true);
     toast({ title: t("api_notify_toast") });

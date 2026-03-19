@@ -6,7 +6,7 @@ import {
   Zap, Shield, Plus, Trash2, Edit3, Ban, CheckCircle,
   Search, ChevronLeft, ChevronRight, RefreshCw, Send,
   ToggleLeft, ToggleRight, DollarSign, Percent, Star,
-  Package, AlertTriangle, Clock, Database,
+  Package, AlertTriangle, Clock, Database, Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -1021,9 +1021,134 @@ function AdminCountries() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   SECTION: CONTACT MESSAGES
+══════════════════════════════════════════════════════════════════════════════ */
+function AdminContactMessages() {
+  const { data, loading, refetch } = useAdminFetch<any[]>("/v1/admin/contact");
+  const { toast } = useToast();
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const markRead = async (id: number, isRead: boolean) => {
+    await adminPatch(`/v1/admin/contact/${id}`, { isRead });
+    refetch();
+  };
+
+  const remove = async (id: number) => {
+    await adminDelete(`/v1/admin/contact/${id}`);
+    toast({ title: "Message supprimé" });
+    refetch();
+  };
+
+  const msgs = data ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{msgs.length} message{msgs.length !== 1 ? "s" : ""} reçu{msgs.length !== 1 ? "s" : ""}</p>
+        <button onClick={refetch} className="p-2 rounded-xl border border-white/10 text-muted-foreground hover:text-white hover:bg-white/5"><RefreshCw className="w-4 h-4" /></button>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+      ) : msgs.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground text-sm">Aucun message de contact pour l'instant</div>
+      ) : (
+        <div className="space-y-3">
+          {msgs.map((msg: any) => (
+            <div key={msg.id} className={`rounded-2xl border bg-card/40 overflow-hidden transition-all ${msg.isRead ? "border-white/[0.06]" : "border-primary/30 bg-primary/5"}`}>
+              <div className="flex items-start gap-4 p-5 cursor-pointer" onClick={() => setExpanded(expanded === msg.id ? null : msg.id)}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {!msg.isRead && <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-bold border border-primary/30">Nouveau</span>}
+                    <p className="font-semibold text-white text-sm">{msg.name}</p>
+                    <span className="text-muted-foreground text-xs">·</span>
+                    <p className="text-xs text-muted-foreground">{msg.email}</p>
+                  </div>
+                  <p className="text-sm text-white/80 font-medium">{msg.subject}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{new Date(msg.createdAt).toLocaleString("fr-FR")}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={(e) => { e.stopPropagation(); markRead(msg.id, !msg.isRead); }} className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-muted-foreground hover:text-white" title={msg.isRead ? "Marquer non lu" : "Marquer lu"}>
+                    <CheckCircle className={`w-4 h-4 ${msg.isRead ? "text-green-400" : ""}`} />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); remove(msg.id); }} className="p-1.5 rounded-lg border border-white/10 hover:bg-red-500/10 text-muted-foreground hover:text-red-400">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              {expanded === msg.id && (
+                <div className="px-5 pb-5 border-t border-white/[0.06]">
+                  <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap pt-4">{msg.message}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION: API WAITLIST
+══════════════════════════════════════════════════════════════════════════════ */
+function AdminWaitlist() {
+  const { data, loading, refetch } = useAdminFetch<any[]>("/v1/admin/waitlist");
+  const { toast } = useToast();
+
+  const remove = async (id: number) => {
+    await adminDelete(`/v1/admin/waitlist/${id}`);
+    toast({ title: "Email supprimé" });
+    refetch();
+  };
+
+  const list = data ?? [];
+
+  const copyAll = () => {
+    const text = list.map((e: any) => e.email).join("\n");
+    navigator.clipboard.writeText(text);
+    toast({ title: `${list.length} adresse${list.length !== 1 ? "s" : ""} copiée${list.length !== 1 ? "s" : ""}` });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <p className="text-sm text-muted-foreground">{list.length} abonné{list.length !== 1 ? "s" : ""} à la liste d'attente API</p>
+        <div className="flex gap-2">
+          {list.length > 0 && (
+            <Button onClick={copyAll} variant="outline" size="sm" className="border-white/10 text-white hover:bg-white/5 text-xs">
+              Copier tous les emails
+            </Button>
+          )}
+          <button onClick={refetch} className="p-2 rounded-xl border border-white/10 text-muted-foreground hover:text-white hover:bg-white/5"><RefreshCw className="w-4 h-4" /></button>
+        </div>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+      ) : list.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground text-sm">Aucun abonné pour l'instant</div>
+      ) : (
+        <Table headers={["Email", "Date d'inscription", "Action"]} empty={false}>
+          {list.map((entry: any) => (
+            <tr key={entry.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+              <td className="px-4 py-3 text-white text-sm font-medium">{entry.email}</td>
+              <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(entry.createdAt).toLocaleString("fr-FR")}</td>
+              <td className="px-4 py-3">
+                <button onClick={() => remove(entry.id)} className="p-1.5 rounded-lg border border-white/10 hover:bg-red-500/10 text-muted-foreground hover:text-red-400">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </Table>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    MAIN ADMIN PANEL COMPONENT
 ══════════════════════════════════════════════════════════════════════════════ */
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries";
+type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
@@ -1031,6 +1156,8 @@ const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "orders",       label: "Commandes",       icon: <ShoppingBag className="w-4 h-4" /> },
   { id: "transactions", label: "Transactions",    icon: <CreditCard className="w-4 h-4" /> },
   { id: "messages",     label: "Messages",        icon: <MessageSquare className="w-4 h-4" /> },
+  { id: "contact",      label: "Contacts",        icon: <Send className="w-4 h-4" /> },
+  { id: "waitlist",     label: "Liste d'attente API", icon: <Bell className="w-4 h-4" /> },
   { id: "settings",     label: "Paramètres",      icon: <Settings className="w-4 h-4" /> },
   { id: "payments",     label: "Paiements",       icon: <Wallet className="w-4 h-4" /> },
   { id: "faq",          label: "Centre d'aide",   icon: <HelpCircle className="w-4 h-4" /> },
@@ -1085,6 +1212,8 @@ export default function AdminPanel() {
           {activeTab === "orders"       && <AdminOrders />}
           {activeTab === "transactions" && <AdminTransactions />}
           {activeTab === "messages"     && <AdminMessages />}
+          {activeTab === "contact"      && <AdminContactMessages />}
+          {activeTab === "waitlist"     && <AdminWaitlist />}
           {activeTab === "settings"     && <AdminSettings />}
           {activeTab === "payments"     && <AdminPayments />}
           {activeTab === "faq"          && <AdminFaq />}

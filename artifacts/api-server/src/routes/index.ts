@@ -6,6 +6,7 @@ import numbersRouter from "./numbers.js";
 import balanceRouter from "./balance.js";
 import developerRouter from "./developer.js";
 import adminRouter from "./admin.js";
+import contactRouter from "./contact.js";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(numbersRouter);
 router.use(balanceRouter);
 router.use(developerRouter);
 router.use(adminRouter);
+router.use(contactRouter);
 
 export default router;

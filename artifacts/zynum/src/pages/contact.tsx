@@ -4,15 +4,37 @@ import { Mail, MessageSquare, Clock, Send, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/hooks/use-language";
+import { useToast } from "@/hooks/use-toast";
+
+const API = "/api";
 
 export default function Contact() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/v1/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast({ title: data.message ?? "Erreur lors de l'envoi", variant: "destructive" });
+        return;
+      }
+      setSent(true);
+    } catch {
+      toast({ title: "Erreur réseau. Réessayez.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const INFO = [
@@ -82,8 +104,12 @@ export default function Contact() {
                     <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t("contact_label_message")}</label>
                     <textarea required rows={5} placeholder={t("contact_placeholder_message")} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full rounded-xl border border-white/10 bg-black/20 text-white placeholder:text-white/30 px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50" />
                   </div>
-                  <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-base shadow-xl shadow-primary/25">
-                    <Send className="w-4 h-4 mr-2" /> {t("contact_send_btn")}
+                  <Button type="submit" disabled={loading} className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-base shadow-xl shadow-primary/25">
+                    {loading ? (
+                      <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Envoi...</span>
+                    ) : (
+                      <span className="flex items-center gap-2"><Send className="w-4 h-4" /> {t("contact_send_btn")}</span>
+                    )}
                   </Button>
                 </form>
               )}
