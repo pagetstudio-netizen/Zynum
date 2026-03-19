@@ -120,6 +120,7 @@ const POPULAR_DATA: Record<string, { cat: string; title: string; readTime: strin
 
 function ArticleView({ article, category, onBack }: { article: Article; category: Category; onBack: () => void }) {
   const { t } = useLanguage();
+  const [feedback, setFeedback] = useState<"yes" | "no" | null>(null);
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto">
       <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-6 transition-colors">
@@ -153,15 +154,60 @@ function ArticleView({ article, category, onBack }: { article: Article; category
           <p className="text-sm">{t("aide_tip_desc")}</p>
         </div>
       </div>
-      <div className="mt-8 flex items-center justify-between p-5 rounded-2xl border border-white/10 bg-white/[0.02]">
-        <div>
-          <p className="text-white font-semibold mb-1">{t("aide_helpful")}</p>
-          <p className="text-sm text-muted-foreground">{t("aide_feedback")}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="border-green-500/30 text-green-400 hover:bg-green-500/10">{t("aide_yes")}</Button>
-          <Button variant="outline" size="sm" className="border-white/20 text-muted-foreground hover:bg-white/5">{t("aide_no")}</Button>
-        </div>
+      <div className="mt-8 p-5 rounded-2xl border border-white/10 bg-white/[0.02]">
+        {feedback === null ? (
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-white font-semibold mb-1">{t("aide_helpful")}</p>
+              <p className="text-sm text-muted-foreground">{t("aide_feedback")}</p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFeedback("yes")}
+                className="border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-500/60 transition-all"
+              >
+                👍 {t("aide_yes")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFeedback("no")}
+                className="border-white/20 text-muted-foreground hover:bg-white/5 hover:text-white hover:border-white/40 transition-all"
+              >
+                👎 {t("aide_no")}
+              </Button>
+            </div>
+          </div>
+        ) : feedback === "yes" ? (
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-green-500/15 flex items-center justify-center shrink-0">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+            </div>
+            <div>
+              <p className="text-white font-semibold">Merci pour votre retour !</p>
+              <p className="text-sm text-muted-foreground">Nous sommes ravis que cet article vous ait aidé.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <MessageSquare className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-white font-semibold">Nous allons améliorer cet article</p>
+                <p className="text-sm text-muted-foreground">Merci de nous aider à mieux vous aider.</p>
+              </div>
+            </div>
+            <Link href="/contact">
+              <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-semibold mt-1">
+                Contacter le support
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
       <div className="mt-6 p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
         <MessageSquare className="w-10 h-10 text-primary shrink-0" />
