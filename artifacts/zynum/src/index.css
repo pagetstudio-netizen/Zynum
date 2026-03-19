@@ -238,6 +238,39 @@ html.light textarea::placeholder {
   color: rgba(0,0,0,0.30) !important;
 }
 
+/* ── 13. Hardcoded dark-hex cards — keep text white regardless of theme ──── *
+ * Cards using bg-[#0d...], bg-[#06...], from-[#0d...] etc. always stay dark;
+ * their inner text must remain white so it's readable against the dark card.  */
+html.light [class*="from-[#0d"] .text-white,
+html.light [class*="from-[#06"] .text-white,
+html.light [class*="bg-[#0d"] .text-white,
+html.light [class*="bg-[#06"] .text-white,
+html.light [class*="bg-[#11"] .text-white,
+html.light [class*="from-[#0d"].text-white,
+html.light [class*="from-[#06"].text-white,
+html.light [class*="bg-[#0d"].text-white,
+html.light [class*="bg-[#06"].text-white,
+html.light [class*="bg-[#11"].text-white { color: #ffffff !important; }
+
+/* Muted foreground inside dark hex cards should also stay light */
+html.light [class*="from-[#0d"] .text-muted-foreground,
+html.light [class*="from-[#06"] .text-muted-foreground,
+html.light [class*="bg-[#0d"] .text-muted-foreground,
+html.light [class*="bg-[#06"] .text-muted-foreground { color: rgba(255,255,255,0.55) !important; }
+
+/* Outline buttons inside dark hex cards */
+html.light [class*="from-[#0d"] .border-white\/20,
+html.light [class*="from-[#06"] .border-white\/20,
+html.light [class*="bg-[#0d"] .border-white\/20,
+html.light [class*="bg-[#06"] .border-white\/20 { border-color: rgba(255,255,255,0.25) !important; }
+
+/* ── 14. Gradient-clip text (stats numbers, hero text) ───────────────────── *
+ * bg-clip-text + from-white = invisible on light bg.                          *
+ * Override to use a dark navy gradient so numbers remain readable.            */
+html.light .bg-clip-text.from-white {
+  background-image: linear-gradient(to bottom, hsl(222,47%,8%), hsl(222,47%,30%)) !important;
+}
+
 @layer base {
   * {
     @apply border-border;
