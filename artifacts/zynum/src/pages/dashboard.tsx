@@ -388,6 +388,98 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
   );
 }
 
+// ─── User widget (top-right header) ───────────────────────────────────────────
+function UserWidget({
+  user,
+  onProfileClick,
+  onLogout,
+}: {
+  user: { name: string; email: string };
+  onProfileClick: () => void;
+  onLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`flex items-center gap-2 rounded-xl px-2 py-1.5 transition-all ${
+          open ? "bg-white/10" : "hover:bg-white/5"
+        }`}
+      >
+        <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/20 flex items-center justify-center font-bold text-primary text-sm">
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="hidden sm:block text-left">
+          <p className="text-xs font-semibold text-white leading-none">{user.name}</p>
+          <p className="text-[10px] text-muted-foreground leading-none mt-0.5 truncate max-w-[100px]">{user.email}</p>
+        </div>
+        <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform hidden sm:block ${open ? "rotate-90" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-white/10 bg-[hsl(222,47%,8%)] shadow-2xl shadow-black/50 overflow-hidden z-50"
+          >
+            {/* User info */}
+            <div className="px-4 py-3 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center font-bold text-primary text-sm shrink-0">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{user.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Menu items */}
+            <div className="py-1.5 px-1.5 space-y-0.5">
+              <button
+                onClick={() => { onProfileClick(); setOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/5 transition-colors text-left"
+              >
+                <User className="w-4 h-4 text-muted-foreground" /> Mon profil
+              </button>
+              <button
+                onClick={() => { window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" })); setOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/5 transition-colors text-left"
+              >
+                <PlusCircle className="w-4 h-4 text-muted-foreground" /> Recharger
+              </button>
+            </div>
+
+            <div className="px-1.5 pb-1.5 border-t border-white/[0.06] pt-1.5">
+              <button
+                onClick={() => { onLogout(); setOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-400 hover:bg-red-400/10 transition-colors text-left"
+              >
+                <LogOut className="w-4 h-4" /> Déconnexion
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── Main Dashboard ────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -570,9 +662,8 @@ export default function Dashboard() {
             <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors" title="Centre d'aide">
               <HelpCircle className="w-4 h-4" />
             </Link>
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center font-bold text-primary text-sm">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
+            {/* User widget */}
+            <UserWidget user={user} onProfileClick={() => setActiveTab("profile")} onLogout={() => logoutMutation.mutate({})} />
           </div>
         </header>
 

@@ -1,209 +1,285 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
 import { format } from "date-fns";
-import { History, Search, RefreshCcw, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { fr } from "date-fns/locale";
+import {
+  History, RefreshCcw, Lock, ChevronLeft, ChevronRight,
+  Package, CheckCircle2, Clock, XCircle, Copy, Check,
+} from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useGetOrderHistory, useGetCurrentUser } from "@workspace/api-client-react";
 
+// ─── Status helpers ────────────────────────────────────────────────────────────
+const STATUS_MAP: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
+  PENDING:  { label: "En attente", cls: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", icon: <Clock className="w-3 h-3" /> },
+  RECEIVED: { label: "Reçu",       cls: "bg-green-500/10  text-green-400  border-green-500/20",  icon: <CheckCircle2 className="w-3 h-3" /> },
+  FINISHED: { label: "Terminé",    cls: "bg-green-500/10  text-green-400  border-green-500/20",  icon: <CheckCircle2 className="w-3 h-3" /> },
+  TIMEOUT:  { label: "Expiré",     cls: "bg-gray-500/10   text-gray-400   border-gray-500/20",   icon: <XCircle className="w-3 h-3" /> },
+  CANCELED: { label: "Annulé",     cls: "bg-gray-500/10   text-gray-400   border-gray-500/20",   icon: <XCircle className="w-3 h-3" /> },
+  BANNED:   { label: "Banni",      cls: "bg-red-500/10    text-red-400    border-red-500/20",    icon: <XCircle className="w-3 h-3" /> },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_MAP[status] ?? { label: status, cls: "bg-white/5 text-white border-white/10", icon: null };
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>
+      {s.icon}{s.label}
+    </span>
+  );
+}
+
+function CopyCode({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={copy}
+      className="inline-flex items-center gap-1.5 font-mono text-sm font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-2.5 py-1 rounded-lg hover:bg-green-400/20 transition-all group"
+    >
+      {code}
+      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100" />}
+    </button>
+  );
+}
+
+// ─── Mobile card ───────────────────────────────────────────────────────────────
+function OrderCard({ order, formatPrice }: { order: any; formatPrice: (usd: number, fcfa?: number) => string }) {
+  return (
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4 space-y-3">
+      {/* Top row: service + status */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+            <Package className="w-4 h-4 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-white text-sm truncate">{order.serviceName}</p>
+            <p className="text-xs text-muted-foreground">{order.countryName}</p>
+          </div>
+        </div>
+        <StatusBadge status={order.status} />
+      </div>
+
+      {/* Number */}
+      <div className="bg-black/30 rounded-xl px-3 py-2 font-mono text-sm text-white/80">
+        {order.phone}
+      </div>
+
+      {/* SMS code (if any) */}
+      {order.smsCode ? (
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-muted-foreground">Code SMS</span>
+          <CopyCode code={order.smsCode} />
+        </div>
+      ) : order.status === "PENDING" ? (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <RefreshCcw className="w-3 h-3 animate-spin" /> En attente du SMS…
+        </div>
+      ) : null}
+
+      {/* Bottom: date + price */}
+      <div className="flex items-center justify-between pt-1 border-t border-white/[0.06]">
+        <span className="text-xs text-muted-foreground">
+          {format(new Date(order.createdAt), "dd MMM yyyy · HH:mm", { locale: fr })}
+        </span>
+        <span className="text-sm font-bold text-white font-mono">
+          {formatPrice(order.priceUsd, order.priceFcfa)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main ──────────────────────────────────────────────────────────────────────
 export default function OrderHistory() {
-  const { currency, formatPrice } = useCurrency();
+  const { formatPrice } = useCurrency();
   const [page, setPage] = useState(1);
   const limit = 15;
 
   const { data: user, isLoading: isUserLoading } = useGetCurrentUser({ query: { retry: false } });
 
-  const { 
-    data: historyData, 
-    isLoading, 
-    isFetching,
-    refetch 
-  } = useGetOrderHistory(
+  const { data: historyData, isLoading, isFetching, refetch } = useGetOrderHistory(
     { page, limit },
-    { 
-      query: { 
+    {
+      query: {
         enabled: !!user,
-        // Polling if there's any pending order in the current view
         refetchInterval: (query) => {
-          const hasPending = query.state.data?.orders.some(o => o.status === 'PENDING');
+          const hasPending = query.state.data?.orders.some((o) => o.status === "PENDING");
           return hasPending ? 5000 : false;
-        }
-      } 
+        },
+      },
     }
   );
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20">Pending</Badge>;
-      case 'RECEIVED':
-      case 'FINISHED':
-        return <Badge className="bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20">Received</Badge>;
-      case 'TIMEOUT':
-      case 'CANCELED':
-        return <Badge className="bg-gray-500/10 text-gray-400 border-gray-500/20 hover:bg-gray-500/20">Timeout</Badge>;
-      case 'BANNED':
-        return <Badge className="bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20">Banned</Badge>;
-      default:
-        return <Badge className="bg-secondary text-white border-white/10">{status}</Badge>;
-    }
-  };
-
   if (isUserLoading) {
-    return <div className="flex-1 flex items-center justify-center min-h-[60vh]"><RefreshCcw className="w-8 h-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <RefreshCcw className="w-7 h-7 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (!user) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-[60vh] text-center">
-        <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mb-6 border border-white/10">
-          <Lock className="w-10 h-10 text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
+        <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-5 border border-white/10">
+          <Lock className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h2 className="text-3xl font-display font-bold text-white mb-4">View Your History</h2>
-        <p className="text-muted-foreground max-w-md mb-8">Log in to view your past purchases and SMS codes.</p>
-        <Link href="/login"><Button className="bg-primary text-white">Log In</Button></Link>
+        <h2 className="text-2xl font-bold text-white mb-2">Connexion requise</h2>
+        <p className="text-muted-foreground text-sm mb-6 max-w-xs">Connectez-vous pour consulter l'historique de vos achats.</p>
+        <Link href="/login">
+          <Button className="bg-primary hover:bg-primary/90 text-white font-semibold">Se connecter</Button>
+        </Link>
       </div>
     );
   }
 
   const totalPages = historyData ? Math.ceil(historyData.total / limit) : 1;
+  const orders = historyData?.orders ?? [];
+  const from = (page - 1) * limit + 1;
+  const to = Math.min(page * limit, historyData?.total ?? 0);
 
   return (
-    <div className="container max-w-7xl mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-white tracking-tight flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-xl">
-              <History className="w-8 h-8 text-primary" />
-            </div>
-            Order History
-          </h1>
-          <p className="text-muted-foreground mt-2 ml-14">View your past virtual numbers and received codes.</p>
+          <h2 className="text-2xl font-bold text-white">Historique</h2>
+          <p className="text-muted-foreground text-sm mt-0.5">Toutes vos commandes de numéros virtuels</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            className="border-white/10 bg-card hover:bg-white/5 text-white shadow-sm"
-            onClick={() => refetch()}
-            disabled={isFetching}
-          >
-            <RefreshCcw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-white/10 bg-white/5 hover:bg-white/10 text-white shrink-0"
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          <RefreshCcw className={`w-4 h-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+          Actualiser
+        </Button>
       </div>
 
-      <div className="bg-card border border-white/10 rounded-2xl shadow-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5">
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date & ID</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Service</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Country</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Number</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">SMS Code</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Price</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
-                    <RefreshCcw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-50" />
-                    Loading history...
-                  </td>
-                </tr>
-              ) : !historyData || historyData.orders.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center text-muted-foreground">
-                    <div className="flex flex-col items-center">
-                      <History className="w-12 h-12 mb-4 opacity-20" />
-                      <p className="text-lg font-medium text-white mb-1">No orders found</p>
-                      <p>You haven't purchased any numbers yet.</p>
-                      <Link href="/buy" className="mt-4">
-                        <Button variant="secondary" className="bg-white/10 hover:bg-white/20 text-white">Buy a Number</Button>
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                historyData.orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-white">{format(new Date(order.createdAt), 'MMM dd, yyyy')}</div>
-                      <div className="text-xs text-muted-foreground font-mono mt-0.5">{format(new Date(order.createdAt), 'HH:mm:ss')}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-white">{order.serviceName}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white">{order.countryName}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-white">
-                      {order.phone}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(order.status)}
-                    </td>
-                    <td className="px-6 py-4">
-                      {order.smsCode ? (
-                        <div className="font-mono text-sm font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded inline-block border border-green-400/20">
-                          {order.smsCode}
-                        </div>
-                      ) : order.status === 'PENDING' ? (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <RefreshCcw className="w-3 h-3 animate-spin" /> Waiting...
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right font-mono text-sm text-white">
-                      {formatPrice(order.priceUsd, order.priceFcfa)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Summary strip */}
+      {historyData && historyData.total > 0 && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-white/[0.02] border border-white/[0.06] rounded-xl px-4 py-2.5">
+          <History className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span>{historyData.total} commande{historyData.total > 1 ? "s" : ""} au total</span>
+          {historyData.total > limit && (
+            <span className="ml-auto">Affichage {from}–{to}</span>
+          )}
         </div>
+      )}
 
-        {/* Pagination */}
-        {historyData && historyData.total > limit && (
-          <div className="px-6 py-4 border-t border-white/10 bg-black/20 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Showing {(page - 1) * limit + 1} to Math.min(page * limit, historyData.total) of {historyData.total} results
-            </span>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="border-white/10 text-white hover:bg-white/10 h-8 px-2"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div className="flex items-center px-3 text-sm font-medium text-white bg-white/5 border border-white/10 rounded-md">
-                {page} / {totalPages}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="border-white/10 text-white hover:bg-white/10 h-8 px-2"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-16">
+          <RefreshCcw className="w-6 h-6 animate-spin text-primary opacity-50" />
+        </div>
+      )}
+
+      {/* Empty */}
+      {!isLoading && orders.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <History className="w-12 h-12 mb-4 text-muted-foreground/30" />
+          <p className="text-lg font-semibold text-white mb-1">Aucune commande</p>
+          <p className="text-muted-foreground text-sm mb-5">Vous n'avez pas encore acheté de numéro virtuel.</p>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            Acheter un numéro →
+          </button>
+        </div>
+      )}
+
+      {/* Mobile: cards */}
+      {!isLoading && orders.length > 0 && (
+        <>
+          <div className="flex flex-col gap-3 md:hidden">
+            {orders.map((order) => (
+              <OrderCard key={order.id} order={order} formatPrice={formatPrice} />
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden md:block rounded-2xl border border-white/10 bg-card/40 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/[0.03]">
+                    {["Date", "Service", "Pays", "Numéro", "Statut", "Code SMS", "Prix"].map((h, i) => (
+                      <th key={h} className={`px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider ${i === 6 ? "text-right" : ""}`}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {orders.map((order) => (
+                    <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <p className="text-sm text-white">{format(new Date(order.createdAt), "dd MMM yyyy", { locale: fr })}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{format(new Date(order.createdAt), "HH:mm:ss")}</p>
+                      </td>
+                      <td className="px-5 py-3.5 whitespace-nowrap text-sm font-medium text-white">{order.serviceName}</td>
+                      <td className="px-5 py-3.5 whitespace-nowrap text-sm text-white">{order.countryName}</td>
+                      <td className="px-5 py-3.5 whitespace-nowrap font-mono text-sm text-white/80">{order.phone}</td>
+                      <td className="px-5 py-3.5 whitespace-nowrap"><StatusBadge status={order.status} /></td>
+                      <td className="px-5 py-3.5">
+                        {order.smsCode ? (
+                          <CopyCode code={order.smsCode} />
+                        ) : order.status === "PENDING" ? (
+                          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <RefreshCcw className="w-3 h-3 animate-spin" /> En attente…
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5 whitespace-nowrap text-right font-mono text-sm font-semibold text-white">
+                        {formatPrice(order.priceUsd, order.priceFcfa)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+      {/* Pagination */}
+      {historyData && historyData.total > limit && (
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <span className="text-xs text-muted-foreground hidden sm:block">
+            {from}–{to} sur {historyData.total} résultats
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              variant="outline" size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="border-white/10 text-white hover:bg-white/10 h-8 px-3"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-medium text-white bg-white/5 border border-white/10 rounded-lg px-3 py-1">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline" size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="border-white/10 text-white hover:bg-white/10 h-8 px-3"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
