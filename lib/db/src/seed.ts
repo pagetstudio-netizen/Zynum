@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { db, usersTable } from "./index.js";
+import { db, usersTable, socialLinksTable } from "./index.js";
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -30,13 +30,25 @@ async function seed() {
     })
     .onConflictDoUpdate({
       target: usersTable.email,
-      set: {
-        isAdmin: true,
-        name: "Admin",
-      },
+      set: { isAdmin: true, name: "Admin" },
     });
 
   console.log(`Admin account ready: ${adminEmail}`);
+
+  const socials = [
+    { platform: "WhatsApp", url: "https://whatsapp.com/channel/0029Vb8MmTnHQbS8sEmxvd3z", icon: "whatsapp", isActive: true, sortOrder: 1 },
+    { platform: "Facebook", url: "https://facebook.com/zynum",   icon: "facebook", isActive: true, sortOrder: 2 },
+    { platform: "Discord",  url: "https://discord.gg/zynum",     icon: "discord",  isActive: true, sortOrder: 3 },
+    { platform: "Telegram", url: "https://t.me/ZyNumSupport",    icon: "telegram", isActive: true, sortOrder: 4 },
+    { platform: "YouTube",  url: "https://youtube.com/@zynum",   icon: "youtube",  isActive: true, sortOrder: 5 },
+    { platform: "X",        url: "https://x.com/zynum",          icon: "x",        isActive: true, sortOrder: 6 },
+  ];
+
+  for (const s of socials) {
+    await db.insert(socialLinksTable).values(s).onConflictDoNothing();
+  }
+
+  console.log("Social links ready");
   process.exit(0);
 }
 

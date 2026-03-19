@@ -882,6 +882,8 @@ function AdminSocialLinks() {
   const { toast } = useToast();
   const { data, loading, refetch } = useAdminFetch<any>("/v1/admin/social-links", []);
   const [showAdd, setShowAdd] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ platform: "", url: "", icon: "" });
   const [form, setForm] = useState({ platform: "", url: "", icon: "" });
 
   const add = async () => {
@@ -892,6 +894,20 @@ function AdminSocialLinks() {
     setShowAdd(false);
     refetch();
   };
+
+  const startEdit = (l: any) => {
+    setEditId(l.id);
+    setEditForm({ platform: l.platform, url: l.url, icon: l.icon ?? "" });
+  };
+
+  const saveEdit = async () => {
+    if (!editId) return;
+    await adminPatch(`/v1/admin/social-links/${editId}`, editForm);
+    toast({ title: "Lien modifié" });
+    setEditId(null);
+    refetch();
+  };
+
   const toggle = async (l: any) => { await adminPatch(`/v1/admin/social-links/${l.id}`, { isActive: !l.isActive }); refetch(); };
   const remove = async (id: number) => { await adminDelete(`/v1/admin/social-links/${id}`); toast({ title: "Supprimé" }); refetch(); };
 
@@ -926,16 +942,50 @@ function AdminSocialLinks() {
       {loading ? <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> : (
         <div className="space-y-3">
           {(data?.links ?? []).map((l: any) => (
-            <div key={l.id} className={`flex items-center gap-4 p-4 rounded-2xl border ${l.isActive ? "border-white/10" : "border-white/5 opacity-60"} bg-card/40`}>
-              {l.icon && <img src={`https://cdn.simpleicons.org/${l.icon}/ffffff`} className="w-6 h-6 shrink-0" alt={l.platform} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white">{l.platform}</p>
-                <p className="text-xs text-muted-foreground truncate">{l.url}</p>
+            <div key={l.id} className={`rounded-2xl border bg-card/40 overflow-hidden ${l.isActive ? "border-white/10" : "border-white/5 opacity-60"}`}>
+              {/* Row */}
+              <div className="flex items-center gap-4 p-4">
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  {l.icon
+                    ? <img src={`https://cdn.simpleicons.org/${l.icon}/ffffff`} className="w-5 h-5" alt={l.platform} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    : <span className="text-xs font-bold text-muted-foreground">{l.platform.charAt(0)}</span>
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white">{l.platform}</p>
+                  <p className="text-xs text-muted-foreground truncate">{l.url}</p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => startEdit(l)} className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5" title="Modifier"><Edit3 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => toggle(l)} className={`p-1.5 rounded-lg ${l.isActive ? "text-green-400 hover:bg-green-500/10" : "text-muted-foreground hover:bg-white/5"}`} title={l.isActive ? "Désactiver" : "Activer"}>
+                    {l.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  </button>
+                  <button onClick={() => remove(l.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10" title="Supprimer"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
               </div>
-              <div className="flex gap-1">
-                <button onClick={() => toggle(l)} className={`p-1.5 rounded-lg ${l.isActive ? "text-green-400 hover:bg-green-500/10" : "text-muted-foreground hover:bg-white/5"}`}><CheckCircle className="w-3.5 h-3.5" /></button>
-                <button onClick={() => remove(l.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
-              </div>
+              {/* Inline edit form */}
+              {editId === l.id && (
+                <div className="px-4 pb-4 border-t border-white/[0.06] pt-4 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">Plateforme</label>
+                      <input value={editForm.platform} onChange={(e) => setEditForm({ ...editForm, platform: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">URL</label>
+                      <input value={editForm.url} onChange={(e) => setEditForm({ ...editForm, url: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">Icône (slug simpleicons)</label>
+                      <input value={editForm.icon} onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })} placeholder="facebook" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={saveEdit} size="sm" className="bg-primary hover:bg-primary/90 text-white">Sauvegarder</Button>
+                    <Button onClick={() => setEditId(null)} size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5">Annuler</Button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
           {!data?.links?.length && <p className="text-sm text-muted-foreground text-center py-8">Aucun lien social configuré</p>}

@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
+import { SocialBar } from "@/components/social-bar";
 
 interface Article { id: string; title: string; desc: string; readTime: string; }
 interface Category { id: string; icon: React.ReactNode; color: string; bgColor: string; title: string; desc: string; count: number; articles: Article[]; }
@@ -336,17 +337,15 @@ export default function HelpCenter() {
                 <MessageSquare className="w-12 h-12 text-primary mx-auto mb-5" />
                 <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">{t("aide_contact_cta_title")}</h2>
                 <p className="text-muted-foreground mb-8 max-w-lg mx-auto">{t("aide_contact_cta_desc")}</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                   <Link href="/contact">
                     <Button size="lg" className="h-12 px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-xl shadow-primary/25">
                       <MessageSquare className="w-4 h-4 mr-2" /> {t("aide_contact_btn")}
                     </Button>
                   </Link>
-                  <a href="https://t.me/ZyNumSupport" target="_blank" rel="noopener noreferrer">
-                    <Button size="lg" variant="outline" className="h-12 px-8 border-white/20 text-white hover:bg-white/10 rounded-xl">
-                      <Globe2 className="w-4 h-4 mr-2" /> {t("aide_telegram_btn")}
-                    </Button>
-                  </a>
+                </div>
+                <div className="border-t border-white/10 pt-6">
+                  <SocialBar label="Suivez-nous sur nos réseaux" className="flex flex-col items-center" size="sm" />
                 </div>
               </div>
             </div>

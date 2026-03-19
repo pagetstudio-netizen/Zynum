@@ -4,6 +4,7 @@ import { ChevronDown, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
+import { SocialBar } from "@/components/social-bar";
 
 const FAQS = {
   fr: [
@@ -73,14 +74,18 @@ export default function FAQ() {
       </section>
 
       <section className="py-16 border-t border-white/5">
-        <div className="container max-w-3xl mx-auto px-4 text-center">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10">
+        <div className="container max-w-3xl mx-auto px-4 space-y-6">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
             <MessageSquare className="w-10 h-10 text-primary mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-3">{t("faq_no_answer")}</h2>
             <p className="text-muted-foreground mb-6">{t("faq_no_answer_desc")}</p>
             <Link href="/contact">
               <Button className="bg-primary hover:bg-primary/90 text-white font-semibold px-8">{t("faq_contact_btn")}</Button>
             </Link>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm font-semibold text-white">Rejoignez notre communauté</p>
+            <SocialBar size="sm" />
           </div>
         </div>
       </section>

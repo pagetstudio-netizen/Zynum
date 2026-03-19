@@ -1,11 +1,20 @@
 import { Router, type IRouter } from "express";
-import { db, contactMessagesTable, apiWaitlistTable } from "@workspace/db";
+import { db, contactMessagesTable, apiWaitlistTable, socialLinksTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 
 const router: IRouter = Router();
 const auth = [requireAuth, requireAdmin];
+
+/* ── Public: get active social links ── */
+router.get("/v1/social-links", async (_req, res): Promise<void> => {
+  const links = await db
+    .select()
+    .from(socialLinksTable)
+    .orderBy(socialLinksTable.sortOrder);
+  res.json({ links: links.filter((l) => l.isActive) });
+});
 
 /* ── Public: submit contact form ── */
 router.post("/v1/contact", async (req, res): Promise<void> => {

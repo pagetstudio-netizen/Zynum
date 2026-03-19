@@ -10,6 +10,7 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useGetCurrentUser, useLogoutUser, getGetCurrentUserQueryKey, useGetBalance } from "@workspace/api-client-react";
+import { SocialBar } from "@/components/social-bar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -345,13 +346,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
                 {t("footer_desc")}
               </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <a href="https://t.me/ZyNumSupport" target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-white border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-all"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" /> Telegram
-                  <ArrowUpRight className="w-3 h-3" />
-                </a>
+              <div className="flex flex-wrap gap-2 pt-1">
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground border border-white/10 bg-white/5 px-3 py-1.5 rounded-lg">
                   <Shield className="w-3.5 h-3.5 text-green-400" /> {t("footer_ssl")}
                 </div>
@@ -359,6 +354,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <Globe2 className="w-3.5 h-3.5 text-blue-400" /> {t("footer_countries")}
                 </div>
               </div>
+              <SocialBar label="Suivez-nous" className="pt-1" size="sm" />
             </div>
 
             {/* Nav columns */}
