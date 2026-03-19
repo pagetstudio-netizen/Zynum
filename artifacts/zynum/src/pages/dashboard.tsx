@@ -22,8 +22,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import BuyNumber from "./buy";
 import OrderHistory from "./history";
 import Recharge from "./recharge";
+import AdminPanel from "./admin";
 
-type Tab = "overview" | "buy" | "history" | "recharge" | "profile";
+type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "admin";
+type UserWithAdmin = { id: number; name: string; email: string; isAdmin?: boolean; isBanned?: boolean; createdAt: string };
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING:  "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -547,7 +549,8 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
 
   const { t } = useLanguage();
-  const { data: user, isLoading } = useGetCurrentUser({ query: { retry: false } });
+  const { data: rawUser, isLoading } = useGetCurrentUser({ query: { retry: false } });
+  const user = rawUser as UserWithAdmin | undefined;
   const logoutMutation = useLogoutUser({
     mutation: {
       onSuccess: () => {
@@ -609,7 +612,8 @@ export default function Dashboard() {
     { id: "history",   label: t("dash_tab_history"),  icon: History },
     { id: "recharge",  label: t("dash_tab_recharge"), icon: PlusCircle },
     { id: "profile",   label: t("dash_tab_profile"),  icon: User },
-  ] as const;
+    ...(user?.isAdmin ? [{ id: "admin", label: "Administration", icon: Shield }] : []),
+  ] as { id: Tab; label: string; icon: React.ElementType }[];
 
   const formatPrice = (v: number) =>
     currency === "FCFA" ? `${Math.round(v * 620).toLocaleString()} FCFA` : `$${v.toFixed(2)}`;
@@ -761,6 +765,7 @@ export default function Dashboard() {
               {activeTab === "history"   && <OrderHistory />}
               {activeTab === "recharge"  && <Recharge />}
               {activeTab === "profile"   && <Profile user={user} />}
+              {activeTab === "admin"     && user?.isAdmin && <AdminPanel />}
             </motion.div>
           </AnimatePresence>
         </main>

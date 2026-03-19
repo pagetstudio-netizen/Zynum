@@ -41,11 +41,24 @@ artifacts-monorepo/
 └── scripts/                # Utility scripts
 ```
 
+## Admin Account
+
+- **Email**: pagetstudio@gmail.com
+- **Password**: AAbb11##
+- **Access**: Onglet "Administration" visible uniquement pour les comptes admin dans le dashboard
+
 ## Database Tables
 
-- **users**: id, name, email, passwordHash, apiKey, createdAt, updatedAt
+- **users**: id, name, email, passwordHash, apiKey, balanceUsd, isAdmin, isBanned, createdAt, updatedAt
 - **orders**: id, userId, externalId (5SIM), phone, service, serviceName, country, countryName, status, smsCode, smsText, priceUsd, priceFcfa, currency, createdAt, updatedAt
 - **sessions**: id, userId, token, expiresAt, createdAt
+- **transactions**: id, userId, type, amountUsd, amountFcfa, method, provider, status, reference, metadata, createdAt
+- **admin_settings**: id, key, value, updatedAt (clé-valeur pour la configuration plateforme)
+- **admin_messages**: id, senderId, type (popup/email), target, subject, content, sentAt
+- **payment_providers**: id, category (card/mobile_money/crypto), name, slug, isActive, isSelected, config, createdAt
+- **faq_articles**: id, type (faq/article), category, question, answer, lang, isActive, sortOrder, createdAt
+- **social_links**: id, platform, url, icon, isActive, sortOrder, createdAt
+- **country_overrides**: id, countrySlug, countryName, isDisabled, priceMultiplier, updatedAt
 
 ## API Endpoints
 
@@ -67,12 +80,39 @@ artifacts-monorepo/
 - `GET /api/v1/developer/apikey` - Clé API développeur
 - `POST /api/v1/developer/apikey` - Régénérer la clé API
 
+### Admin (requiert isAdmin=true)
+- `GET /api/v1/admin/stats` - 15+ statistiques avec filtres date
+- `GET|PATCH|DELETE /api/v1/admin/users/:id` - Gestion utilisateurs
+- `GET /api/v1/admin/orders` - Toutes les commandes
+- `GET /api/v1/admin/transactions` - Historique rechargements
+- `POST /api/v1/admin/messages` - Envoyer message global
+- `GET|POST|POST(bulk) /api/v1/admin/settings` - Paramètres plateforme
+- `GET|POST|PATCH|DELETE /api/v1/admin/payment-providers` - Fournisseurs paiement
+- `GET|POST|PATCH|DELETE /api/v1/admin/faq` - FAQ et articles d'aide
+- `GET|POST|PATCH|DELETE /api/v1/admin/social-links` - Liens sociaux
+- `GET|POST|PATCH /api/v1/admin/countries` - Overrides pays/prix
+- `GET /api/v1/settings` - Paramètres publics
+
 ## Environment Variables
 
 - `FIVESIM_API_KEY` - Clé API 5SIM (secret)
 - `DATABASE_URL` - URL PostgreSQL (auto-provisionné)
 - `SESSION_SECRET` - Secret de session (auto-provisionné)
 - `PORT` - Port du serveur (auto-assigné)
+
+## Admin Panel Features
+
+10 sections disponibles dans l'onglet "Administration" du dashboard :
+1. **Statistiques** — 15+ métriques + top services/pays + filtres date
+2. **Utilisateurs** — liste, recherche, modifier solde/mot de passe/rôle, bannir
+3. **Commandes** — tous les numéros achetés avec infos utilisateur
+4. **Transactions** — historique rechargements avec méthode/provider
+5. **Messages** — envoyer popup ou email global avec ciblage
+6. **Paramètres** — nom plateforme, contacts, commission, maintenance
+7. **Paiements** — fournisseurs carte/mobile money/crypto, sélection active
+8. **Centre d'aide** — CRUD FAQ et articles multilingue
+9. **Réseaux sociaux** — gestion liens sociaux avec icons SimpleIcons
+10. **Pays** — désactiver pays, multiplicateur de prix
 
 ## Currency
 

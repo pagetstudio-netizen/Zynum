@@ -66,6 +66,11 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
+  if (user.isBanned) {
+    res.status(403).json({ error: "Forbidden", message: "Votre compte a été suspendu. Contactez le support." });
+    return;
+  }
+
   const token = await createSession(user.id);
 
   res.json({
@@ -73,6 +78,8 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
       id: user.id,
       name: user.name,
       email: user.email,
+      isAdmin: user.isAdmin,
+      isBanned: user.isBanned,
       createdAt: user.createdAt,
     },
     token,
@@ -96,6 +103,8 @@ router.get("/v1/auth/me", requireAuth, async (req: AuthRequest, res): Promise<vo
     id: user.id,
     name: user.name,
     email: user.email,
+    isAdmin: user.isAdmin,
+    isBanned: user.isBanned,
     createdAt: user.createdAt,
   });
 });
