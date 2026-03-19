@@ -226,7 +226,7 @@ export default function ApiDocs() {
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">Ce qui vous attend</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Nous construisons une API pensée pour les développeurs africains — rapide, fiable et en FCFA.
+              Nous construisons une API pensée pour tous les développeurs — rapide, fiable et simple à intégrer.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

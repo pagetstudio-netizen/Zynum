@@ -17,7 +17,7 @@ export default function About() {
               À propos de <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-400">ZyNum</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              ZyNum est né d'un besoin simple : rendre les numéros virtuels accessibles à tous en Afrique de l'Ouest, avec des paiements en FCFA et une interface en français.
+              ZyNum est né d'un besoin simple : rendre les numéros virtuels accessibles à tous dans le monde, avec une interface simple, des prix transparents et une livraison instantanée.
             </p>
           </motion.div>
         </div>
@@ -36,7 +36,7 @@ export default function About() {
                 Nous croyons que chaque personne a le droit de protéger sa vie privée en ligne. Avec ZyNum, vous pouvez créer des comptes sur n'importe quelle plateforme sans exposer votre vrai numéro de téléphone.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                Notre infrastructure connectée à 5SIM vous donne accès à plus de 180 pays et 200 services, avec des prix transparents en FCFA.
+                Notre infrastructure connectée à 5SIM vous donne accès à plus de 180 pays et 200 services, avec des prix transparents et une livraison en moins de 5 secondes.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -65,7 +65,7 @@ export default function About() {
             {[
               { icon: <ShieldCheck className="w-8 h-8 text-green-400" />, title: "Sécurité", desc: "Vos données personnelles sont protégées. Nous ne revendons jamais vos informations." },
               { icon: <Zap className="w-8 h-8 text-yellow-400" />, title: "Rapidité", desc: "Numéros provisionnés instantanément. Code OTP reçu en quelques secondes." },
-              { icon: <Users className="w-8 h-8 text-blue-400" />, title: "Communauté", desc: "Pensé pour les utilisateurs d'Afrique de l'Ouest avec support en français." },
+              { icon: <Users className="w-8 h-8 text-blue-400" />, title: "Communauté", desc: "Pensé pour les utilisateurs du monde entier, avec support multilingue." },
             ].map((v) => (
               <div key={v.title} className="rounded-2xl border border-white/5 bg-white/[0.03] p-8 text-center">
                 <div className="flex justify-center mb-4">{v.icon}</div>

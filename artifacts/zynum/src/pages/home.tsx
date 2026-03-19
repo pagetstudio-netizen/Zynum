@@ -90,7 +90,7 @@ export default function Home() {
             </motion.h1>
 
             <motion.p {...fadeUp(0.2)} className="text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed">
-              Achetez un numéro virtuel dans 180+ pays, recevez vos SMS de vérification pour Telegram, WhatsApp, Google et des centaines d'autres services — paiement en FCFA accepté.
+              Achetez un numéro virtuel dans 180+ pays, recevez vos SMS de vérification pour Telegram, WhatsApp, Google et des centaines d'autres services — sans carte SIM physique.
             </motion.p>
 
             <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -107,10 +107,10 @@ export default function Home() {
             </motion.div>
 
             {/* Trust badges */}
-            <motion.div {...fadeUp(0.4)} className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-10 justify-center lg:justify-start text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> Aucune SIM requise</span>
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> FCFA accepté</span>
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> Livraison instantanée</span>
+            <motion.div {...fadeUp(0.4)} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-10 max-w-sm lg:max-w-none mx-auto lg:mx-0 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] px-3 py-2 rounded-lg"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Aucune SIM requise</span>
+              <span className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] px-3 py-2 rounded-lg"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> 180+ pays couverts</span>
+              <span className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] px-3 py-2 rounded-lg"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Livraison instantanée</span>
             </motion.div>
           </div>
 
@@ -292,9 +292,9 @@ export default function Home() {
       <section className="w-full py-24 border-t border-white/5">
         <div className="container max-w-7xl mx-auto px-4">
           <motion.div {...fadeUp()} className="text-center mb-16">
-            <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-3">Pourquoi ZyNum ?</p>
+            <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-3">Nos avantages</p>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white">
-              La solution numéro 1<br />en Afrique de l'Ouest
+              Simple, rapide<br />et fiable
             </h2>
           </motion.div>
 
@@ -371,7 +371,7 @@ export default function Home() {
               Prêt à commencer ?
             </h2>
             <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-              Rejoignez des milliers d'utilisateurs en Afrique de l'Ouest qui font confiance à ZyNum pour leurs numéros virtuels.
+              Rejoignez des milliers d'utilisateurs dans le monde entier qui font confiance à ZyNum pour leurs numéros virtuels.
             </p>
             <Link href="/register">
               <Button size="lg" className="h-14 px-10 rounded-xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-2xl shadow-primary/30 transition-all hover:-translate-y-1">

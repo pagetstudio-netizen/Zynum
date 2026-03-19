@@ -61,9 +61,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   });
 
   const navLinks = [
-    { href: "/buy", label: "Acheter", icon: <Phone className="w-4 h-4 mr-2" /> },
-    { href: "/history", label: "Historique", icon: <History className="w-4 h-4 mr-2" /> },
-    { href: "/aide", label: "Aide", icon: <HelpCircle className="w-4 h-4 mr-2" /> },
+    { href: "/buy",     label: "Acheter",    icon: <Phone      className="w-4 h-4 mr-2" /> },
+    { href: "/history", label: "Historique", icon: <History    className="w-4 h-4 mr-2" /> },
+    { href: "/aide",    label: "Aide",       icon: <HelpCircle className="w-4 h-4 mr-2" /> },
+    { href: "/contact", label: "Contact",    icon: <MessageSquare className="w-4 h-4 mr-2" /> },
   ];
 
   return (
@@ -90,18 +91,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden md:flex items-center space-x-1">
+            <nav className="hidden md:flex items-center space-x-0.5">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center ${
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     location === link.href
                       ? "bg-white/10 text-white"
                       : "text-muted-foreground hover:bg-white/5 hover:text-white"
                   }`}
                 >
-                  {link.icon}{link.label}
+                  {link.label}
                 </Link>
               ))}
             </nav>
@@ -260,7 +261,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <span className="font-display font-bold text-xl text-white">ZyNum</span>
               </Link>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-                La plateforme de numéros virtuels pensée pour l'Afrique de l'Ouest. Recevez vos codes OTP en FCFA, instantanément.
+                La plateforme internationale de numéros virtuels. Recevez vos codes OTP dans 180+ pays, instantanément.
               </p>
               {/* Social / trust links */}
               <div className="flex flex-wrap gap-3 pt-2">
