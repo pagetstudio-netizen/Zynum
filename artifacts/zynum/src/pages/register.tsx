@@ -59,9 +59,16 @@ export default function Register() {
     "w-full h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20";
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-10 bg-background">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-10 bg-background relative overflow-hidden">
 
-      <div className="w-full max-w-sm">
+      {/* Decorative background orbs */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-[-10%] left-[-5%] w-[450px] h-[450px] rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute top-[10%] right-[-8%] w-[350px] h-[350px] rounded-full bg-rose-500/10 blur-[100px]" />
+        <div className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 w-[600px] h-[250px] rounded-full bg-primary/5 blur-[80px]" />
+      </div>
+
+      <div className="w-full max-w-sm relative z-10">
 
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-8">
@@ -242,7 +249,7 @@ export default function Register() {
               !acceptTerms ||
               password !== confirmPassword
             }
-            className="w-full h-14 rounded-2xl font-extrabold text-white text-[16px] transition-all mt-2 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+            className="w-full h-14 rounded-2xl font-extrabold text-white text-[16px] transition-all mt-2 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] bg-gradient-to-r from-primary to-rose-500 hover:from-primary/90 hover:to-rose-500/90 shadow-lg shadow-primary/25 border-0"
           >
             {registerMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
