@@ -80,7 +80,8 @@ export default function Home() {
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-blue-600/20 blur-[120px]" />
           <div className="absolute bottom-0 right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/15 blur-[100px]" />
-          <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] rounded-full bg-cyan-500/10 blur-[80px]" />
+          <div className="absolute top-[30%] right-[15%] w-[350px] h-[350px] rounded-full bg-rose-500/10 blur-[100px]" />
+          <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] rounded-full bg-cyan-500/8 blur-[80px]" />
           <div className="absolute inset-0 grid-overlay-60" />
         </div>
 
@@ -93,7 +94,7 @@ export default function Home() {
 
             <motion.h1 {...fadeUp(0.1)} className="text-5xl md:text-6xl xl:text-7xl font-display font-extrabold text-white leading-[1.08] tracking-tight mb-6">
               {t("home_hero_title1")}<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-primary to-cyan-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-primary to-rose-400">
                 {t("home_hero_accent")}
               </span>{" "}
               {t("home_hero_title2")}
@@ -105,7 +106,7 @@ export default function Home() {
 
             <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link href="/register">
-                <Button size="lg" className="h-14 px-8 rounded-xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-2xl shadow-primary/30 transition-all hover:-translate-y-1">
+                <Button size="lg" className="h-14 px-8 rounded-xl text-base font-bold bg-gradient-to-r from-primary to-rose-500 hover:from-primary/90 hover:to-rose-500/90 text-white shadow-2xl shadow-primary/30 transition-all hover:-translate-y-1 border-0">
                   {t("home_start_free")} <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
@@ -196,7 +197,7 @@ export default function Home() {
       </section>
 
       {/* ── Stats ──────────────────────────────────────────────────── */}
-      <section className="w-full border-y border-white/5 bg-white/[0.02]">
+      <section className="w-full border-y border-white/5 bg-gradient-to-r from-blue-950/30 via-white/[0.02] to-rose-950/20">
         <div className="container max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {STATS.map((s, i) => (
@@ -217,10 +218,14 @@ export default function Home() {
       </section>
 
       {/* ── Services ───────────────────────────────────────────────── */}
-      <section className="w-full py-24">
-        <div className="container max-w-7xl mx-auto px-4">
+      <section className="w-full py-24 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-[-10%] w-[400px] h-[400px] rounded-full bg-rose-500/5 blur-[100px]" />
+          <div className="absolute bottom-0 right-[-5%] w-[300px] h-[300px] rounded-full bg-blue-600/10 blur-[80px]" />
+        </div>
+        <div className="container max-w-7xl mx-auto px-4 relative z-10">
           <motion.div {...fadeUp()} className="text-center mb-14">
-            <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-3">200+ {t("home_stats_services").toLowerCase()}</p>
+            <p className="text-rose-400 font-semibold text-sm uppercase tracking-widest mb-3">200+ {t("home_stats_services").toLowerCase()}</p>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">{t("home_services_title")}</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">{t("home_services_sub")}</p>
           </motion.div>
@@ -256,7 +261,8 @@ export default function Home() {
 
       {/* ── How it works ───────────────────────────────────────────── */}
       <section className="w-full py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-950/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-950/15 to-transparent pointer-events-none" />
+        <div className="absolute top-0 right-1/4 w-[300px] h-[300px] rounded-full bg-rose-500/5 blur-[90px] pointer-events-none" />
         <div className="container max-w-7xl mx-auto px-4 relative z-10">
           <motion.div {...fadeUp()} className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">{t("home_how_title")}</h2>
@@ -321,12 +327,12 @@ export default function Home() {
       {/* ── API CTA ────────────────────────────────────────────────── */}
       <section className="w-full py-24 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-rose-500/5" />
         </div>
         <div className="container max-w-6xl mx-auto px-4">
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0d1a35] to-[#060d1f] p-8 md:p-16 text-center relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[80px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none" />
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0d1a35] via-[#0d1226] to-[#1a0d1a] p-8 md:p-16 text-center relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/15 blur-[80px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-rose-500/10 blur-[60px] rounded-full pointer-events-none" />
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
                 <Code className="w-4 h-4" /> {t("footer_api")}
@@ -355,20 +361,23 @@ export default function Home() {
       </section>
 
       {/* ── Final CTA ──────────────────────────────────────────────── */}
-      <section className="w-full py-24 border-t border-white/5">
-        <div className="container max-w-4xl mx-auto px-4 text-center">
+      <section className="w-full py-24 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-rose-500/10 via-primary/5 to-transparent blur-[80px]" />
+        </div>
+        <div className="container max-w-4xl mx-auto px-4 text-center relative z-10">
           <motion.div {...fadeUp()}>
             <div className="flex justify-center mb-6 gap-1">
               {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />)}
             </div>
             <h2 className="text-3xl md:text-5xl font-display font-extrabold text-white mb-5">
-              {t("home_cta_title")} <span className="text-primary">{t("home_cta_accent")}</span> {t("home_cta_title2")}
+              {t("home_cta_title")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-rose-400">{t("home_cta_accent")}</span> {t("home_cta_title2")}
             </h2>
             <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
               {t("home_cta_sub")}
             </p>
             <Link href="/register">
-              <Button size="lg" className="h-14 px-10 rounded-xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-2xl shadow-primary/30 transition-all hover:-translate-y-1">
+              <Button size="lg" className="h-14 px-10 rounded-xl text-base font-bold bg-gradient-to-r from-primary to-rose-500 hover:from-primary/90 hover:to-rose-500/90 text-white shadow-2xl shadow-primary/30 transition-all hover:-translate-y-1 border-0">
                 {t("home_cta_btn")} <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
