@@ -90,13 +90,14 @@ function CountdownRing({ createdAt, onExpired }: { createdAt: string; onExpired?
 
 function ServiceLogo({ icon, color, name, size = 40 }: { icon: string; color: string; name: string; size?: number }) {
   const [failed, setFailed] = useState(false);
-  const lightBg = ["#FFFC00", "#F0B90B"].includes(color.toUpperCase());
+  const lightBg = ["#FFFC00", "#F0B90B", "#FAE100", "#FFC629"].some(c => color.toUpperCase() === c);
+  const showFallback = failed || !icon;
   return (
     <div style={{ width: size, height: size, background: color, borderRadius: size * 0.22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      {!failed ? (
+      {!showFallback ? (
         <img src={icon} alt={name} style={{ width: size * 0.58, height: size * 0.58, objectFit: "contain" }} onError={() => setFailed(true)} />
       ) : (
-        <span style={{ fontWeight: 700, fontSize: size * 0.36, color: lightBg ? "#000" : "#fff" }}>
+        <span style={{ fontWeight: 700, fontSize: size * 0.36, color: lightBg ? "#000" : "#fff", lineHeight: 1, userSelect: "none" }}>
           {name.slice(0, 2).toUpperCase()}
         </span>
       )}

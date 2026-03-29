@@ -105,28 +105,101 @@ export interface CountryInfo {
 
 const CDN = "https://cdn.simpleicons.org";
 
+// Rich metadata for well-known services (icon from simpleicons.org)
 const SERVICE_MAP: Record<string, { name: string; icon: string; color: string; category: string }> = {
-  telegram:  { name: "Telegram",       icon: `${CDN}/telegram/ffffff`,   color: "#2AABEE", category: "Messagerie" },
-  whatsapp:  { name: "WhatsApp",       icon: `${CDN}/whatsapp/ffffff`,   color: "#25D366", category: "Messagerie" },
-  google:    { name: "Gmail / Google", icon: `${CDN}/gmail/ffffff`,      color: "#EA4335", category: "Email" },
-  facebook:  { name: "Facebook",       icon: `${CDN}/facebook/ffffff`,   color: "#1877F2", category: "Social" },
-  instagram: { name: "Instagram",      icon: `${CDN}/instagram/ffffff`,  color: "#E4405F", category: "Social" },
-  twitter:   { name: "Twitter / X",    icon: `${CDN}/x/ffffff`,          color: "#14171A", category: "Social" },
-  tiktok:    { name: "TikTok",         icon: `${CDN}/tiktok/ffffff`,     color: "#010101", category: "Social" },
-  uber:      { name: "Uber",           icon: `${CDN}/uber/ffffff`,       color: "#000000", category: "Transport" },
-  amazon:    { name: "Amazon",         icon: `${CDN}/amazon/ffffff`,     color: "#FF9900", category: "Shopping" },
-  microsoft: { name: "Microsoft",      icon: `${CDN}/microsoft/ffffff`,  color: "#0078D4", category: "Tech" },
-  paypal:    { name: "PayPal",         icon: `${CDN}/paypal/ffffff`,     color: "#003087", category: "Finance" },
-  snapchat:  { name: "Snapchat",       icon: `${CDN}/snapchat/ffffff`,   color: "#FFFC00", category: "Social" },
-  discord:   { name: "Discord",        icon: `${CDN}/discord/ffffff`,    color: "#5865F2", category: "Gaming" },
-  linkedin:  { name: "LinkedIn",       icon: `${CDN}/linkedin/ffffff`,   color: "#0A66C2", category: "Pro" },
-  binance:   { name: "Binance",        icon: `${CDN}/binance/ffffff`,    color: "#F0B90B", category: "Crypto" },
-  airbnb:    { name: "Airbnb",         icon: `${CDN}/airbnb/ffffff`,     color: "#FF5A5F", category: "Voyage" },
-  ebay:      { name: "eBay",           icon: `${CDN}/ebay/ffffff`,       color: "#E43142", category: "Shopping" },
-  netflix:   { name: "Netflix",        icon: `${CDN}/netflix/ffffff`,    color: "#E50914", category: "Streaming" },
-  steam:     { name: "Steam",          icon: `${CDN}/steam/ffffff`,      color: "#1B2838", category: "Gaming" },
-  shopee:    { name: "Shopee",         icon: `${CDN}/shopee/ffffff`,     color: "#EE4D2D", category: "Shopping" },
+  // ── Messagerie ──────────────────────────────────────────────────────────────
+  telegram:    { name: "Telegram",       icon: `${CDN}/telegram/ffffff`,    color: "#2AABEE", category: "Messagerie" },
+  whatsapp:    { name: "WhatsApp",       icon: `${CDN}/whatsapp/ffffff`,    color: "#25D366", category: "Messagerie" },
+  viber:       { name: "Viber",          icon: `${CDN}/viber/ffffff`,       color: "#7360F2", category: "Messagerie" },
+  line:        { name: "Line",           icon: `${CDN}/line/ffffff`,        color: "#00C300", category: "Messagerie" },
+  wechat:      { name: "WeChat",         icon: `${CDN}/wechat/ffffff`,      color: "#07C160", category: "Messagerie" },
+  kakaotalk:   { name: "KakaoTalk",      icon: `${CDN}/kakaotalk/000000`,   color: "#FAE100", category: "Messagerie" },
+  imo:         { name: "IMO",            icon: "",                           color: "#009DDC", category: "Messagerie" },
+  michat:      { name: "MiChat",         icon: "",                           color: "#FF6B00", category: "Messagerie" },
+  // ── Social ──────────────────────────────────────────────────────────────────
+  facebook:    { name: "Facebook",       icon: `${CDN}/facebook/ffffff`,    color: "#1877F2", category: "Social" },
+  instagram:   { name: "Instagram",      icon: `${CDN}/instagram/ffffff`,   color: "#E4405F", category: "Social" },
+  twitter:     { name: "Twitter / X",    icon: `${CDN}/x/ffffff`,           color: "#14171A", category: "Social" },
+  tiktok:      { name: "TikTok",         icon: `${CDN}/tiktok/ffffff`,      color: "#010101", category: "Social" },
+  snapchat:    { name: "Snapchat",       icon: `${CDN}/snapchat/000000`,    color: "#FFFC00", category: "Social" },
+  linkedin:    { name: "LinkedIn",       icon: `${CDN}/linkedin/ffffff`,    color: "#0A66C2", category: "Social" },
+  discord:     { name: "Discord",        icon: `${CDN}/discord/ffffff`,     color: "#5865F2", category: "Social" },
+  naver:       { name: "Naver",          icon: `${CDN}/naver/ffffff`,       color: "#03C75A", category: "Social" },
+  weibo:       { name: "Weibo",          icon: `${CDN}/sinaweibo/ffffff`,   color: "#E6162D", category: "Social" },
+  clubhouse:   { name: "Clubhouse",      icon: "",                           color: "#F2F0EB", category: "Social" },
+  skout:       { name: "Skout",          icon: "",                           color: "#FF6900", category: "Social" },
+  bigolive:    { name: "BIGO LIVE",      icon: "",                           color: "#00C878", category: "Social" },
+  yalla:       { name: "Yalla",          icon: "",                           color: "#F5A623", category: "Social" },
+  // ── Email / Tech ────────────────────────────────────────────────────────────
+  google:      { name: "Gmail / Google", icon: `${CDN}/gmail/ffffff`,       color: "#EA4335", category: "Email" },
+  yahoo:       { name: "Yahoo",          icon: `${CDN}/yahoo/ffffff`,       color: "#6001D2", category: "Email" },
+  microsoft:   { name: "Microsoft",      icon: `${CDN}/microsoft/ffffff`,   color: "#0078D4", category: "Tech" },
+  zoho:        { name: "Zoho",           icon: `${CDN}/zoho/ffffff`,        color: "#C8202E", category: "Email" },
+  protonmail:  { name: "ProtonMail",     icon: `${CDN}/protonmail/ffffff`,  color: "#6D4AFF", category: "Email" },
+  apple:       { name: "Apple / iCloud", icon: `${CDN}/apple/ffffff`,       color: "#555555", category: "Tech" },
+  // ── Shopping ────────────────────────────────────────────────────────────────
+  amazon:      { name: "Amazon",         icon: `${CDN}/amazon/ffffff`,      color: "#FF9900", category: "Shopping" },
+  ebay:        { name: "eBay",           icon: `${CDN}/ebay/ffffff`,        color: "#E43142", category: "Shopping" },
+  shopee:      { name: "Shopee",         icon: `${CDN}/shopee/ffffff`,      color: "#EE4D2D", category: "Shopping" },
+  aliexpress:  { name: "AliExpress",     icon: `${CDN}/aliexpress/ffffff`,  color: "#FF6A00", category: "Shopping" },
+  lazada:      { name: "Lazada",         icon: "",                           color: "#0F146D", category: "Shopping" },
+  vinted:      { name: "Vinted",         icon: `${CDN}/vinted/ffffff`,      color: "#007982", category: "Shopping" },
+  olx:         { name: "OLX",            icon: `${CDN}/olx/ffffff`,         color: "#4C80F0", category: "Shopping" },
+  nike:        { name: "Nike",           icon: `${CDN}/nike/ffffff`,        color: "#111111", category: "Shopping" },
+  // ── Finance / Crypto ────────────────────────────────────────────────────────
+  paypal:      { name: "PayPal",         icon: `${CDN}/paypal/ffffff`,      color: "#003087", category: "Finance" },
+  alipay:      { name: "Alipay",         icon: `${CDN}/alipay/ffffff`,      color: "#1677FF", category: "Finance" },
+  binance:     { name: "Binance",        icon: `${CDN}/binance/ffffff`,     color: "#F0B90B", category: "Crypto" },
+  papara:      { name: "Papara",         icon: "",                           color: "#7400FF", category: "Finance" },
+  // ── Transport / Food ────────────────────────────────────────────────────────
+  uber:        { name: "Uber",           icon: `${CDN}/uber/ffffff`,        color: "#000000", category: "Transport" },
+  bolt:        { name: "Bolt",           icon: `${CDN}/bolt/ffffff`,        color: "#34D186", category: "Transport" },
+  airbnb:      { name: "Airbnb",         icon: `${CDN}/airbnb/ffffff`,      color: "#FF5A5F", category: "Voyage" },
+  deliveroo:   { name: "Deliveroo",      icon: `${CDN}/deliveroo/ffffff`,   color: "#00CCBC", category: "Alimentation" },
+  blablacar:   { name: "BlaBlaCar",      icon: `${CDN}/blablacar/ffffff`,   color: "#00A0E8", category: "Transport" },
+  grabtaxi:    { name: "Grab",           icon: `${CDN}/grab/ffffff`,        color: "#00B14F", category: "Transport" },
+  didi:        { name: "DiDi",           icon: `${CDN}/didi/ffffff`,        color: "#FF8000", category: "Transport" },
+  foodpanda:   { name: "Foodpanda",      icon: `${CDN}/foodpanda/ffffff`,   color: "#D70F64", category: "Alimentation" },
+  wolt:        { name: "Wolt",           icon: `${CDN}/wolt/ffffff`,        color: "#009DE0", category: "Alimentation" },
+  getir:       { name: "Getir",          icon: `${CDN}/getir/ffffff`,       color: "#5D0096", category: "Alimentation" },
+  // ── Gaming ──────────────────────────────────────────────────────────────────
+  steam:       { name: "Steam",          icon: `${CDN}/steam/ffffff`,       color: "#1B2838", category: "Gaming" },
+  blizzard:    { name: "Battle.net",     icon: `${CDN}/battledotnet/ffffff`,color: "#148EFF", category: "Gaming" },
+  // ── Dating ──────────────────────────────────────────────────────────────────
+  tinder:      { name: "Tinder",         icon: `${CDN}/tinder/ffffff`,      color: "#FE3C72", category: "Dating" },
+  grindr:      { name: "Grindr",         icon: `${CDN}/grindr/ffffff`,      color: "#FEAD14", category: "Dating" },
+  happn:       { name: "Happn",          icon: "",                           color: "#FF4E6D", category: "Dating" },
+  pof:         { name: "POF (Plenty of Fish)", icon: "",                    color: "#0070CC", category: "Dating" },
+  cupid:       { name: "Cupid",          icon: "",                           color: "#E91E63", category: "Dating" },
+  bumble:      { name: "Bumble",         icon: `${CDN}/bumble/000000`,      color: "#FFC629", category: "Dating" },
+  // ── Pro / Freelance ─────────────────────────────────────────────────────────
+  fiverr:      { name: "Fiverr",         icon: `${CDN}/fiverr/ffffff`,      color: "#1DBF73", category: "Pro" },
+  craigslist:  { name: "Craigslist",     icon: "",                           color: "#800000", category: "Pro" },
+  truecaller:  { name: "Truecaller",     icon: "",                           color: "#0097DA", category: "Pro" },
+  // ── Streaming ───────────────────────────────────────────────────────────────
+  netflix:     { name: "Netflix",        icon: `${CDN}/netflix/ffffff`,     color: "#E50914", category: "Streaming" },
+  // ── Autres ──────────────────────────────────────────────────────────────────
+  tencentqq:   { name: "Tencent QQ",     icon: `${CDN}/tencentqq/ffffff`,   color: "#12B7F5", category: "Social" },
+  jd:          { name: "JD.com",         icon: `${CDN}/jd/ffffff`,          color: "#E1251B", category: "Shopping" },
 };
+
+// Generate a deterministic color for unknown services
+function colorFromString(str: string): string {
+  const colors = ["#6366F1","#EC4899","#14B8A6","#F59E0B","#EF4444","#8B5CF6","#06B6D4","#84CC16","#F97316","#10B981"];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+  return colors[hash % colors.length];
+}
+
+// Capitalize service id into a readable name (e.g. "bigolive" → "Bigolive")
+function toReadableName(id: string): string {
+  return id.charAt(0).toUpperCase() + id.slice(1);
+}
+
+// Cache for dynamic services list
+let servicesCache: ServiceInfo[] | null = null;
+let servicesCacheTime = 0;
+const SERVICES_CACHE_TTL = 10 * 60 * 1000; // 10 min
 
 // ISO code → emoji flag
 function isoToFlag(iso: string): string {
@@ -214,10 +287,43 @@ export async function getProfile(): Promise<FiveSimProfile> {
   return fiveSimRequest<FiveSimProfile>("/user/profile");
 }
 
-export function getAvailableServices(): ServiceInfo[] {
-  return Object.entries(SERVICE_MAP).map(([id, { name, icon, color, category }]) => ({
-    id, name, icon, color, category,
-  }));
+export async function getAvailableServices(): Promise<ServiceInfo[]> {
+  if (servicesCache && Date.now() - servicesCacheTime < SERVICES_CACHE_TTL) {
+    return servicesCache;
+  }
+
+  // Fetch top services from 5sim sorted by availability
+  let fiveSimProducts: Record<string, { Category: string; Qty: number; Price: number }> = {};
+  try {
+    fiveSimProducts = await fiveSimRequest<typeof fiveSimProducts>("/guest/products/any/any");
+  } catch {
+    // Fallback to static map if API fails
+    return Object.entries(SERVICE_MAP).map(([id, { name, icon, color, category }]) => ({ id, name, icon, color, category }));
+  }
+
+  // Sort by qty descending, take top 150
+  const sorted = Object.entries(fiveSimProducts)
+    .filter(([, v]) => v.Category === "activation" && v.Qty > 0)
+    .sort((a, b) => b[1].Qty - a[1].Qty)
+    .slice(0, 150);
+
+  const result: ServiceInfo[] = sorted.map(([id]) => {
+    const known = SERVICE_MAP[id];
+    if (known) {
+      return { id, name: known.name, icon: known.icon, color: known.color, category: known.category };
+    }
+    return {
+      id,
+      name: toReadableName(id),
+      icon: "",
+      color: colorFromString(id),
+      category: "Autre",
+    };
+  });
+
+  servicesCache = result;
+  servicesCacheTime = Date.now();
+  return result;
 }
 
 export async function getCountriesForService(service: string): Promise<CountryInfo[]> {
