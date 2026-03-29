@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import {
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
+import { useGetServices } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -15,23 +16,26 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.55, delay, ease: "easeOut" },
 });
 
-const SERVICES = [
-  { name: "Telegram",  color: "#2AABEE", icon: "telegram" },
-  { name: "WhatsApp",  color: "#25D366", icon: "whatsapp" },
-  { name: "Google",    color: "#4285F4", icon: "google" },
-  { name: "Facebook",  color: "#1877F2", icon: "facebook" },
-  { name: "TikTok",    color: "#010101", icon: "tiktok" },
-  { name: "Instagram", color: "#E1306C", icon: "instagram" },
-  { name: "Twitter",   color: "#1DA1F2", icon: "x" },
-  { name: "Snapchat",  color: "#FFFC00", icon: "snapchat" },
-  { name: "Tinder",    color: "#FE3C72", icon: "tinder" },
-  { name: "Uber",      color: "#000000", icon: "uber" },
-  { name: "Amazon",    color: "#FF9900", icon: "amazon" },
-  { name: "Microsoft", color: "#00A4EF", icon: "microsoft" },
-];
+function HomeSvcLogo({ icon, color, name, size = 48 }: { icon: string; color: string; name: string; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const lightBg = ["#FFFC00", "#F0B90B", "#FAE100", "#FFC629"].some(c => color.toUpperCase() === c);
+  const showFallback = failed || !icon;
+  return (
+    <div style={{ width: size, height: size, background: color, borderRadius: size * 0.22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      {!showFallback ? (
+        <img src={icon} alt={name} style={{ width: size * 0.58, height: size * 0.58, objectFit: "contain" }} onError={() => setFailed(true)} />
+      ) : (
+        <span style={{ fontWeight: 700, fontSize: size * 0.36, color: lightBg ? "#000" : "#fff", lineHeight: 1, userSelect: "none" }}>
+          {name.slice(0, 2).toUpperCase()}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   const { t } = useLanguage();
+  const { data: servicesData } = useGetServices();
 
   const STATS = [
     { value: "50K+",  label: t("home_stats_numbers") },
@@ -222,20 +226,21 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-            {SERVICES.map((svc, i) => (
-              <motion.div
-                key={svc.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.04 }}
-                className="flex flex-col items-center gap-3 p-4 rounded-2xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/10 transition-all cursor-pointer group"
-              >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ background: svc.color }}>
-                  <img src={`https://cdn.simpleicons.org/${svc.icon}/ffffff`} alt={svc.name} className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                </div>
-                <span className="text-xs font-medium text-muted-foreground group-hover:text-white transition-colors">{svc.name}</span>
-              </motion.div>
+            {(servicesData?.services ?? []).slice(0, 24).map((svc, i) => (
+              <Link key={svc.id} href={`/buy?service=${svc.id}`}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.03 }}
+                  className="flex flex-col items-center gap-3 p-4 rounded-2xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/10 transition-all cursor-pointer group"
+                >
+                  <div className="group-hover:scale-110 transition-transform">
+                    <HomeSvcLogo icon={svc.icon} color={svc.color} name={svc.name} size={48} />
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground group-hover:text-white transition-colors text-center leading-tight">{svc.name}</span>
+                </motion.div>
+              </Link>
             ))}
           </div>
 
