@@ -413,8 +413,8 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
             ) : (
               <div className="space-y-2">
                 {filtered.map((country, i) => {
-                  const priceUsd = country.cost ?? 0;
-                  const priceFcfa = Math.round(priceUsd * 620);
+                  const priceUsd = country.priceUsd ?? 0;
+                  const priceFcfa = country.priceFcfa ?? Math.round(priceUsd * 620);
                   return (
                     <motion.button
                       key={country.code}
