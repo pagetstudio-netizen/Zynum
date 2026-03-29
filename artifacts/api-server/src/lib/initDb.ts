@@ -130,9 +130,14 @@ async function ensureSchema() {
       "icon" text,
       "is_active" boolean DEFAULT true NOT NULL,
       "sort_order" integer DEFAULT 0 NOT NULL,
-      "created_at" timestamp with time zone DEFAULT now() NOT NULL
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+      CONSTRAINT "social_links_platform_unique" UNIQUE("platform")
     )
   `);
+  // Ensure the unique constraint exists on already-created tables (idempotent)
+  await db.execute(sql`
+    ALTER TABLE social_links ADD CONSTRAINT social_links_platform_unique UNIQUE (platform)
+  `).catch(() => { /* constraint already exists, ignore */ });
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "country_overrides" (
       "id" serial PRIMARY KEY NOT NULL,
