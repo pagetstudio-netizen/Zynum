@@ -230,17 +230,20 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     },
   });
 
+  const needsPolling = (order: typeof activeOrder) =>
+    !!order && (order.status === "PENDING" || (order.status === "RECEIVED" && !order.smsCode));
+
   const { data: smsData, refetch: refetchSms } = useCheckSms(activeOrder?.id || "", {
     query: {
-      enabled: !!activeOrder && step === "active" && activeOrder.status === "PENDING",
-      refetchInterval: (q) => (q.state.data?.order.status !== "PENDING" ? false : 5000),
+      enabled: !!activeOrder && step === "active" && needsPolling(activeOrder),
+      refetchInterval: (q) => (needsPolling(q.state.data?.order ?? activeOrder) ? 5000 : false),
     },
   });
 
   useEffect(() => {
     if (!smsData?.order) return;
     setActiveOrder(smsData.order);
-    if (smsData.order.status === "RECEIVED" || smsData.order.status === "FINISHED") {
+    if ((smsData.order.status === "RECEIVED" || smsData.order.status === "FINISHED") && smsData.order.smsCode) {
       toast({ title: t("buy_sms_toast"), description: `${t("buy_sms_code_toast")} ${smsData.order.smsCode}` });
     } else if (["TIMEOUT", "BANNED", "CANCELED"].includes(smsData.order.status)) {
       toast({ variant: "destructive", title: t("buy_expired_toast"), description: t("buy_expired_desc") });
@@ -635,8 +638,8 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   // ── STEP 5 — ACTIVE / SMS POLLING ───────────────────────────────────────────
   if (step === "active" && activeOrder) {
     const svc = selectedServiceInfo;
-    const isPending = activeOrder.status === "PENDING";
-    const isSuccess = activeOrder.status === "RECEIVED" || activeOrder.status === "FINISHED";
+    const isPending = activeOrder.status === "PENDING" || (activeOrder.status === "RECEIVED" && !activeOrder.smsCode);
+    const isSuccess = (activeOrder.status === "RECEIVED" || activeOrder.status === "FINISHED") && !!activeOrder.smsCode;
     const isFailed  = ["TIMEOUT", "BANNED", "CANCELED"].includes(activeOrder.status);
 
     return (
