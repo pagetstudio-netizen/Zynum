@@ -161,8 +161,10 @@ router.post("/v1/cancel/:orderId", requireAuth, async (req: AuthRequest, res): P
     return;
   }
 
-  if (dbOrder.status !== "PENDING") {
-    res.status(400).json({ error: "Invalid", message: "Seules les commandes en attente peuvent être annulées" });
+  // Allow cancel if PENDING, or if RECEIVED but no SMS code was delivered
+  const canCancel = dbOrder.status === "PENDING" || (dbOrder.status === "RECEIVED" && !dbOrder.smsCode);
+  if (!canCancel) {
+    res.status(400).json({ error: "Invalid", message: "Cette commande ne peut pas être annulée (SMS déjà reçu)" });
     return;
   }
 
