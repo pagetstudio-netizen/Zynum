@@ -14,6 +14,7 @@ import {
   mapFiveSimStatus,
   usdToFcfa,
 } from "../lib/fivesim.js";
+import { getCommissionMultiplier, applyCommission } from "../lib/commission.js";
 
 const router: IRouter = Router();
 
@@ -63,15 +64,20 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   const countryName = getCountryName(country);
 
   let fiveSimOrder;
+  let commissionMultiplier: number;
   try {
-    fiveSimOrder = await buyNumber(service, country, operator ?? "any");
+    [fiveSimOrder, commissionMultiplier] = await Promise.all([
+      buyNumber(service, country, operator ?? "any"),
+      getCommissionMultiplier(),
+    ]);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat du numéro";
     res.status(400).json({ error: "Purchase failed", message });
     return;
   }
 
-  const priceUsd = fiveSimOrder.price;
+  const rawPriceUsd = fiveSimOrder.price;
+  const priceUsd = applyCommission(rawPriceUsd, commissionMultiplier);
   const priceFcfa = usdToFcfa(priceUsd);
 
   let order;

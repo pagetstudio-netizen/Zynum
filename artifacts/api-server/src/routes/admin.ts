@@ -4,6 +4,7 @@ import { eq, desc, count, sum, and, gte, lte, like, or, sql } from "drizzle-orm"
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import { hashPassword } from "../lib/auth.js";
+import { invalidateCommissionCache } from "../lib/commission.js";
 
 const router = Router();
 const auth = [requireAuth, requireAdmin];
@@ -178,6 +179,7 @@ router.post("/v1/admin/settings", ...auth, async (req, res): Promise<void> => {
   if (!key || value === undefined) { res.status(400).json({ error: "key and value required" }); return; }
 
   await db.insert(adminSettingsTable).values({ key, value }).onConflictDoUpdate({ target: adminSettingsTable.key, set: { value } });
+  if (key === "commission_type" || key === "commission_value") invalidateCommissionCache();
   res.json({ success: true });
 });
 
@@ -188,6 +190,7 @@ router.post("/v1/admin/settings/bulk", ...auth, async (req, res): Promise<void> 
   for (const [key, value] of Object.entries(settings)) {
     await db.insert(adminSettingsTable).values({ key, value }).onConflictDoUpdate({ target: adminSettingsTable.key, set: { value } });
   }
+  invalidateCommissionCache();
   res.json({ success: true });
 });
 
