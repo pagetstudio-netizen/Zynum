@@ -13,6 +13,8 @@ import {
   getCountryName,
   mapFiveSimStatus,
   usdToFcfa,
+  MIN_PRICE_FCFA,
+  FCFA_RATE,
 } from "../lib/fivesim.js";
 import { getCommissionMultiplier, applyCommission } from "../lib/commission.js";
 
@@ -77,8 +79,14 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   }
 
   const rawPriceUsd = fiveSimOrder.price;
-  const priceUsd = applyCommission(rawPriceUsd, commissionMultiplier);
-  const priceFcfa = usdToFcfa(priceUsd);
+  let priceUsd = applyCommission(rawPriceUsd, commissionMultiplier);
+  let priceFcfa = usdToFcfa(priceUsd);
+
+  // Apply minimum FCFA price floor — ensure the platform always earns at least MIN_PRICE_FCFA
+  if (priceFcfa < MIN_PRICE_FCFA) {
+    priceFcfa = MIN_PRICE_FCFA;
+    priceUsd = Math.round((MIN_PRICE_FCFA / FCFA_RATE) * 100) / 100;
+  }
 
   let order;
   try {
