@@ -230,24 +230,65 @@ export default function Home() {
             <p className="text-muted-foreground max-w-xl mx-auto">{t("home_services_sub")}</p>
           </motion.div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-            {(servicesData?.services ?? []).slice(0, 24).map((svc, i) => (
-              <Link key={svc.id} href={`/buy?service=${svc.id}`}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.03 }}
-                  className="flex flex-col items-center gap-3 p-4 rounded-2xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/10 transition-all cursor-pointer group"
-                >
-                  <div className="group-hover:scale-110 transition-transform">
-                    <HomeSvcLogo icon={svc.icon} color={svc.color} name={svc.name} size={48} />
-                  </div>
-                  <span className="text-xs font-medium text-muted-foreground group-hover:text-white transition-colors text-center leading-tight">{svc.name}</span>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
+          {/* ── Services populaires (grande mise en avant) ── */}
+          {(() => {
+            const FEATURED_IDS = ["whatsapp","telegram","facebook","tiktok","instagram","google","twitter","discord","snapchat","netflix"];
+            const all = servicesData?.services ?? [];
+            const featured = FEATURED_IDS.map(id => all.find(s => s.id === id)).filter(Boolean) as typeof all;
+            const rest = all.filter(s => !FEATURED_IDS.includes(s.id)).slice(0, 18);
+            return (
+              <>
+                {/* Featured row */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+                  {featured.map((svc, i) => (
+                    <Link key={svc.id} href={`/buy?service=${svc.id}`}>
+                      <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.04 }}
+                        className="relative flex flex-col items-center gap-3 p-5 rounded-2xl cursor-pointer group overflow-hidden"
+                        style={{ background: `linear-gradient(135deg, ${svc.color}18 0%, ${svc.color}08 100%)`, border: `1px solid ${svc.color}30` }}
+                      >
+                        <div className="group-hover:scale-110 transition-transform duration-200">
+                          <HomeSvcLogo icon={svc.icon} color={svc.color} name={svc.name} size={52} />
+                        </div>
+                        <span className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors text-center leading-tight">{svc.name}</span>
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${svc.color}28 0%, transparent 100%)` }} />
+                      </motion.div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-4 my-6">
+                  <div className="flex-1 h-px bg-white/5" />
+                  <span className="text-xs text-muted-foreground/60 uppercase tracking-widest">Autres services</span>
+                  <div className="flex-1 h-px bg-white/5" />
+                </div>
+
+                {/* Other services smaller grid */}
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                  {rest.map((svc, i) => (
+                    <Link key={svc.id} href={`/buy?service=${svc.id}`}>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.02 }}
+                        className="flex flex-col items-center gap-2.5 p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 transition-all cursor-pointer group"
+                      >
+                        <div className="group-hover:scale-110 transition-transform">
+                          <HomeSvcLogo icon={svc.icon} color={svc.color} name={svc.name} size={40} />
+                        </div>
+                        <span className="text-[11px] font-medium text-muted-foreground group-hover:text-white transition-colors text-center leading-tight line-clamp-1">{svc.name}</span>
+                      </motion.div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
 
           <div className="text-center mt-10">
             <Link href="/buy">

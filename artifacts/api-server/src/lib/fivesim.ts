@@ -196,6 +196,12 @@ function toReadableName(id: string): string {
   return id.charAt(0).toUpperCase() + id.slice(1);
 }
 
+// Services toujours mis en avant (forcés en tête de liste même si stock = 0)
+const FEATURED_SERVICE_IDS = [
+  "whatsapp", "telegram", "facebook", "tiktok", "instagram",
+  "google", "twitter", "discord", "snapchat", "netflix",
+];
+
 // Cache for dynamic services list
 let servicesCache: ServiceInfo[] | null = null;
 let servicesCacheTime = 0;
@@ -307,19 +313,24 @@ export async function getAvailableServices(): Promise<ServiceInfo[]> {
     .sort((a, b) => b[1].Qty - a[1].Qty)
     .slice(0, 150);
 
-  const result: ServiceInfo[] = sorted.map(([id]) => {
+  // Build featured services first (always shown, even if qty = 0)
+  const featured: ServiceInfo[] = FEATURED_SERVICE_IDS.map((id) => {
     const known = SERVICE_MAP[id];
-    if (known) {
-      return { id, name: known.name, icon: known.icon, color: known.color, category: known.category };
-    }
-    return {
-      id,
-      name: toReadableName(id),
-      icon: "",
-      color: colorFromString(id),
-      category: "Autre",
-    };
+    if (known) return { id, name: known.name, icon: known.icon, color: known.color, category: known.category };
+    return { id, name: toReadableName(id), icon: "", color: colorFromString(id), category: "Autre" };
   });
+
+  // Remaining dynamic services (exclude already-featured ones)
+  const rest: ServiceInfo[] = sorted
+    .filter(([id]) => !FEATURED_SERVICE_IDS.includes(id))
+    .map(([id]) => {
+      const known = SERVICE_MAP[id];
+      if (known) return { id, name: known.name, icon: known.icon, color: known.color, category: known.category };
+      return { id, name: toReadableName(id), icon: "", color: colorFromString(id), category: "Autre" };
+    });
+
+  // Also include featured services that happen to be in the dynamic list with their real position data
+  const result: ServiceInfo[] = [...featured, ...rest];
 
   servicesCache = result;
   servicesCacheTime = Date.now();
