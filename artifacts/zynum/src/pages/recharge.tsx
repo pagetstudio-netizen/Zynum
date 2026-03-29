@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Link } from "wouter";
 import {
-  Wallet, Bitcoin, Smartphone, CreditCard,
+  Wallet,
   ArrowRight, Check, Lock,
-  ChevronRight, AlertCircle, ShieldCheck,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +11,9 @@ import { useLanguage } from "@/hooks/use-language";
 import { useGetBalance, useGetCurrentUser, getGetBalanceQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PaxityModal } from "@/components/paxity-modal";
+import iconMobile from "@assets/icons8-argent-mobile-53_1774828244252.png";
+import iconCrypto from "@assets/cryptocurrency-3d-illustration-png_1774828244226.png";
+import iconCard   from "@assets/9242877_1774828244157.png";
 
 const AMOUNTS_USD   = [5, 10, 20, 50, 100, 200];
 const FCFA_PER_USD  = 620;
@@ -37,7 +39,7 @@ export default function Recharge() {
   }[] = [
     {
       id:        "mobile",
-      icon:      <Smartphone className="w-6 h-6" />,
+      icon:      <img src={iconMobile} alt="Mobile Money" className="w-8 h-8 object-contain" />,
       label:     "Mobile Money",
       sub:       "Wave, Orange Money, MTN, Moov, M-Pesa… · 11 pays",
       color:     "text-emerald-400",
@@ -47,7 +49,7 @@ export default function Recharge() {
     },
     {
       id:        "card",
-      icon:      <CreditCard className="w-6 h-6" />,
+      icon:      <img src={iconCard} alt="Carte bancaire" className="w-9 h-9 object-contain" />,
       label:     "Carte bancaire",
       sub:       "Visa, Mastercard — paiement sécurisé",
       color:     "text-blue-400",
@@ -57,7 +59,7 @@ export default function Recharge() {
     },
     {
       id:        "crypto",
-      icon:      <Bitcoin className="w-6 h-6" />,
+      icon:      <img src={iconCrypto} alt="Cryptomonnaie" className="w-9 h-9 object-contain" />,
       label:     "Cryptomonnaie",
       sub:       "USDT, BTC, ETH, BNB…",
       color:     "text-yellow-400",
@@ -194,7 +196,7 @@ export default function Recharge() {
               } ${!m.available ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${m.bg} ${m.color}`}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
                   {m.icon}
                 </div>
                 <div className="text-left">
@@ -269,19 +271,6 @@ export default function Recharge() {
           <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
           {t("recharge_security_note")}
         </p>
-      </div>
-
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 flex items-center gap-4">
-        <AlertCircle className="w-8 h-8 text-muted-foreground shrink-0" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-white mb-0.5">{t("recharge_manual_title")}</p>
-          <p className="text-xs text-muted-foreground">{t("recharge_manual_desc")}</p>
-        </div>
-        <Link href="/contact">
-          <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10 shrink-0">
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </Link>
       </div>
 
       {user && (
