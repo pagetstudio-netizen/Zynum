@@ -11,6 +11,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useGetBalance, useGetCurrentUser, getGetBalanceQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PaxityModal } from "@/components/paxity-modal";
+import { OmnipayModal } from "@/components/omnipay-modal";
 import iconMobile from "@assets/icons8-argent-mobile-53_1774828244252.png";
 import iconCrypto from "@assets/cryptocurrency-3d-illustration-png_1774828244226.png";
 import iconCard   from "@assets/9242877_1774828244157.png";
@@ -27,11 +28,12 @@ export default function Recharge() {
   const { data: balanceData, refetch: refetchBalance } =
     useGetBalance({ query: { enabled: !!user, retry: false } });
 
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(20);
-  const [customAmount,   setCustomAmount]   = useState("");
-  const [selectedMethod, setSelectedMethod] = useState<string | null>("mobile");
-  const [modalOpen,      setModalOpen]      = useState(false);
-  const [modalTab,       setModalTab]       = useState<"mobile" | "card">("mobile");
+  const [selectedAmount,   setSelectedAmount]   = useState<number | null>(20);
+  const [customAmount,     setCustomAmount]     = useState("");
+  const [selectedMethod,   setSelectedMethod]   = useState<string | null>("mobile");
+  const [paxityOpen,       setPaxityOpen]       = useState(false);
+  const [omnipayOpen,      setOmnipayOpen]      = useState(false);
+  const [modalTab,         setModalTab]         = useState<"mobile" | "card">("mobile");
 
   const METHODS: {
     id: string; label: string; sub: string; icon: React.ReactNode;
@@ -92,14 +94,17 @@ export default function Recharge() {
       toast({ variant: "destructive", title: "Montant invalide", description: "Veuillez saisir un montant supérieur à 0." });
       return;
     }
-    const method = METHODS.find((m) => m.id === selectedMethod);
-    if (method?.available && method.paxityTab) {
-      if (!user) {
-        toast({ variant: "destructive", title: "Non connecté", description: "Veuillez vous connecter." });
-        return;
-      }
-      setModalTab(method.paxityTab);
-      setModalOpen(true);
+    if (!user) {
+      toast({ variant: "destructive", title: "Non connecté", description: "Veuillez vous connecter." });
+      return;
+    }
+    if (selectedMethod === "mobile") {
+      setOmnipayOpen(true);
+      return;
+    }
+    if (selectedMethod === "card") {
+      setModalTab("card");
+      setPaxityOpen(true);
       return;
     }
     toast({ title: t("recharge_soon_toast_title"), description: t("recharge_soon_toast_desc") });
@@ -275,12 +280,22 @@ export default function Recharge() {
 
       {user && (
         <PaxityModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
+          open={paxityOpen}
+          onClose={() => setPaxityOpen(false)}
           amountXof={finalAmountXof}
           userId={user.id}
           onSuccess={handlePaymentSuccess}
           initialTab={modalTab}
+        />
+      )}
+
+      {user && (
+        <OmnipayModal
+          open={omnipayOpen}
+          onClose={() => setOmnipayOpen(false)}
+          amountXof={finalAmountXof}
+          userId={user.id}
+          onSuccess={handlePaymentSuccess}
         />
       )}
     </div>
