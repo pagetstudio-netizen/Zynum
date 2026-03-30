@@ -650,16 +650,16 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
             <StepIndicator current="active" />
             <button
               onClick={() => { setActiveOrder(null); goTo("service", false); setBuyCount(0); }}
-transition-colors"
+              className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> {t("buy_buy_another")}
             </button>
-            <div className="rounded-3xl border border-white/10 bg-card/60 backdrop-blur-xl overflow-hidden shadow-2xl">
-              <div className="px-6 pt-5 pb-4 border-b border-white/10 flex items-center gap-4" style={{ background: svc ? `${svc.color}12` : undefined }}>
+            <div className="rounded-3xl border border-gray-200 bg-white overflow-hidden shadow-lg">
+              <div className="px-6 pt-5 pb-4 border-b border-gray-100 flex items-center gap-4" style={{ background: svc ? `${svc.color}08` : undefined }}>
                 {svc && <ServiceLogo icon={svc.icon} color={svc.color} name={svc.name} size={44} />}
                 <div className="flex-1">
-                  <p className="font-bold text-white">{activeOrder.serviceName}</p>
-                  <p className="text-sm text-muted-foreground">{activeOrder.countryName}</p>
+                  <p className="font-bold text-gray-900">{activeOrder.serviceName}</p>
+                  <p className="text-sm text-gray-500">{activeOrder.countryName}</p>
                 </div>
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
                   isPending ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" :
@@ -667,13 +667,13 @@ transition-colors"
                   "bg-red-500/10 text-red-400 border-red-500/30"
                 }`}>{activeOrder.status}</span>
               </div>
-              <div className="px-6 py-4 border-b border-white/10">
-                <p className="text-xs text-muted-foreground mb-2">{t("buy_virtual_num_label")}</p>
-                <div className="flex items-center gap-3 bg-black/30 border border-white/5 rounded-xl px-4 py-3">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <p className="text-xs text-gray-400 mb-2">{t("buy_virtual_num_label")}</p>
+                <div className="flex items-center gap-3 bg-gray-100 border border-gray-200 rounded-xl px-4 py-3">
                   <Phone className="w-5 h-5 text-primary shrink-0" />
-                  <span className="font-bold text-white font-mono text-2xl tracking-wider flex-1 select-all">{activeOrder.phone}</span>
-                  <button onClick={() => copy(activeOrder.phone, t("buy_phone"))} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                    <Copy className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-bold text-gray-900 font-mono text-2xl tracking-wider flex-1 select-all">{activeOrder.phone}</span>
+                  <button onClick={() => copy(activeOrder.phone, t("buy_phone"))} className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors">
+                    <Copy className="w-4 h-4 text-gray-400 hover:text-gray-700" />
                   </button>
                 </div>
               </div>
@@ -686,9 +686,9 @@ transition-colors"
                       <Smartphone className="absolute inset-0 m-auto w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-bold text-white text-lg mb-1">{t("buy_waiting_sms")}</p>
-                      <p className="text-sm text-muted-foreground max-w-xs">
-                        {t("buy_enter_number_hint")} <strong className="text-white">{activeOrder.serviceName}</strong> {t("buy_enter_number_hint2")}
+                      <p className="font-bold text-gray-900 text-lg mb-1">{t("buy_waiting_sms")}</p>
+                      <p className="text-sm text-gray-500 max-w-xs">
+                        {t("buy_enter_number_hint")} <strong className="text-gray-900">{activeOrder.serviceName}</strong> {t("buy_enter_number_hint2")}
                       </p>
                     </div>
                     <CountdownRing
@@ -698,12 +698,12 @@ transition-colors"
                       }}
                     />
                     <div className="flex flex-col sm:flex-row gap-2 w-full mt-1">
-                      <Button variant="outline" size="sm" onClick={() => refetchSms()} className="flex-1 border-white/20 text-white hover:bg-white/10">
+                      <Button variant="outline" size="sm" onClick={() => refetchSms()} className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50">
                         <RefreshCw className="w-4 h-4 mr-2" /> {t("buy_check_now")}
                       </Button>
                       <Button
                         variant="ghost" size="sm"
-                        className="flex-1 text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+                        className="flex-1 text-gray-500 hover:text-red-500 hover:bg-red-50"
                         onClick={() => cancelMutation.mutate(activeOrder.id)}
                         disabled={cancelMutation.isPending}
                       >
@@ -711,9 +711,9 @@ transition-colors"
                         {t("buy_cancel_refund2")}
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-2 w-full text-left">
+                    <p className="text-xs text-gray-500 flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 w-full text-left">
                       <History className="w-3.5 h-3.5 shrink-0 text-primary" />
-                      {t("buy_history_tip")} <strong className="text-white mx-1">{t("buy_history_link")}</strong> {t("buy_history_tip2")}
+                      {t("buy_history_tip")} <strong className="text-gray-900 mx-1">{t("buy_history_link")}</strong> {t("buy_history_tip2")}
                     </p>
                   </div>
                 )}
