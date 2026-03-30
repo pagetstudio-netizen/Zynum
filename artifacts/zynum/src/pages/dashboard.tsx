@@ -9,10 +9,10 @@ import {
   Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Sun, Moon, Globe2,
 } from "lucide-react";
-import iconOverview  from "@assets/1-2_1774828481921.png";
-import iconBuy       from "@assets/images_(10)_1774828482052.png";
+import iconOverview  from "@assets/1239292_1774829368223.png";
+import iconBuy       from "@assets/84426_1774829368186.png";
 import iconHistory   from "@assets/blog_1774828482035.png";
-import iconRecharge  from "@assets/4-1_1774828481905.png";
+import iconRecharge  from "@assets/2534215_1774829355101.png";
 import iconProfile   from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
 import iconHelp      from "@assets/images_(12)_1774828482000.png";
 import iconSupport   from "@assets/2-2_1774828481887.png";
