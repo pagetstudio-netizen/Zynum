@@ -12,7 +12,8 @@ ZyNum est une plateforme web complète permettant aux utilisateurs d'acheter des
 - **TypeScript version**: 5.9
 - **Frontend**: React + Vite (artifacts/zynum)
 - **API framework**: Express 5 (artifacts/api-server)
-- **Database**: PostgreSQL + Drizzle ORM
+- **Database**: Supabase PostgreSQL + Drizzle ORM
+- **Production domain**: https://zynum.net
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **UI**: Tailwind CSS v4, shadcn/ui, framer-motion, lucide-react

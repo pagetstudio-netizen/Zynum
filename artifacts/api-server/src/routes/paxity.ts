@@ -203,7 +203,7 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
       return;
     }
 
-    const baseUrl   = process.env.API_BASE_URL ?? "https://zynum0220.replit.app";
+    const baseUrl   = process.env.API_BASE_URL ?? "https://zynum.net";
     const ipnUrl    = ipn || `${baseUrl}/api/v1/webhooks/paxity`;
     const rawAmount = Math.round(Number(amount));
     let paxityRes: globalThis.Response;
