@@ -195,12 +195,12 @@ function PasswordInput({ value, onChange, placeholder }: { value: string; onChan
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-11 pl-4 pr-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition"
+        className="w-full h-11 pl-4 pr-12 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition shadow-sm"
       />
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
       >
         {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
       </button>
@@ -251,45 +251,45 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h2 className="text-2xl font-bold text-white mb-1">{t("profile_title")}</h2>
-        <p className="text-muted-foreground text-sm">{t("profile_sub")}</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">{t("profile_title")}</h2>
+        <p className="text-gray-500 text-sm">{t("profile_sub")}</p>
       </div>
 
       {/* User Info */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-xl font-bold text-white">{user.name}</p>
-            <p className="text-muted-foreground text-sm">{user.email}</p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xl font-bold text-gray-900">{user.name}</p>
+            <p className="text-gray-500 text-sm">{user.email}</p>
+            <p className="text-xs text-gray-400 mt-1">
               {t("profile_member_since")} {format(new Date(user.createdAt), "MMMM yyyy")}
             </p>
           </div>
         </div>
-        <div className="border-t border-white/10 pt-4 grid grid-cols-2 gap-4 text-sm">
+        <div className="border-t border-gray-100 pt-4 grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-muted-foreground mb-1">{t("profile_full_name")}</p>
-            <p className="text-white font-medium">{user.name}</p>
+            <p className="text-gray-400 mb-1">{t("profile_full_name")}</p>
+            <p className="text-gray-900 font-medium">{user.name}</p>
           </div>
           <div>
-            <p className="text-muted-foreground mb-1">{t("profile_email")}</p>
-            <p className="text-white font-medium">{user.email}</p>
+            <p className="text-gray-400 mb-1">{t("profile_email")}</p>
+            <p className="text-gray-900 font-medium">{user.email}</p>
           </div>
         </div>
       </div>
 
       {/* Change password */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-5">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-5 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
             <KeyRound className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold text-white">{t("profile_change_pwd")}</h3>
-            <p className="text-xs text-muted-foreground">{t("profile_change_pwd_sub")}</p>
+            <h3 className="font-semibold text-gray-900">{t("profile_change_pwd")}</h3>
+            <p className="text-xs text-gray-500">{t("profile_change_pwd_sub")}</p>
           </div>
         </div>
 
@@ -297,7 +297,7 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3"
+            className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded-xl px-4 py-3"
           >
             <Check className="w-4 h-4 shrink-0" />
             {t("profile_pwd_updated")}
@@ -306,15 +306,15 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
 
         <form onSubmit={handleChangePassword} className="space-y-4">
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">{t("profile_current_pwd")}</label>
+            <label className="text-xs text-gray-500 font-semibold mb-1.5 block">{t("profile_current_pwd")}</label>
             <PasswordInput value={currentPwd} onChange={setCurrentPwd} placeholder="••••••••" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">{t("profile_new_pwd")}</label>
+            <label className="text-xs text-gray-500 font-semibold mb-1.5 block">{t("profile_new_pwd")}</label>
             <PasswordInput value={newPwd} onChange={setNewPwd} placeholder={t("profile_min_chars")} />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">{t("profile_confirm_pwd")}</label>
+            <label className="text-xs text-gray-500 font-semibold mb-1.5 block">{t("profile_confirm_pwd")}</label>
             <PasswordInput value={confirmPwd} onChange={setConfirmPwd} placeholder={t("profile_repeat_pwd")} />
           </div>
 
@@ -330,18 +330,18 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
                     (/[^A-Za-z0-9]/.test(newPwd) ? 1 : 0)
                   ));
                   return (
-                    <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${
+                    <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
                       i < strength
                         ? strength <= 1 ? "bg-red-500"
                         : strength <= 2 ? "bg-yellow-500"
                         : strength <= 3 ? "bg-blue-500"
                         : "bg-green-500"
-                        : "bg-white/10"
+                        : "bg-gray-200"
                     }`} />
                   );
                 })}
               </div>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-gray-400">
                 {newPwd.length < 8 ? t("profile_pwd_short") :
                  !/[A-Z]/.test(newPwd) ? t("profile_pwd_uppercase") :
                  !/[0-9]/.test(newPwd) ? t("profile_pwd_number") :
@@ -365,26 +365,26 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
       </div>
 
       {/* Security info */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-5 flex items-center gap-4">
-        <Shield className="w-8 h-8 text-green-400 shrink-0" />
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 flex items-center gap-4 shadow-sm">
+        <Shield className="w-8 h-8 text-green-500 shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-semibold text-white mb-0.5">{t("profile_secure")}</p>
-          <p className="text-xs text-muted-foreground">{t("profile_secure_desc")}</p>
+          <p className="text-sm font-semibold text-gray-900 mb-0.5">{t("profile_secure")}</p>
+          <p className="text-xs text-gray-500">{t("profile_secure_desc")}</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 shrink-0">
+        <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 border border-green-200 rounded-full px-3 py-1 shrink-0">
           <Check className="w-3 h-3" /> {t("profile_active")}
         </div>
       </div>
 
       {/* Language selector */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-5">
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Globe2 className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-white">{t("profile_language")}</p>
-            <p className="text-xs text-muted-foreground">{t("profile_language_sub")}</p>
+            <p className="text-sm font-semibold text-gray-900">{t("profile_language")}</p>
+            <p className="text-xs text-gray-500">{t("profile_language_sub")}</p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -394,8 +394,8 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
               onClick={() => setLang(l)}
               className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all border ${
                 lang === l
-                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                  : "text-muted-foreground border-white/10 hover:text-white hover:bg-white/5"
+                  ? "bg-primary text-white border-primary shadow-md shadow-primary/20"
+                  : "text-gray-500 border-gray-200 hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
               {l === "fr" ? "🇫🇷 Français" : "🇬🇧 English"}
@@ -405,15 +405,15 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
       </div>
 
       {/* Help */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-3">
           <HelpCircle className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-white">{t("profile_need_help")}</h3>
+          <h3 className="font-semibold text-gray-900">{t("profile_need_help")}</h3>
         </div>
-        <p className="text-sm text-muted-foreground">{t("profile_help_desc")}</p>
+        <p className="text-sm text-gray-500">{t("profile_help_desc")}</p>
         <div className="flex gap-3">
           <Link href="/aide">
-            <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+            <Button variant="outline" size="sm" className="border-gray-200 text-gray-700 hover:bg-gray-50">
               <HelpCircle className="w-4 h-4 mr-2" /> {t("profile_help_center")}
             </Button>
           </Link>
@@ -455,17 +455,17 @@ function UserWidget({
       <button
         onClick={() => setOpen((o) => !o)}
         className={`flex items-center gap-2 rounded-xl px-2 py-1.5 transition-all ${
-          open ? "bg-white/10" : "hover:bg-white/5"
+          open ? "bg-gray-100" : "hover:bg-gray-100"
         }`}
       >
-        <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/20 flex items-center justify-center font-bold text-primary text-sm">
+        <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center font-bold text-primary text-sm">
           {user.name.charAt(0).toUpperCase()}
         </div>
         <div className="hidden sm:block text-left">
-          <p className="text-xs font-semibold text-white leading-none">{user.name}</p>
-          <p className="text-[10px] text-muted-foreground leading-none mt-0.5 truncate max-w-[100px]">{user.email}</p>
+          <p className="text-xs font-semibold text-gray-900 leading-none">{user.name}</p>
+          <p className="text-[10px] text-gray-400 leading-none mt-0.5 truncate max-w-[100px]">{user.email}</p>
         </div>
-        <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform hidden sm:block ${open ? "rotate-90" : ""}`} />
+        <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform hidden sm:block ${open ? "rotate-90" : ""}`} />
       </button>
 
       <AnimatePresence>
@@ -475,17 +475,17 @@ function UserWidget({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-white/10 bg-card shadow-2xl shadow-black/50 overflow-hidden z-50"
+            className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-gray-200 bg-white shadow-xl shadow-black/10 overflow-hidden z-50"
           >
             {/* User info */}
-            <div className="px-4 py-3 border-b border-white/[0.06]">
+            <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center font-bold text-primary text-sm shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
                 </div>
               </div>
             </div>
@@ -494,22 +494,22 @@ function UserWidget({
             <div className="py-1.5 px-1.5 space-y-0.5">
               <button
                 onClick={() => { onProfileClick(); setOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/5 transition-colors text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
               >
-                <User className="w-4 h-4 text-muted-foreground" /> {t("widget_my_profile")}
+                <User className="w-4 h-4 text-gray-400" /> {t("widget_my_profile")}
               </button>
               <button
                 onClick={() => { window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" })); setOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/5 transition-colors text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
               >
-                <PlusCircle className="w-4 h-4 text-muted-foreground" /> {t("widget_recharge")}
+                <PlusCircle className="w-4 h-4 text-gray-400" /> {t("widget_recharge")}
               </button>
             </div>
 
-            <div className="px-1.5 pb-1.5 border-t border-white/[0.06] pt-1.5">
+            <div className="px-1.5 pb-1.5 border-t border-gray-100 pt-1.5">
               <button
                 onClick={() => { onLogout(); setOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-400 hover:bg-red-400/10 transition-colors text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors text-left"
               >
                 <LogOut className="w-4 h-4" /> {t("widget_logout")}
               </button>
@@ -616,33 +616,33 @@ export default function Dashboard() {
       `} style={{ background: "hsl(var(--surface))" }}>
 
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-primary/30">
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-md shadow-primary/20">
               <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
             </div>
-            <span className="font-bold text-white text-lg">ZyNum</span>
+            <span className="font-bold text-gray-900 text-lg">ZyNum</span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-muted-foreground hover:text-white p-1">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-gray-600 p-1">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* User info */}
-        <div className="px-4 py-3 border-b border-white/[0.06]">
-          <div className="flex items-center gap-3 bg-white/5 rounded-xl px-3 py-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center font-bold text-primary text-sm shrink-0">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+              <p className="text-xs text-gray-400 truncate">{user.email}</p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-4 px-3 space-y-1">
+        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
           {NAV.map((item) => {
             const active = activeTab === item.id;
             return (
@@ -653,7 +653,7 @@ export default function Dashboard() {
                   w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
                   ${active
                     ? "bg-primary text-white shadow-lg shadow-primary/20"
-                    : "text-muted-foreground hover:text-white hover:bg-white/5"}
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"}
                 `}
               >
                 {item.imgSrc
@@ -666,17 +666,17 @@ export default function Dashboard() {
           })}
 
           {/* Separator */}
-          <div className="pt-3 mt-3 border-t border-white/[0.06] space-y-1">
+          <div className="pt-3 mt-3 border-t border-gray-100 space-y-1">
             <Link
               href="/aide"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all"
             >
               <img src={iconHelp} alt="Centre d'aide" className="w-5 h-5 shrink-0 object-contain" />
               {t("dash_help_center")}
             </Link>
             <Link
               href="/contact"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all"
             >
               <img src={iconSupport} alt="Support" className="w-5 h-5 shrink-0 object-contain" />
               {t("profile_contact_support")}
@@ -685,14 +685,14 @@ export default function Dashboard() {
         </nav>
 
         {/* Currency toggle */}
-        <div className="px-4 py-3 border-t border-white/[0.06]">
-          <div className="flex bg-black/30 rounded-lg p-1 gap-1">
+        <div className="px-4 py-3 border-t border-gray-100">
+          <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
             {(["USD", "FCFA"] as const).map((c) => (
               <button
                 key={c}
                 onClick={() => setCurrency(c)}
                 className={`flex-1 py-1.5 rounded text-xs font-semibold transition-all ${
-                  currency === c ? "bg-primary text-white" : "text-muted-foreground hover:text-white"
+                  currency === c ? "bg-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {c}
@@ -702,10 +702,10 @@ export default function Dashboard() {
         </div>
 
         {/* Logout */}
-        <div className="px-4 py-4 border-t border-white/[0.06]">
+        <div className="px-4 py-4 border-t border-gray-100">
           <button
             onClick={() => logoutMutation.mutate({})}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-colors font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors font-medium"
           >
             <LogOut className="w-4 h-4" />
             {logoutMutation.isPending ? t("loading") : t("nav_logout")}
