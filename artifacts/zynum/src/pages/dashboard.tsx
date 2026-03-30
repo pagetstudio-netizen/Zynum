@@ -49,13 +49,13 @@ function StatCard({ icon, label, value, sub, color }: {
   sub?: string; color?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 p-5 bg-card/40 backdrop-blur-md flex items-start gap-4">
+    <div className="rounded-2xl border border-gray-200 p-5 bg-white shadow-sm flex items-start gap-4">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${color ?? "bg-primary/20"}`}>
         {icon}
       </div>
       <div>
         <p className="text-sm text-muted-foreground mb-1">{label}</p>
-        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
         {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
       </div>
     </div>
@@ -103,9 +103,9 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
       </div>
 
       {/* Recent orders */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 backdrop-blur-md overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <h3 className="font-semibold text-white text-sm">{t("dash_recent_orders")}</h3>
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900 text-sm">{t("dash_recent_orders")}</h3>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "history" }))}
             className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
@@ -127,15 +127,15 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-gray-100">
             {orders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between px-5 py-3 hover:bg-white/5 transition-colors">
+              <div key={order.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Package className="w-4 h-4 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{order.serviceName}</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{order.serviceName}</p>
                     <p className="text-xs text-muted-foreground font-mono truncate">{order.phone}</p>
                   </div>
                 </div>
@@ -165,18 +165,18 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
             <ShoppingCart className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-white">{t("dash_buy_number")}</p>
+            <p className="font-semibold text-gray-900">{t("dash_buy_number")}</p>
             <p className="text-xs text-muted-foreground">{t("dash_countries")}</p>
           </div>
           <ChevronRight className="w-4 h-4 text-primary ml-auto group-hover:translate-x-1 transition-transform" />
         </button>
 
-        <Link href="/aide" className="rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] p-5 flex items-center gap-4 text-left transition-all group">
-          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+        <Link href="/aide" className="rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 p-5 flex items-center gap-4 text-left transition-all group shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+            <HelpCircle className="w-5 h-5 text-gray-500" />
           </div>
           <div>
-            <p className="font-semibold text-white">{t("dash_help_center")}</p>
+            <p className="font-semibold text-gray-900">{t("dash_help_center")}</p>
             <p className="text-xs text-muted-foreground">{t("dash_guides")}</p>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto group-hover:translate-x-1 transition-transform" />
@@ -458,8 +458,8 @@ function UserWidget({
           open ? "bg-gray-100" : "hover:bg-gray-100"
         }`}
       >
-        <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center font-bold text-primary text-sm">
-          {user.name.charAt(0).toUpperCase()}
+        <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+          <img src={iconProfile} alt="Profil" className="w-5 h-5 object-contain" />
         </div>
         <div className="hidden sm:block text-left">
           <p className="text-xs font-semibold text-gray-900 leading-none">{user.name}</p>
@@ -716,17 +716,17 @@ export default function Dashboard() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-white/[0.06] bg-background/80">
-          <button className="lg:hidden text-muted-foreground hover:text-white p-1" onClick={() => setSidebarOpen(true)}>
+        <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-gray-200 bg-white/90">
+          <button className="lg:hidden text-muted-foreground hover:text-gray-700 p-1" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h1 className="text-base font-semibold text-white">
+            <h1 className="text-base font-semibold text-gray-900">
               {NAV.find((n) => n.id === activeTab)?.label ?? "Dashboard"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors" title="Centre d'aide">
+            <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Centre d'aide">
               <img src={iconHelp} alt="Centre d'aide" className="w-4 h-4 object-contain" />
             </Link>
             {/* User widget */}
