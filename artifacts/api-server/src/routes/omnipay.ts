@@ -388,13 +388,24 @@ router.get("/v1/admin/omnipay/balance", requireAuth, requireAdmin, async (_req: 
     const apiKey = process.env.OMNIPAY_API_KEY;
     if (!apiKey) { res.status(500).json({ error: "OMNIPAY_API_KEY non configuré" }); return; }
 
-    const resp = await fetch(OMNIPAY_BASE, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ action: "balance", apikey: apiKey }),
-    });
-    const data = await resp.json() as Record<string, unknown>;
-    res.json({ success: true, raw: data });
+    // Essaie plusieurs noms d'action possibles pour le solde OmniPay
+    const actionsToTry = ["getbalance", "balance_check", "merchant_balance", "account_balance"];
+    let data: Record<string, unknown> = {};
+    let usedAction = "getbalance";
+
+    for (const action of actionsToTry) {
+      const r = await fetch(OMNIPAY_BASE, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ action, apikey: apiKey }),
+      });
+      data = await r.json() as Record<string, unknown>;
+      usedAction = action;
+      // S'arrête dès qu'on n'a pas "Invalid parameters"
+      if (String(data.message ?? "").toLowerCase() !== "invalid parameters" && String(data.success ?? "") !== "0") break;
+    }
+
+    res.json({ success: true, usedAction, raw: data });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur";
     res.status(500).json({ error: message });
