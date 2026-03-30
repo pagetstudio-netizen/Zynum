@@ -6,6 +6,14 @@ import {
   Smartphone, Search, ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import imgMTN       from "@assets/mtn_(1)_1763835082904-BVdEqpuz-1_1774832430292.png";
+import imgOrangeMoney from "@assets/images_1774832430265.png";
+import imgWave      from "@assets/wave_(1)_1763835083242-BDJmxeWc_(1)_1774832430315.png";
+import imgOPay      from "@assets/opay-new-2023-logo-png_seeklogo-503616_1774832430151.png";
+import imgVodacom   from "@assets/vodacom_1774832430195.png";
+import imgAirtel    from "@assets/Airtel_logo-01_1774832430216.png";
+import imgTMoney    from "@assets/images_(1)_1774832430242.png";
+import imgWizall    from "@assets/wizall_1763835083090-BfalgIrK_1774832430339.png";
 
 export interface PaxityModalProps {
   open: boolean;
@@ -46,18 +54,24 @@ interface PaxityTxData {
   currency?: string;
 }
 
-const MTN_LOGO  = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/New-mtn-logo.jpg/120px-New-mtn-logo.jpg";
-const OM_LOGO   = "https://i.imgur.com/ctVnv9i.png";
-const WAVE_LOGO = "https://i.imgur.com/zOMoVcU.png";
-const MOOV_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Moov_Africa_logo.svg/120px-Moov_Africa_logo.svg.png";
-const MPESA_LOGO= "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/M-PESA_LOGO-01.svg/120px-M-PESA_LOGO-01.svg.png";
+const MTN_LOGO   = imgMTN;
+const OM_LOGO    = imgOrangeMoney;
+const WAVE_LOGO  = imgWave;
+const MOOV_LOGO  = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Moov_Africa_logo.svg/120px-Moov_Africa_logo.svg.png";
+const MPESA_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/M-PESA_LOGO-01.svg/120px-M-PESA_LOGO-01.svg.png";
+const OPAY_LOGO  = imgOPay;
+const AIRTEL_LOGO = imgAirtel;
+const TMONEY_LOGO = imgTMoney;
+const VODACOM_LOGO = imgVodacom;
+const WIZALL_LOGO  = imgWizall;
 
 const COUNTRIES: CountryDef[] = [
   {
     code: "SN", name: "Sénégal",       flag: "🇸🇳", currency: "XOF", currencySymbol: "FCFA",
     operators: [
-      { id: "WAVESN", label: "Wave",         logo: WAVE_LOGO, type: "CODE_QR" },
-      { id: "OMSN",   label: "Orange Money", logo: OM_LOGO,   type: "CODE_QR" },
+      { id: "WAVESN",   label: "Wave",         logo: WAVE_LOGO,   type: "CODE_QR" },
+      { id: "OMSN",     label: "Orange Money", logo: OM_LOGO,     type: "CODE_QR" },
+      { id: "WIZALLSN", label: "Wizall Money", logo: WIZALL_LOGO, type: "PUSH"    },
     ],
   },
   {
@@ -92,9 +106,9 @@ const COUNTRIES: CountryDef[] = [
   {
     code: "GH", name: "Ghana",         flag: "🇬🇭", currency: "GHS", currencySymbol: "GHS",
     operators: [
-      { id: "ATGH",  label: "AirtelTigo", logo: MTN_LOGO, type: "PUSH" },
-      { id: "MTNGH", label: "MTN",        logo: MTN_LOGO, type: "PUSH" },
-      { id: "TLGH",  label: "Telecel",    logo: MTN_LOGO, type: "PUSH" },
+      { id: "ATGH",  label: "AirtelTigo", logo: AIRTEL_LOGO,  type: "PUSH" },
+      { id: "MTNGH", label: "MTN",        logo: MTN_LOGO,     type: "PUSH" },
+      { id: "TLGH",  label: "Telecel",    logo: VODACOM_LOGO, type: "PUSH" },
     ],
   },
   {
@@ -120,14 +134,14 @@ const COUNTRIES: CountryDef[] = [
   {
     code: "NG", name: "Nigeria",       flag: "🇳🇬", currency: "NGN", currencySymbol: "₦",
     operators: [
-      { id: "MTNNG", label: "MTN MoMo", logo: MTN_LOGO, type: "PUSH"    },
-      { id: "OPNG",  label: "OPay",     logo: MTN_LOGO, type: "CODE_QR" },
+      { id: "MTNNG", label: "MTN MoMo", logo: MTN_LOGO,  type: "PUSH"    },
+      { id: "OPNG",  label: "OPay",     logo: OPAY_LOGO, type: "CODE_QR" },
     ],
   },
   {
     code: "TG", name: "Togo",          flag: "🇹🇬", currency: "XOF", currencySymbol: "FCFA",
     operators: [
-      { id: "TMONEYTG", label: "T-Money",    logo: MTN_LOGO,  type: "PUSH" },
+      { id: "TMONEYTG", label: "T-Money",    logo: TMONEY_LOGO, type: "PUSH" },
       { id: "MOOVTG",   label: "Moov Money", logo: MOOV_LOGO, type: "PUSH" },
     ],
   },
