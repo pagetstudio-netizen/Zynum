@@ -1342,7 +1342,7 @@ function AdminOmniPay() {
   const { toast } = useToast();
   const [balance, setBalance]           = useState<any>(null);
   const [balLoading, setBalLoading]     = useState(false);
-  const [withdraw, setWithdraw]         = useState({ phone: "", operatorId: "ORANGE_CI", amount: "", note: "" });
+  const [withdraw, setWithdraw]         = useState({ phone: "", operatorId: "ORANGE_CI", amount: "", firstName: "", lastName: "", note: "" });
   const [wLoading, setWLoading]         = useState(false);
   const [wResult,  setWResult]          = useState<any>(null);
   const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm";
@@ -1429,6 +1429,14 @@ function AdminOmniPay() {
             <select value={withdraw.operatorId} onChange={(e) => setWithdraw({ ...withdraw, operatorId: e.target.value })} className={inp}>
               {OMNIPAY_OPERATORS_LIST.map((op) => <option key={op.id} value={op.id}>{op.label}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Prénom du bénéficiaire *</label>
+            <input value={withdraw.firstName} onChange={(e) => setWithdraw({ ...withdraw, firstName: e.target.value })} placeholder="ex: Jean" className={inp} />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Nom du bénéficiaire *</label>
+            <input value={withdraw.lastName} onChange={(e) => setWithdraw({ ...withdraw, lastName: e.target.value })} placeholder="ex: Koné" className={inp} />
           </div>
           <div>
             <label className="text-xs text-muted-foreground block mb-1">Montant (FCFA) *</label>

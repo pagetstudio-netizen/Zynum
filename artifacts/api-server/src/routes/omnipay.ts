@@ -418,7 +418,7 @@ router.post("/v1/admin/omnipay/withdraw", requireAuth, requireAdmin, async (req:
     const apiKey = process.env.OMNIPAY_API_KEY;
     if (!apiKey) { res.status(500).json({ error: "OMNIPAY_API_KEY non configuré" }); return; }
 
-    const { phone, operatorId, amount, note } = req.body ?? {};
+    const { phone, operatorId, amount, note, firstName, lastName } = req.body ?? {};
     if (!phone || !operatorId || !amount) {
       res.status(400).json({ error: "Champs requis : phone, operatorId, amount" });
       return;
@@ -434,13 +434,15 @@ router.post("/v1/admin/omnipay/withdraw", requireAuth, requireAdmin, async (req:
     const reference = `ZNUMOUT${Date.now()}`;
 
     const body: Record<string, string> = {
-      action:    "transfer",
-      apikey:    apiKey,
+      action:     "transfer",
+      apikey:     apiKey,
       msisdn,
-      amount:    String(rawAmount),
-      operator:  opInfo.omnipayOperator,
+      amount:     String(rawAmount),
+      operator:   opInfo.omnipayOperator,
       reference,
-      currency:  opInfo.currency,
+      currency:   opInfo.currency,
+      first_name: String(firstName || "ZyNum"),
+      last_name:  String(lastName  || "Admin"),
     };
     if (note) body.note = String(note);
 
