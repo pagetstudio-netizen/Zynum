@@ -145,16 +145,9 @@ async function ensureSchema() {
       "icon" text,
       "is_active" boolean DEFAULT true NOT NULL,
       "sort_order" integer DEFAULT 0 NOT NULL,
-      "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-      CONSTRAINT "social_links_platform_unique" UNIQUE("platform")
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL
     )
   `);
-  await db.execute(sql`
-    DO $$ BEGIN
-      ALTER TABLE social_links ADD CONSTRAINT social_links_platform_unique UNIQUE(platform);
-    EXCEPTION WHEN others THEN NULL;
-    END $$
-  `).catch(() => {});
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "country_overrides" (
       "id" serial PRIMARY KEY NOT NULL,
@@ -222,16 +215,17 @@ async function seedData() {
       set: { isAdmin: true, name: "Admin" },
     });
 
-  const socials = [
-    { platform: "WhatsApp", url: "https://whatsapp.com/channel/0029Vb8MmTnHQbS8sEmxvd3z", icon: "whatsapp", isActive: true, sortOrder: 1 },
-    { platform: "Facebook", url: "https://facebook.com/zynum",  icon: "facebook", isActive: true, sortOrder: 2 },
-    { platform: "Discord",  url: "https://discord.gg/zynum",    icon: "discord",  isActive: true, sortOrder: 3 },
-    { platform: "Telegram", url: "https://t.me/ZyNumSupport",   icon: "telegram", isActive: true, sortOrder: 4 },
-    { platform: "YouTube",  url: "https://youtube.com/@zynum",  icon: "youtube",  isActive: true, sortOrder: 5 },
-    { platform: "X",        url: "https://x.com/zynum",         icon: "x",        isActive: true, sortOrder: 6 },
-  ];
-  for (const s of socials) {
-    await db.insert(socialLinksTable).values(s).onConflictDoNothing();
+  const existingSocials = await db.select().from(socialLinksTable).limit(1);
+  if (existingSocials.length === 0) {
+    const socials = [
+      { platform: "WhatsApp", url: "https://whatsapp.com/channel/0029Vb8MmTnHQbS8sEmxvd3z", icon: "whatsapp", isActive: true, sortOrder: 1 },
+      { platform: "Facebook", url: "https://facebook.com/zynum",  icon: "facebook", isActive: true, sortOrder: 2 },
+      { platform: "Discord",  url: "https://discord.gg/zynum",    icon: "discord",  isActive: true, sortOrder: 3 },
+      { platform: "Telegram", url: "https://t.me/ZyNumSupport",   icon: "telegram", isActive: true, sortOrder: 4 },
+      { platform: "YouTube",  url: "https://youtube.com/@zynum",  icon: "youtube",  isActive: true, sortOrder: 5 },
+      { platform: "X",        url: "https://x.com/zynum",         icon: "x",        isActive: true, sortOrder: 6 },
+    ];
+    await db.insert(socialLinksTable).values(socials);
   }
 
   const providers = [
