@@ -611,7 +611,7 @@ export default function Dashboard() {
       <aside className={`
         fixed inset-y-0 left-0 z-30 w-64 border-r border-white/[0.06] backdrop-blur-xl
         flex flex-col transition-transform duration-300
-        lg:static lg:translate-x-0
+        lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `} style={{ background: "hsl(var(--surface))" }}>
 
