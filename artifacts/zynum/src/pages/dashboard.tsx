@@ -44,23 +44,6 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELED: "bg-gray-500/20 text-gray-400 border-gray-500/30",
 };
 
-function StatCard({ icon, label, value, sub, color }: {
-  icon: React.ReactNode; label: string; value: string | number;
-  sub?: string; color?: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-gray-200 p-5 bg-white shadow-sm flex items-start gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${color ?? "bg-primary/20"}`}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm text-muted-foreground mb-1">{label}</p>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
-      </div>
-    </div>
-  );
-}
 
 function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v: number) => string }) {
   const { data: balanceData } = useGetBalance({ query: { retry: false } });
@@ -78,79 +61,101 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        <StatCard
-          icon={<Wallet className="w-6 h-6 text-red-500" />}
-          label={t("dash_balance")}
-          value={currency === "FCFA" ? `${Math.round(balance * 620).toLocaleString()} FCFA` : `$${balance.toFixed(2)}`}
-          sub={balance === 0 ? t("dash_balance_low") : t("dash_balance_available")}
-          color="bg-gradient-to-br from-red-500/20 to-primary/10"
-        />
-        <StatCard
-          icon={<Package className="w-6 h-6 text-blue-400" />}
-          label={t("dash_orders_total")}
-          value={history?.total ?? 0}
-          sub={t("dash_orders_sub")}
-          color="bg-blue-500/20"
-        />
-        <StatCard
-          icon={<TrendingUp className="w-6 h-6 text-green-400" />}
-          label={t("dash_sms_received")}
-          value={received}
-          sub={`$${spent.toFixed(2)} dépensés au total`}
-          color="bg-green-500/20"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Solde */}
+        <div className="rounded-2xl p-5 bg-gradient-to-br from-red-500 to-primary text-white shadow-lg shadow-red-500/20 flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+            <Wallet className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="text-sm text-white/70 mb-1">{t("dash_balance")}</p>
+            <p className="text-2xl font-bold">{currency === "FCFA" ? `${Math.round(balance * 620).toLocaleString()} FCFA` : `$${balance.toFixed(2)}`}</p>
+            <p className="text-xs text-white/60 mt-1">{balance === 0 ? t("dash_balance_low") : t("dash_balance_available")}</p>
+          </div>
+        </div>
+        {/* Commandes */}
+        <div className="rounded-2xl p-5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20 flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+            <Package className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="text-sm text-white/70 mb-1">{t("dash_orders_total")}</p>
+            <p className="text-2xl font-bold">{history?.total ?? 0}</p>
+            <p className="text-xs text-white/60 mt-1">{t("dash_orders_sub")}</p>
+          </div>
+        </div>
+        {/* SMS reçus */}
+        <div className="rounded-2xl p-5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+            <TrendingUp className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="text-sm text-white/70 mb-1">{t("dash_sms_received")}</p>
+            <p className="text-2xl font-bold">{received}</p>
+            <p className="text-xs text-white/60 mt-1">{currency === "FCFA" ? `${Math.round(spent * 620).toLocaleString()} FCFA` : `$${spent.toFixed(2)}`} {t("dash_orders_sub")}</p>
+          </div>
+        </div>
       </div>
 
       {/* Recent orders */}
       <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/50">
           <h3 className="font-semibold text-gray-900 text-sm">{t("dash_recent_orders")}</h3>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "history" }))}
-            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors font-medium"
           >
             {t("dash_view_all")} <ChevronRight className="w-3 h-3" />
           </button>
         </div>
         {orders.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-sm">
-            <img src={iconEmpty} alt="Aucune commande" className="w-20 h-20 mx-auto mb-3 object-contain opacity-80" />
-            {t("dash_no_orders")}
+            <img src={iconEmpty} alt="Aucune commande" className="w-20 h-20 mx-auto mb-3 object-contain opacity-60" />
+            <p className="text-gray-500">{t("dash_no_orders")}</p>
             <div className="mt-4">
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
-                className="text-primary hover:text-primary/80 text-sm font-medium"
+                className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 text-sm font-semibold bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-xl transition-all"
               >
-                {t("dash_buy_action")}
+                <ShoppingCart className="w-4 h-4" /> {t("dash_buy_action")}
               </button>
             </div>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {orders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Package className="w-4 h-4 text-primary" />
+            {orders.map((order) => {
+              const STATUS_LIGHT: Record<string, string> = {
+                PENDING:  "bg-yellow-50 text-yellow-700 border-yellow-200",
+                RECEIVED: "bg-green-50 text-green-700 border-green-200",
+                FINISHED: "bg-green-50 text-green-700 border-green-200",
+                TIMEOUT:  "bg-gray-100 text-gray-500 border-gray-200",
+                BANNED:   "bg-red-50 text-red-700 border-red-200",
+                CANCELED: "bg-gray-100 text-gray-500 border-gray-200",
+              };
+              return (
+                <div key={order.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/80 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500/10 to-primary/10 border border-primary/10 flex items-center justify-center shrink-0">
+                      <Package className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{order.serviceName}</p>
+                      <p className="text-xs text-gray-400 font-mono truncate">{order.phone}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{order.serviceName}</p>
-                    <p className="text-xs text-muted-foreground font-mono truncate">{order.phone}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {order.smsCode && (
-                    <span className="text-xs font-mono font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded">
-                      {order.smsCode}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {order.smsCode && (
+                      <span className="text-xs font-mono font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-lg">
+                        {order.smsCode}
+                      </span>
+                    )}
+                    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${STATUS_LIGHT[order.status] ?? "bg-gray-100 text-gray-500 border-gray-200"}`}>
+                      {order.status}
                     </span>
-                  )}
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${STATUS_COLORS[order.status] ?? STATUS_COLORS.CANCELED}`}>
-                    {order.status}
-                  </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -159,16 +164,16 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
-          className="rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary/10 p-5 flex items-center gap-4 text-left transition-all group"
+          className="rounded-2xl bg-gradient-to-br from-red-500 to-primary p-5 flex items-center gap-4 text-left transition-all group hover:shadow-lg hover:shadow-red-500/20 shadow-md shadow-red-500/10"
         >
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-            <ShoppingCart className="w-5 h-5 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+            <ShoppingCart className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{t("dash_buy_number")}</p>
-            <p className="text-xs text-muted-foreground">{t("dash_countries")}</p>
+            <p className="font-semibold text-white">{t("dash_buy_number")}</p>
+            <p className="text-xs text-white/70">{t("dash_countries")}</p>
           </div>
-          <ChevronRight className="w-4 h-4 text-primary ml-auto group-hover:translate-x-1 transition-transform" />
+          <ChevronRight className="w-4 h-4 text-white/80 ml-auto group-hover:translate-x-1 transition-transform" />
         </button>
 
         <Link href="/aide" className="rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 p-5 flex items-center gap-4 text-left transition-all group shadow-sm">
