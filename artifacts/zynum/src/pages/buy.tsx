@@ -62,7 +62,7 @@ function CountdownRing({ createdAt, onExpired }: { createdAt: string; onExpired?
     <div className="flex flex-col items-center gap-3 py-2">
       <div className="relative w-24 h-24">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 88 88">
-          <circle cx="44" cy="44" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+          <circle cx="44" cy="44" r={r} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="6" />
           <circle
             cx="44" cy="44" r={r} fill="none"
             stroke={color} strokeWidth="6" strokeLinecap="round"
@@ -126,16 +126,16 @@ function StepIndicator({ current }: { current: BuyStep }) {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 done   ? "bg-green-500 text-white shadow-lg shadow-green-500/30" :
                 active ? "bg-primary text-white shadow-lg shadow-primary/30 ring-2 ring-primary/30" :
-                         "bg-white/5 border border-white/10 text-muted-foreground"
+                         "bg-gray-100 border border-gray-200 text-gray-400"
               }`}>
                 {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
               </div>
-              <span className={`text-[10px] font-medium hidden sm:block ${active ? "text-white" : "text-muted-foreground"}`}>
+              <span className={`text-[10px] font-medium hidden sm:block ${active ? "text-gray-900" : "text-gray-400"}`}>
                 {s.label}
               </span>
             </div>
             {i < STEPS_INFO.length - 1 && (
-              <div className={`flex-1 h-px mb-4 transition-all ${i < idx ? "bg-green-500/50" : "bg-white/10"}`} />
+              <div className={`flex-1 h-px mb-4 transition-all ${i < idx ? "bg-green-500/50" : "bg-gray-200"}`} />
             )}
           </React.Fragment>
         );
@@ -286,13 +286,13 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
 
   const BalancePill = () => (
     <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${
-      balance === 0 ? "bg-red-500/10 border-red-500/20 text-red-300"
-      : balance < 1 ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-300"
-      :               "bg-green-500/10 border-green-500/20 text-green-300"
+      balance === 0 ? "bg-red-50 border-red-200 text-red-600"
+      : balance < 1 ? "bg-yellow-50 border-yellow-200 text-yellow-700"
+      :               "bg-green-50 border-green-200 text-green-700"
     }`}>
       <Wallet className="w-4 h-4 shrink-0" />
       {t("buy_balance_pill")} {formatBalance()}
-      {balance === 0 && <button onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))} className="underline ml-1 hover:text-white">{t("buy_top_up_pill")}</button>}
+      {balance === 0 && <button onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))} className="underline ml-1 hover:text-red-800">{t("buy_top_up_pill")}</button>}
     </div>
   );
 
@@ -301,13 +301,13 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
       {selectedServiceInfo && (
         <span className="flex items-center gap-1">
           <ServiceLogo icon={selectedServiceInfo.icon} color={selectedServiceInfo.color} name={selectedServiceInfo.name} size={16} />
-          <span className="text-white font-medium">{selectedServiceInfo.name}</span>
+          <span className="text-gray-800 font-medium">{selectedServiceInfo.name}</span>
         </span>
       )}
       {selectedCountryInfo && (
         <>
           <ChevronRight className="w-3 h-3" />
-          <span className="text-white font-medium">{selectedCountryInfo.name}</span>
+          <span className="text-gray-800 font-medium">{selectedCountryInfo.name}</span>
         </>
       )}
     </div>
@@ -323,8 +323,8 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         <StepIndicator current="service" />
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-white">{t("buy_s1_title")}</h1>
-            <p className="text-muted-foreground text-sm mt-1">{t("buy_s1_sub")}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t("buy_s1_title")}</h1>
+            <p className="text-gray-500 text-sm mt-1">{t("buy_s1_sub")}</p>
           </div>
           {user && <BalancePill />}
         </div>
@@ -332,7 +332,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder={t("buy_s1_placeholder")}
-            className="pl-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-primary/50"
+            className="pl-11 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl focus:border-primary/50"
             value={searchService}
             onChange={(e) => setSearchService(e.target.value)}
           />
@@ -348,15 +348,15 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.03, 0.3) }}
                 onClick={() => { setSelectedService(svc.id); setSelectedCountry(null); setSelectedOperator(null); goTo("country"); }}
-                className="group flex flex-col items-center gap-3 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 text-center transition-all hover:scale-[1.02]"
+                className="group flex flex-col items-center gap-3 p-5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-center transition-all hover:scale-[1.02] shadow-sm hover:shadow-md"
               >
                 <ServiceLogo icon={svc.icon} color={svc.color} name={svc.name} size={48} />
-                <span className="text-sm font-semibold text-white group-hover:text-primary transition-colors leading-tight">{svc.name}</span>
+                <span className="text-sm font-semibold text-gray-800 group-hover:text-primary transition-colors leading-tight">{svc.name}</span>
               </motion.button>
             ))}
             {filtered.length === 0 && (
               <div className="col-span-full py-16 text-center text-muted-foreground">
-                {t("buy_no_service_for")} "<strong className="text-white">{searchService}</strong>"
+                {t("buy_no_service_for")} "<strong className="text-gray-900">{searchService}</strong>"
               </div>
             )}
           </div>
@@ -377,15 +377,15 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         <StepPage key="country" dir={dir}>
           <div className="max-w-3xl mx-auto">
             <StepIndicator current="country" />
-            <button onClick={() => goBack("service")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-5 transition-colors">
+            <button onClick={() => goBack("service")} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-5 transition-colors">
               <ArrowLeft className="w-4 h-4" /> {t("buy_change_service")}
             </button>
             {selectedServiceInfo && (
-              <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+              <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl border border-gray-200 bg-white shadow-sm">
                 <ServiceLogo icon={selectedServiceInfo.icon} color={selectedServiceInfo.color} name={selectedServiceInfo.name} size={40} />
                 <div>
-                  <p className="text-xs text-muted-foreground">{t("buy_service_selected")}</p>
-                  <p className="font-bold text-white">{selectedServiceInfo.name}</p>
+                  <p className="text-xs text-gray-400">{t("buy_service_selected")}</p>
+                  <p className="font-bold text-gray-900">{selectedServiceInfo.name}</p>
                 </div>
                 {user && <BalancePill />}
               </div>
@@ -397,14 +397,14 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
               </div>
             )}
             <div className="mb-5">
-              <h2 className="text-2xl font-bold text-white mb-1">{t("buy_s2_title")}</h2>
-              <p className="text-muted-foreground text-sm">{t("buy_s2_sub")}</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">{t("buy_s2_title")}</h2>
+              <p className="text-gray-500 text-sm">{t("buy_s2_sub")}</p>
             </div>
             <div className="relative mb-5">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 placeholder={t("buy_s2_placeholder")}
-                className="pl-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-primary/50"
+                className="pl-11 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl focus:border-primary/50"
                 value={searchCountry}
                 onChange={(e) => setSearchCountry(e.target.value)}
               />
@@ -431,24 +431,24 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                           if (user) { setLocation("/dashboard"); } else { setLocation("/login"); }
                         }
                       }}
-                      className="w-full flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 text-left transition-all group"
+                      className="w-full flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all group shadow-sm"
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{country.flag ?? "🌐"}</span>
                         <div>
-                          <p className="font-semibold text-white group-hover:text-primary transition-colors">{country.name}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{country.name}</p>
+                          <p className="text-xs text-gray-400">
                             {country.available} {country.available > 1 ? t("buy_num_available_plural") : t("buy_num_available_single")}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="text-right">
-                          <p className="font-bold text-white text-sm">
+                          <p className="font-bold text-gray-900 text-sm">
                             {currency === "FCFA" ? `${priceFcfa.toLocaleString("fr-FR")} FCFA` : `$${priceUsd.toFixed(2)}`}
                           </p>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" />
                       </div>
                     </motion.button>
                   );
@@ -471,21 +471,21 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         <StepPage key="operator" dir={dir}>
           <div className="max-w-2xl mx-auto">
             <StepIndicator current="operator" />
-            <button onClick={() => goBack("country")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-5 transition-colors">
+            <button onClick={() => goBack("country")} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-5 transition-colors">
               <ArrowLeft className="w-4 h-4" /> {t("buy_change_country")}
             </button>
             <Breadcrumb />
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm">
               {selectedServiceInfo && <ServiceLogo icon={selectedServiceInfo.icon} color={selectedServiceInfo.color} name={selectedServiceInfo.name} size={48} />}
               <div className="flex-1">
-                <p className="font-bold text-white text-lg">{selectedServiceInfo?.name}</p>
-                <p className="text-muted-foreground text-sm">{selectedCountryInfo?.name}</p>
+                <p className="font-bold text-gray-900 text-lg">{selectedServiceInfo?.name}</p>
+                <p className="text-gray-500 text-sm">{selectedCountryInfo?.name}</p>
               </div>
               {user && <BalancePill />}
             </div>
             <div className="mb-5">
-              <h2 className="text-2xl font-bold text-white mb-1">{t("buy_s3_title")}</h2>
-              <p className="text-muted-foreground text-sm">{t("buy_s3_sub")}</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">{t("buy_s3_title")}</h2>
+              <p className="text-gray-500 text-sm">{t("buy_s3_sub")}</p>
             </div>
             {isLoadingOperators ? (
               <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
@@ -503,28 +503,28 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                       transition={{ delay: i * 0.07 }}
                       onClick={() => setSelectedOperator(op.name)}
                       className={`w-full flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border text-left transition-all ${
-                        active ? "border-primary/50 bg-primary/10 shadow-lg shadow-primary/10" : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10"
+                        active ? "border-primary/50 bg-primary/10 shadow-lg shadow-primary/10" : "border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm"
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border ${active ? "bg-primary/20 border-primary/30 text-primary" : "bg-white/5 border-white/10 text-muted-foreground"}`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border ${active ? "bg-primary/20 border-primary/30 text-primary" : "bg-gray-100 border-gray-200 text-gray-500"}`}>
                           {op.label?.slice(0, 1).toUpperCase() ?? "?"}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-semibold text-white">{op.label ?? op.name}</p>
-                            {i === 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400">{t("buy_recommended")}</span>}
+                            <p className="font-semibold text-gray-900">{op.label ?? op.name}</p>
+                            {i === 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-700">{t("buy_recommended")}</span>}
                           </div>
-                          <p className="text-xs text-muted-foreground">{op.available} {t("buy_num_dispo")}</p>
+                          <p className="text-xs text-gray-400">{op.available} {t("buy_num_dispo")}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="text-right">
-                          <p className="font-bold text-white">
+                          <p className="font-bold text-gray-900">
                             {currency === "FCFA" ? `${op.priceFcfa?.toLocaleString("fr-FR")} FCFA` : `$${op.priceUsd?.toFixed(2)}`}
                           </p>
                         </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${active ? "border-primary bg-primary" : "border-white/20"}`}>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${active ? "border-primary bg-primary" : "border-gray-300"}`}>
                           {active && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
@@ -547,7 +547,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
             {balance === 0 && (
               <p className="text-center text-xs text-red-400 mt-3">
                 {t("buy_insufficient")}.{" "}
-                <button onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))} className="underline hover:text-white">
+                <button onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "recharge" }))} className="underline hover:text-red-700">
                   {t("buy_insufficient_top_up")}
                 </button>
               </p>
@@ -569,21 +569,21 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
             <button
               onClick={() => { cancelMutation.mutate(activeOrder.id); }}
               disabled={cancelMutation.isPending}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-6 transition-colors"
+              className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> {t("buy_change_country_service")}
             </button>
-            <div className="rounded-3xl border border-white/10 bg-card/60 backdrop-blur-xl overflow-hidden shadow-2xl">
-              <div className="px-6 pt-6 pb-4 border-b border-white/10 flex items-center gap-4" style={{ background: svc ? `${svc.color}12` : undefined }}>
+            <div className="rounded-3xl border border-gray-200 bg-white overflow-hidden shadow-lg">
+              <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center gap-4" style={{ background: svc ? `${svc.color}08` : undefined }}>
                 {svc && <ServiceLogo icon={svc.icon} color={svc.color} name={svc.name} size={48} />}
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("buy_assigned")}</p>
-                  <p className="font-bold text-white text-lg">{activeOrder.serviceName}</p>
-                  <p className="text-sm text-muted-foreground">{activeOrder.countryName}</p>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider">{t("buy_assigned")}</p>
+                  <p className="font-bold text-gray-900 text-lg">{activeOrder.serviceName}</p>
+                  <p className="text-sm text-gray-500">{activeOrder.countryName}</p>
                 </div>
                 <div className="ml-auto text-right">
-                  <p className="text-xs text-muted-foreground">{t("buy_price")}</p>
-                  <p className="font-bold text-white text-lg">
+                  <p className="text-xs text-gray-400">{t("buy_price")}</p>
+                  <p className="font-bold text-gray-900 text-lg">
                     {currency === "FCFA" ? `${activeOrder.priceFcfa.toLocaleString("fr-FR")} FCFA` : `$${activeOrder.priceUsd.toFixed(2)}`}
                   </p>
                 </div>
@@ -592,15 +592,15 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                 <div className="mb-3 inline-flex items-center gap-2 bg-primary/10 border border-primary/30 text-primary text-xs px-3 py-1 rounded-full font-medium">
                   <Smartphone className="w-3 h-3" /> {t("buy_virtual_number")}
                 </div>
-                <div className="flex items-center justify-center gap-4 bg-black/40 border border-white/10 rounded-2xl px-6 py-5 mb-3">
+                <div className="flex items-center justify-center gap-4 bg-gray-100 border border-gray-200 rounded-2xl px-6 py-5 mb-3">
                   <Phone className="w-6 h-6 text-primary shrink-0" />
-                  <span className="text-3xl sm:text-4xl font-bold text-white font-mono tracking-wider select-all">{activeOrder.phone}</span>
-                  <button onClick={() => copy(activeOrder.phone, t("buy_phone"))} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-                    <Copy className="w-5 h-5 text-muted-foreground hover:text-white" />
+                  <span className="text-3xl sm:text-4xl font-bold text-gray-900 font-mono tracking-wider select-all">{activeOrder.phone}</span>
+                  <button onClick={() => copy(activeOrder.phone, t("buy_phone"))} className="p-2 hover:bg-gray-200 rounded-xl transition-colors">
+                    <Copy className="w-5 h-5 text-gray-400 hover:text-gray-700" />
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {t("buy_use_number_hint")} <span className="text-white font-medium">{activeOrder.serviceName}</span> {t("buy_use_number_hint2")}
+                <p className="text-xs text-gray-400">
+                  {t("buy_use_number_hint")} <span className="text-gray-900 font-medium">{activeOrder.serviceName}</span> {t("buy_use_number_hint2")}
                 </p>
               </div>
               <div className="px-6 pb-6 space-y-3">
@@ -612,7 +612,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full h-12 rounded-xl border-white/20 text-white hover:bg-white/10 font-semibold"
+                  className="w-full h-12 rounded-xl border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold"
                   onClick={handleChangeNumber}
                   disabled={buyMutation.isPending || cancelMutation.isPending}
                 >
@@ -650,7 +650,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
             <StepIndicator current="active" />
             <button
               onClick={() => { setActiveOrder(null); goTo("service", false); setBuyCount(0); }}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-6 transition-colors"
+transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> {t("buy_buy_another")}
             </button>

@@ -36,15 +36,15 @@ const FAQS = {
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/[0.02]">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-5 text-left hover:bg-white/[0.03] transition-colors">
-        <span className="font-semibold text-white pr-4">{q}</span>
-        <ChevronDown className={`w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+    <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors">
+        <span className="font-semibold text-gray-900 pr-4">{q}</span>
+        <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
-            <p className="px-5 pb-5 text-muted-foreground leading-relaxed text-sm border-t border-white/5 pt-4">{a}</p>
+            <p className="px-5 pb-5 text-gray-500 leading-relaxed text-sm border-t border-gray-100 pt-4">{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -58,33 +58,33 @@ export default function FAQ() {
 
   return (
     <div className="w-full">
-      <section className="py-20 text-center relative">
+      <section className="py-20 text-center relative bg-gradient-to-b from-blue-50 to-white">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-primary/10 blur-[80px] rounded-full pointer-events-none" />
         <div className="container max-w-3xl mx-auto px-4 relative z-10">
           <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-4">{t("faq_badge")}</p>
-          <h1 className="text-4xl md:text-5xl font-display font-extrabold text-white mb-5">{t("faq_title")}</h1>
-          <p className="text-lg text-muted-foreground">{t("faq_sub")}</p>
+          <h1 className="text-4xl md:text-5xl font-display font-extrabold text-gray-900 mb-5">{t("faq_title")}</h1>
+          <p className="text-lg text-gray-500">{t("faq_sub")}</p>
         </div>
       </section>
 
-      <section className="py-8 pb-24">
+      <section className="py-8 pb-24 bg-gray-50">
         <div className="container max-w-3xl mx-auto px-4 space-y-3">
           {faqs.map((faq) => <FaqItem key={faq.q} q={faq.q} a={faq.a} />)}
         </div>
       </section>
 
-      <section className="py-16 border-t border-white/5">
+      <section className="py-16 border-t border-gray-200 bg-white">
         <div className="container max-w-3xl mx-auto px-4 space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-10 text-center shadow-sm">
             <MessageSquare className="w-10 h-10 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-3">{t("faq_no_answer")}</h2>
-            <p className="text-muted-foreground mb-6">{t("faq_no_answer_desc")}</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">{t("faq_no_answer")}</h2>
+            <p className="text-gray-500 mb-6">{t("faq_no_answer_desc")}</p>
             <Link href="/contact">
               <Button className="bg-primary hover:bg-primary/90 text-white font-semibold px-8">{t("faq_contact_btn")}</Button>
             </Link>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm font-semibold text-white">Rejoignez notre communauté</p>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <p className="text-sm font-semibold text-gray-900">Rejoignez notre communauté</p>
             <SocialBar size="sm" />
           </div>
         </div>
