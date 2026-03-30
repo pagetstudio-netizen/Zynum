@@ -354,8 +354,8 @@ export async function getCountriesForService(service: string): Promise<CountryIn
     let totalAvailable = 0;
 
     for (const entry of Object.values(operatorMap)) {
-      if (entry.cost < bestPrice) bestPrice = entry.cost;
       totalAvailable += entry.count || 0;
+      if (entry.count > 0 && entry.cost < bestPrice) bestPrice = entry.cost;
     }
 
     if (bestPrice === Infinity) continue;
