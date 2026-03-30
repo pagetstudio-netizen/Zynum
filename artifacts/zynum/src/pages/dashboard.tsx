@@ -15,7 +15,7 @@ import iconHistory   from "@assets/5708960_1774829436660.png";
 import iconRecharge  from "@assets/2534215_1774829355101.png";
 import iconProfile   from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
 import iconHelp      from "@assets/images_(12)_1774828482000.png";
-import iconSupport   from "@assets/2-2_1774828481887.png";
+import iconSupport   from "@assets/3430127_1774831941357.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
