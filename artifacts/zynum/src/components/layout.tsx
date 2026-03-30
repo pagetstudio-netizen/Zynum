@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Menu, X, Phone, LogOut, Wallet,
-  ArrowUpRight, MessageSquare, Globe2, Shield, HelpCircle, CreditCard, Link2, Code2, Zap,
+  ArrowUpRight, MessageSquare, Globe2, Shield, HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency } from "@/hooks/use-currency";
@@ -323,60 +323,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer className="relative z-10 border-t border-gray-200 bg-gray-50">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          {/* SendavaPay — Nos Solutions banner */}
-          <div className="pt-12 pb-2">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Zap className="w-3.5 h-3.5 text-primary" /> Nos Solutions
-            </p>
-            <a
-              href="https://sendavapay.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex flex-col sm:flex-row items-start sm:items-center gap-5 w-full rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-primary/30 transition-all px-6 py-5 shadow-sm"
-            >
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/25">
-                <CreditCard className="w-6 h-6 text-white" />
-              </div>
-
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors">
-                    SendavaPay
-                  </span>
-                  <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full">
-                    sendavapay.com
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 leading-snug">
-                  Plateforme tout-en-un pour recevoir vos paiements en ligne.
-                </p>
-                {/* Features chips */}
-                <div className="flex flex-wrap items-center gap-2 mt-3">
-                  {[
-                    { icon: <Link2 className="w-3 h-3" />, label: "Liens de paiement" },
-                    { icon: <Code2 className="w-3 h-3" />, label: "API de paiement" },
-                    { icon: <CreditCard className="w-3 h-3" />, label: "Encaissements" },
-                    { icon: <Zap className="w-3 h-3" />, label: "Instantané" },
-                  ].map((f) => (
-                    <span
-                      key={f.label}
-                      className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 bg-gray-100 border border-gray-200 px-2.5 py-1 rounded-lg"
-                    >
-                      {f.icon} {f.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Arrow */}
-              <div className="shrink-0 w-9 h-9 rounded-xl bg-gray-100 group-hover:bg-primary/10 border border-gray-200 group-hover:border-primary/30 flex items-center justify-center transition-all">
-                <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" />
-              </div>
-            </a>
-          </div>
 
           {/* Main footer grid */}
           <div className="pt-10 pb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
