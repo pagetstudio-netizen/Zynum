@@ -90,8 +90,11 @@ export default function Recharge() {
       toast({ variant: "destructive", title: t("recharge_choose_method") });
       return;
     }
-    if (!finalAmountUsd || finalAmountUsd <= 0) {
-      toast({ variant: "destructive", title: "Montant invalide", description: "Veuillez saisir un montant supérieur à 0." });
+    const minFcfa    = 300;
+    const minUsd     = minFcfa / FCFA_PER_USD;
+    const rawFcfa    = currency === "FCFA" ? (finalAmountUsd ?? 0) : Math.round((finalAmountUsd ?? 0) * FCFA_PER_USD);
+    if (!finalAmountUsd || finalAmountUsd <= 0 || rawFcfa < minFcfa) {
+      toast({ variant: "destructive", title: "Montant trop faible", description: `Le dépôt minimum est de ${minFcfa.toLocaleString("fr-FR")} FCFA ($${minUsd.toFixed(2)}).` });
       return;
     }
     if (!user) {
@@ -176,13 +179,11 @@ export default function Recharge() {
               className="w-full h-12 pl-14 pr-4 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition shadow-sm"
             />
           </div>
-          {finalAmountUsd && finalAmountUsd > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
-              ≈ {currency === "FCFA"
-                ? `$${(finalAmountUsd / FCFA_PER_USD).toFixed(2)}`
-                : `${Math.round(finalAmountUsd * FCFA_PER_USD).toLocaleString("fr-FR")} FCFA`}
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground mt-2">
+            {finalAmountUsd && finalAmountUsd > 0
+              ? `≈ ${currency === "FCFA" ? `$${(finalAmountUsd / FCFA_PER_USD).toFixed(2)}` : `${Math.round(finalAmountUsd * FCFA_PER_USD).toLocaleString("fr-FR")} FCFA`}`
+              : `Minimum : 300 FCFA ($${(300 / FCFA_PER_USD).toFixed(2)})`}
+          </p>
         </div>
       </div>
 

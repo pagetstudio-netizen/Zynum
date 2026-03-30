@@ -2,6 +2,8 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db, usersTable, transactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import crypto from "node:crypto";
+import { requireAuth } from "../middlewares/authMiddleware.js";
+import { requireAdmin } from "../middlewares/adminMiddleware.js";
 
 const router: IRouter = Router();
 
@@ -377,6 +379,72 @@ router.post("/v1/webhooks/omnipay", async (req: Request, res: Response): Promise
     const message = err instanceof Error ? err.message : "Erreur webhook";
     console.error("[OmniPay webhook] Error:", message);
     res.status(500).json({ error: "webhook_error", message });
+  }
+});
+
+// ─── Admin: Consulter le solde OmniPay ───────────────────────────────────────
+router.get("/v1/admin/omnipay/balance", requireAuth, requireAdmin, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const apiKey = process.env.OMNIPAY_API_KEY;
+    if (!apiKey) { res.status(500).json({ error: "OMNIPAY_API_KEY non configuré" }); return; }
+
+    const resp = await fetch(OMNIPAY_BASE, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ action: "balance", apikey: apiKey }),
+    });
+    const data = await resp.json() as Record<string, unknown>;
+    res.json({ success: true, raw: data });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    res.status(500).json({ error: message });
+  }
+});
+
+// ─── Admin: Retrait / virement OmniPay ───────────────────────────────────────
+router.post("/v1/admin/omnipay/withdraw", requireAuth, requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const apiKey = process.env.OMNIPAY_API_KEY;
+    if (!apiKey) { res.status(500).json({ error: "OMNIPAY_API_KEY non configuré" }); return; }
+
+    const { phone, operatorId, amount, note } = req.body ?? {};
+    if (!phone || !operatorId || !amount) {
+      res.status(400).json({ error: "Champs requis : phone, operatorId, amount" });
+      return;
+    }
+
+    const opInfo = OMNIPAY_OPERATORS[operatorId as string];
+    if (!opInfo) { res.status(400).json({ error: `Opérateur inconnu : ${operatorId}` }); return; }
+
+    const rawAmount = parseFloat(String(amount));
+    if (isNaN(rawAmount) || rawAmount <= 0) { res.status(400).json({ error: "Montant invalide" }); return; }
+
+    const msisdn    = buildMsisdn(String(phone), opInfo.prefix);
+    const reference = `ZNUMOUT${Date.now()}`;
+
+    const body: Record<string, string> = {
+      action:    "transfer",
+      apikey:    apiKey,
+      msisdn,
+      amount:    String(rawAmount),
+      operator:  opInfo.omnipayOperator,
+      reference,
+      currency:  opInfo.currency,
+    };
+    if (note) body.note = String(note);
+
+    const resp = await fetch(OMNIPAY_BASE, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(body),
+    });
+    const data = await resp.json() as Record<string, unknown>;
+
+    const success = String(data.status ?? "").toLowerCase() === "success" || String(data.code ?? "") === "200";
+    res.json({ success, reference, raw: data });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    res.status(500).json({ error: message });
   }
 });
 

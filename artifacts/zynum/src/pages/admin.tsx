@@ -1265,6 +1265,140 @@ function AdminSettings() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   SECTION: OMNIPAY ADMIN (solde + retrait)
+══════════════════════════════════════════════════════════════════════════════ */
+const OMNIPAY_OPERATORS_LIST = [
+  { id: "ORANGE_CI", label: "Orange CI" }, { id: "MTN_CI",    label: "MTN CI" },
+  { id: "MOOV_CI",   label: "Moov CI" },   { id: "WAVE_CI",   label: "Wave CI" },
+  { id: "MIXX_CI",   label: "Mixx CI" },   { id: "WAVE_SN",   label: "Wave SN" },
+  { id: "ORANGE_SN", label: "Orange SN" }, { id: "FREE_SN",   label: "Free SN" },
+  { id: "ORANGE_BF", label: "Orange BF" }, { id: "MOOV_BF",   label: "Moov BF" },
+  { id: "ORANGE_ML", label: "Orange ML" }, { id: "MOOV_ML",   label: "Moov ML" },
+  { id: "ORANGE_GN", label: "Orange GN" }, { id: "MTN_GN",    label: "MTN GN" },
+  { id: "MTN_CM",    label: "MTN CM" },    { id: "ORANGE_CM", label: "Orange CM" },
+  { id: "MTN_BJ",    label: "MTN BJ" },    { id: "MOOV_BJ",   label: "Moov BJ" },
+  { id: "MOOV_TG",   label: "Moov TG" },   { id: "TOGOCEL_TG",label: "Togocel TG" },
+  { id: "MTN_GH",    label: "MTN GH" },    { id: "AIRTEL_GH", label: "Airtel GH" },
+  { id: "MOOV_NE",   label: "Moov NE" },
+];
+
+function AdminOmniPay() {
+  const { toast } = useToast();
+  const [balance, setBalance]           = useState<any>(null);
+  const [balLoading, setBalLoading]     = useState(false);
+  const [withdraw, setWithdraw]         = useState({ phone: "", operatorId: "ORANGE_CI", amount: "", note: "" });
+  const [wLoading, setWLoading]         = useState(false);
+  const [wResult,  setWResult]          = useState<any>(null);
+  const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm";
+
+  const fetchBalance = async () => {
+    setBalLoading(true);
+    try {
+      const r = await fetch(`${API}/v1/admin/omnipay/balance`, { credentials: "include" });
+      const d = await r.json();
+      setBalance(d);
+    } catch {
+      toast({ variant: "destructive", title: "Erreur réseau" });
+    } finally { setBalLoading(false); }
+  };
+
+  const handleWithdraw = async () => {
+    if (!withdraw.phone || !withdraw.amount) {
+      toast({ variant: "destructive", title: "Remplissez tous les champs obligatoires" });
+      return;
+    }
+    setWLoading(true); setWResult(null);
+    try {
+      const r = await fetch(`${API}/v1/admin/omnipay/withdraw`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(withdraw),
+      });
+      const d = await r.json();
+      setWResult(d);
+      if (d.success) toast({ title: "Retrait initié", description: `Réf: ${d.reference}` });
+      else toast({ variant: "destructive", title: "Échec du retrait", description: d.raw?.message ?? d.error ?? "Erreur" });
+    } catch {
+      toast({ variant: "destructive", title: "Erreur réseau" });
+    } finally { setWLoading(false); }
+  };
+
+  return (
+    <div className="space-y-6 mb-8">
+      {/* Solde */}
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center"><Wallet className="w-4 h-4 text-primary" /></div>
+            <div>
+              <h3 className="font-bold text-white text-sm">Solde OmniPay</h3>
+              <p className="text-xs text-muted-foreground">Compte marchand</p>
+            </div>
+          </div>
+          <Button onClick={fetchBalance} disabled={balLoading} className="bg-primary hover:bg-primary/90 text-white h-8 px-3 text-xs">
+            {balLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
+            {balLoading ? "Chargement…" : "Actualiser"}
+          </Button>
+        </div>
+        {balance && (
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+            <pre className="text-xs text-green-400 whitespace-pre-wrap overflow-x-auto font-mono">
+              {JSON.stringify(balance.raw ?? balance, null, 2)}
+            </pre>
+          </div>
+        )}
+        {!balance && !balLoading && (
+          <p className="text-xs text-muted-foreground text-center py-2">Cliquez sur Actualiser pour voir le solde.</p>
+        )}
+      </div>
+
+      {/* Retrait */}
+      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 space-y-4">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center"><Send className="w-4 h-4 text-amber-400" /></div>
+          <div>
+            <h3 className="font-bold text-white text-sm">Retrait OmniPay</h3>
+            <p className="text-xs text-muted-foreground">Envoyer des fonds vers un compte mobile money</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Numéro de téléphone *</label>
+            <input value={withdraw.phone} onChange={(e) => setWithdraw({ ...withdraw, phone: e.target.value })} placeholder="ex: 0708000000" className={inp} />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Opérateur *</label>
+            <select value={withdraw.operatorId} onChange={(e) => setWithdraw({ ...withdraw, operatorId: e.target.value })} className={inp}>
+              {OMNIPAY_OPERATORS_LIST.map((op) => <option key={op.id} value={op.id}>{op.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Montant (FCFA) *</label>
+            <input type="number" value={withdraw.amount} onChange={(e) => setWithdraw({ ...withdraw, amount: e.target.value })} placeholder="ex: 5000" className={inp} />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Note interne</label>
+            <input value={withdraw.note} onChange={(e) => setWithdraw({ ...withdraw, note: e.target.value })} placeholder="Raison du retrait" className={inp} />
+          </div>
+        </div>
+        <Button onClick={handleWithdraw} disabled={wLoading || !withdraw.phone || !withdraw.amount} className="bg-amber-600 hover:bg-amber-500 text-white">
+          {wLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Traitement…</> : <><Send className="w-4 h-4 mr-2" /> Effectuer le retrait</>}
+        </Button>
+        {wResult && (
+          <div className={`rounded-xl border p-4 ${wResult.success ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5"}`}>
+            <p className="text-xs font-semibold mb-2 ${wResult.success ? 'text-green-400' : 'text-red-400'}">{wResult.success ? "✓ Retrait initié" : "✗ Échec"} — Réf: {wResult.reference}</p>
+            <pre className="text-xs text-muted-foreground whitespace-pre-wrap overflow-x-auto font-mono">
+              {JSON.stringify(wResult.raw ?? wResult, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    SECTION: PAYMENT PROVIDERS
 ══════════════════════════════════════════════════════════════════════════════ */
 function AdminPayments() {
@@ -1299,8 +1433,13 @@ function AdminPayments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button onClick={() => setShowAdd(true)} className="bg-primary hover:bg-primary/90 text-white"><Plus className="w-4 h-4 mr-2" /> Ajouter fournisseur</Button>
+      <AdminOmniPay />
+
+      <div className="flex items-center gap-3 mb-1">
+        <CreditCard className="w-4 h-4 text-muted-foreground" />
+        <h3 className="font-semibold text-white text-sm">Fournisseurs de paiement</h3>
+        <div className="flex-1 border-t border-white/10" />
+        <Button onClick={() => setShowAdd(true)} className="bg-primary hover:bg-primary/90 text-white h-8 px-3 text-xs"><Plus className="w-3.5 h-3.5 mr-1" /> Ajouter</Button>
       </div>
 
       {showAdd && (
