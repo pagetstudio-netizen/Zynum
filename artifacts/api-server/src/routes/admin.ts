@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable, adminMessagesTable, paymentProvidersTable, faqArticlesTable, socialLinksTable, countryOverridesTable } from "@workspace/db";
+import { invalidateFiveSimKeyCache } from "../lib/fivesim.js";
 import { eq, desc, count, sum, and, gte, lte, like, or, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
@@ -304,6 +305,7 @@ router.post("/v1/admin/settings", ...auth, async (req, res): Promise<void> => {
 
   await db.insert(adminSettingsTable).values({ key, value }).onConflictDoUpdate({ target: adminSettingsTable.key, set: { value } });
   if (key === "commission_type" || key === "commission_value") invalidateCommissionCache();
+  if (key === "fivesim_api_key") invalidateFiveSimKeyCache();
   res.json({ success: true });
 });
 
@@ -315,6 +317,7 @@ router.post("/v1/admin/settings/bulk", ...auth, async (req, res): Promise<void> 
     await db.insert(adminSettingsTable).values({ key, value }).onConflictDoUpdate({ target: adminSettingsTable.key, set: { value } });
   }
   invalidateCommissionCache();
+  if ("fivesim_api_key" in settings) invalidateFiveSimKeyCache();
   res.json({ success: true });
 });
 

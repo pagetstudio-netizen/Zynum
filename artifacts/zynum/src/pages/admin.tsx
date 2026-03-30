@@ -6,7 +6,7 @@ import {
   Zap, Shield, Plus, Trash2, Edit3, Ban, CheckCircle,
   Search, ChevronLeft, ChevronRight, RefreshCw, Send,
   ToggleLeft, ToggleRight, DollarSign, Percent, Star,
-  Package, AlertTriangle, Clock, Database, Bell,
+  Package, AlertTriangle, Clock, Database, Bell, Eye, EyeOff, Key,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -1095,6 +1095,8 @@ function AdminSettings() {
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  const [showApiKey, setShowApiKey] = useState(false);
+
   useEffect(() => {
     if (data?.settings) {
       setForm({
@@ -1109,6 +1111,7 @@ function AdminSettings() {
         commission_value: data.settings.commission_value ?? "0",
         currency_rate: data.settings.currency_rate ?? "620",
         global_discount: data.settings.global_discount ?? "0",
+        fivesim_api_key: data.settings.fivesim_api_key ?? "",
       });
     }
   }, [data]);
@@ -1144,6 +1147,44 @@ function AdminSettings() {
 
   return (
     <div className="space-y-6 max-w-2xl">
+
+      {/* ── Clé API 5sim ── */}
+      <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-6 space-y-4">
+        <h3 className="font-bold text-white flex items-center gap-2"><Key className="w-5 h-5 text-yellow-400" /> Clé API 5sim</h3>
+        <p className="text-xs text-muted-foreground">Cette clé est utilisée pour accéder à l'API 5sim (achat de numéros virtuels). Elle est chiffrée en base de données et jamais exposée aux utilisateurs.</p>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Clé API Bearer</label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type={showApiKey ? "text" : "password"}
+                value={form.fivesim_api_key ?? ""}
+                onChange={(e) => setForm({ ...form, fivesim_api_key: e.target.value })}
+                placeholder="Collez votre clé API 5sim ici"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm pr-10 font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+              >
+                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          {form.fivesim_api_key && (
+            <p className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
+              <CheckCircle className="w-3 h-3" /> Clé configurée — sauvegardez pour appliquer
+            </p>
+          )}
+          {!form.fivesim_api_key && (
+            <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> Aucune clé configurée — le service est inopérant
+            </p>
+          )}
+        </div>
+      </div>
+
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
         <h3 className="font-bold text-white flex items-center gap-2"><Settings className="w-5 h-5 text-primary" /> Informations de la plateforme</h3>
         <Field k="platform_name" label="Nom de la plateforme" />
