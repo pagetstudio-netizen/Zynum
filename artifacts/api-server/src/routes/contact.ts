@@ -7,13 +7,23 @@ import { requireAdmin } from "../middlewares/adminMiddleware.js";
 const router: IRouter = Router();
 const auth = [requireAuth, requireAdmin];
 
-/* ── Public: get active social links ── */
+/* ── Public: get active social links (deduplicated by platform) ── */
 router.get("/v1/social-links", async (_req, res): Promise<void> => {
   const links = await db
     .select()
     .from(socialLinksTable)
     .orderBy(socialLinksTable.sortOrder);
-  res.json({ links: links.filter((l) => l.isActive) });
+
+  const seen = new Set<string>();
+  const unique = links.filter((l) => {
+    if (!l.isActive) return false;
+    const key = l.platform.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  res.json({ links: unique });
 });
 
 /* ── Public: submit contact form ── */
