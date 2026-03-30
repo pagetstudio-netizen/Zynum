@@ -3,9 +3,8 @@ import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Menu, X, Phone, LogOut, Wallet,
-  ArrowUpRight, MessageSquare, Globe2, Shield, HelpCircle,
+  MessageSquare, Globe2, Shield, HelpCircle,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
@@ -195,117 +194,84 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Mobile menu — dark sidebar overlay ─────────────────────────────── */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-0 z-40 bg-black/50"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            {/* Dark sidebar */}
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "tween", duration: 0.25 }}
-              className="md:hidden fixed top-0 right-0 bottom-0 z-50 w-72 flex flex-col"
-              style={{ background: "#2b2d32" }}
-            >
-              {/* Close button */}
-              <div className="flex items-center justify-end px-5 py-4">
-                <button
+      {isMobileMenuOpen && (
+        <div className="md:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            style={{ background: "rgba(0,0,0,0.5)" }}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          {/* Dark sidebar */}
+          <div
+            className="fixed top-0 right-0 bottom-0 z-50 w-72 flex flex-col overflow-hidden"
+            style={{ background: "#2b2d32", color: "#ffffff" }}
+          >
+            {/* Close button */}
+            <div className="flex items-center justify-end px-5 py-4">
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                style={{ color: "rgba(255,255,255,0.7)" }}
+                className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Nav items */}
+            <nav className="flex-1 overflow-y-auto">
+              {[
+                { href: "/", label: t("nav_home") },
+                ...navLinks,
+                ...(!user ? [
+                  { href: "/login", label: t("nav_login") },
+                  { href: "/register", label: t("nav_start_free") },
+                ] : [
+                  { href: "/dashboard", label: t("nav_dashboard") },
+                ]),
+              ].map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-9 h-9 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "16px 28px",
+                    borderBottom: "1px solid rgba(255,255,255,0.1)",
+                    color: "#ffffff",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    textDecoration: "none",
+                  }}
                 >
-                  <X className="w-5 h-5" />
+                  {link.label}
+                </Link>
+              ))}
+
+              {/* Language & Currency */}
+              <div style={{ padding: "32px 28px 16px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                <button
+                  onClick={() => setLang(lang === "fr" ? "en" : "fr")}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", color: "rgba(255,255,255,0.7)", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  <span style={{ fontSize: "20px" }}>{lang === "fr" ? "🇫🇷" : "🇬🇧"}</span>
+                  <span style={{ fontSize: "14px", fontWeight: 500 }}>{lang === "fr" ? "Français" : "English"}</span>
+                </button>
+                <button
+                  onClick={() => setCurrency(currency === "USD" ? "FCFA" : "USD")}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", color: "rgba(255,255,255,0.7)", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  <span style={{ fontSize: "20px" }}>🇺🇸</span>
+                  <span style={{ fontSize: "14px", fontWeight: 500 }}>{currency}</span>
                 </button>
               </div>
-
-              {/* Nav items */}
-              <nav className="flex-1 overflow-y-auto">
-                <Link
-                  href="/"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
-                >
-                  {t("nav_home")}
-                </Link>
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-
-                {/* Logged in user */}
-                {user && (
-                  <>
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
-                    >
-                      {t("nav_dashboard")}
-                    </Link>
-                    <button
-                      onClick={() => { logoutMutation.mutate(); setIsMobileMenuOpen(false); }}
-                      className="w-full flex items-center gap-2 px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-red-400 hover:text-red-300 hover:bg-white/5 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" /> {t("nav_logout")}
-                    </button>
-                  </>
-                )}
-
-                {!user && (
-                  <>
-                    <Link
-                      href="/login"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
-                    >
-                      {t("nav_login")}
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
-                    >
-                      {t("nav_start_free")}
-                    </Link>
-                  </>
-                )}
-
-                {/* Language & Currency */}
-                <div className="px-7 pt-8 pb-2 space-y-5">
-                  <button
-                    onClick={() => setLang(lang === "fr" ? "en" : "fr")}
-                    className="flex items-center gap-3 text-white/70 hover:text-white transition-colors"
-                  >
-                    <span className="text-xl">{lang === "fr" ? "🇫🇷" : "🇬🇧"}</span>
-                    <span className="text-sm font-medium">{lang === "fr" ? "Français" : "English"}</span>
-                  </button>
-                  <button
-                    onClick={() => setCurrency(currency === "USD" ? "FCFA" : "USD")}
-                    className="flex items-center gap-3 text-white/70 hover:text-white transition-colors"
-                  >
-                    <span className="text-xl">🇺🇸</span>
-                    <span className="text-sm font-medium">{currency}</span>
-                  </button>
-                </div>
-              </nav>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </nav>
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <main className="flex-1 relative z-10 flex flex-col">
