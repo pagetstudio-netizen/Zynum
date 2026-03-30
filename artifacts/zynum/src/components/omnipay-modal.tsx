@@ -583,7 +583,7 @@ export function OmnipayModal({
                         {operator.otpHint && (
                           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-orange-50 border border-orange-200">
                             <Info className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-                            <p className={`${operator.otpHint.length > 80 ? "text-[10px]" : "text-xs"} text-orange-700 leading-relaxed`}>
+                            <p className={`${operator.otpHint.length > 130 ? "text-[11px]" : "text-xs"} text-orange-700 leading-relaxed font-medium`}>
                               {operator.otpHint}
                             </p>
                           </div>
