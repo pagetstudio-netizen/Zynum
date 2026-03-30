@@ -194,125 +194,116 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* ── Mobile menu — full screen overlay ─────────────────────────────── */}
+      {/* ── Mobile menu — dark sidebar overlay ─────────────────────────────── */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.25 }}
-            className="md:hidden fixed inset-0 z-50 flex flex-col bg-white"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-primary/20">
-                  <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-                </div>
-                <span className="font-display font-bold text-xl text-gray-900">ZyNum</span>
-              </div>
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Nav items */}
-            <nav className="flex-1 overflow-y-auto">
-              {/* Accueil */}
-              <Link
-                href="/"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-6 py-4 border-b border-gray-100 text-base font-semibold transition-colors ${location === "/" ? "text-primary bg-primary/5" : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"}`}
-              >
-                <span>{t("nav_home")}</span>
-                {location === "/" && <div className="w-2 h-2 rounded-full bg-primary" />}
-              </Link>
-              {navLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden fixed inset-0 z-40 bg-black/50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            {/* Dark sidebar */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.25 }}
+              className="md:hidden fixed top-0 right-0 bottom-0 z-50 w-72 flex flex-col"
+              style={{ background: "#2b2d32" }}
+            >
+              {/* Close button */}
+              <div className="flex items-center justify-end px-5 py-4">
+                <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-6 py-4 border-b border-gray-100 text-base font-semibold transition-colors ${
-                    location === link.href ? "text-primary bg-primary/5" : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
+                  className="w-9 h-9 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                 >
-                  <span>{link.label}</span>
-                  {location === link.href && <div className="w-2 h-2 rounded-full bg-primary" />}
-                </Link>
-              ))}
-
-              {/* Language selector */}
-              <div className="px-6 py-4 border-b border-gray-100">
-                <p className="text-xs text-gray-400 mb-3 font-medium uppercase tracking-wider">{t("menu_language")}</p>
-                <div className="flex items-center gap-2">
-                  {(["fr", "en"] as const).map((l) => (
-                    <button
-                      key={l}
-                      onClick={() => setLang(l)}
-                      className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border uppercase ${
-                        lang === l
-                          ? "bg-primary text-white border-primary shadow-md shadow-primary/20"
-                          : "text-gray-500 border-gray-200 hover:text-gray-900 hover:bg-gray-50"
-                      }`}
-                    >
-                      {l === "fr" ? "🇫🇷 Français" : "🇬🇧 English"}
-                    </button>
-                  ))}
-                </div>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Logged in user info */}
-              {user && (
-                <div className="px-6 py-4 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-blue-400 flex items-center justify-center text-white font-bold">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-gray-900 font-semibold text-sm">{user.name}</p>
-                      <p className="text-xs text-gray-400">{user.email}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </nav>
-
-            {/* Bottom CTA */}
-            <div className="px-5 py-6 space-y-3 border-t border-gray-100">
-              {user ? (
-                <>
-                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25">
-                      {t("nav_dashboard")}
-                    </Button>
-                  </Link>
-                  <button
-                    onClick={() => { logoutMutation.mutate(); setIsMobileMenuOpen(false); }}
-                    className="w-full h-12 flex items-center justify-center gap-2 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 font-semibold text-base transition-colors"
+              {/* Nav items */}
+              <nav className="flex-1 overflow-y-auto">
+                <Link
+                  href="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  {t("nav_home")}
+                </Link>
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
                   >
-                    <LogOut className="w-4 h-4" /> {t("nav_logout")}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25">
-                      {t("nav_start_free")}
-                    </Button>
+                    {link.label}
                   </Link>
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full h-12 border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold text-base rounded-xl">
+                ))}
+
+                {/* Logged in user */}
+                {user && (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      {t("nav_dashboard")}
+                    </Link>
+                    <button
+                      onClick={() => { logoutMutation.mutate(); setIsMobileMenuOpen(false); }}
+                      className="w-full flex items-center gap-2 px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-red-400 hover:text-red-300 hover:bg-white/5 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" /> {t("nav_logout")}
+                    </button>
+                  </>
+                )}
+
+                {!user && (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
+                    >
                       {t("nav_login")}
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </motion.div>
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center px-7 py-4 border-b border-white/10 text-sm font-bold uppercase tracking-widest text-white/90 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      {t("nav_start_free")}
+                    </Link>
+                  </>
+                )}
+
+                {/* Language & Currency */}
+                <div className="px-7 pt-8 pb-2 space-y-5">
+                  <button
+                    onClick={() => setLang(lang === "fr" ? "en" : "fr")}
+                    className="flex items-center gap-3 text-white/70 hover:text-white transition-colors"
+                  >
+                    <span className="text-xl">{lang === "fr" ? "🇫🇷" : "🇬🇧"}</span>
+                    <span className="text-sm font-medium">{lang === "fr" ? "Français" : "English"}</span>
+                  </button>
+                  <button
+                    onClick={() => setCurrency(currency === "USD" ? "FCFA" : "USD")}
+                    className="flex items-center gap-3 text-white/70 hover:text-white transition-colors"
+                  >
+                    <span className="text-xl">🇺🇸</span>
+                    <span className="text-sm font-medium">{currency}</span>
+                  </button>
+                </div>
+              </nav>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
