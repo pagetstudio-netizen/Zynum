@@ -66,23 +66,22 @@ export default function Home() {
   ];
 
   const FEATURES = [
-    { icon: <Zap className="w-6 h-6 text-yellow-400" />, bg: "bg-yellow-400/10 border-yellow-400/20", title: t("home_feat_instant"), desc: t("home_feat_instant_desc") },
-    { icon: <Globe2 className="w-6 h-6 text-blue-400" />, bg: "bg-blue-400/10 border-blue-400/20", title: t("home_feat_global"), desc: t("home_feat_global_desc") },
-    { icon: <ShieldCheck className="w-6 h-6 text-green-400" />, bg: "bg-green-400/10 border-green-400/20", title: t("home_feat_secure"), desc: t("home_feat_secure_desc") },
-    { icon: <Headphones className="w-6 h-6 text-purple-400" />, bg: "bg-purple-400/10 border-purple-400/20", title: t("home_feat_support"), desc: t("home_feat_support_desc") },
+    { icon: <Zap className="w-6 h-6 text-yellow-500" />, bg: "bg-yellow-50 border-yellow-200", title: t("home_feat_instant"), desc: t("home_feat_instant_desc") },
+    { icon: <Globe2 className="w-6 h-6 text-blue-500" />, bg: "bg-blue-50 border-blue-200", title: t("home_feat_global"), desc: t("home_feat_global_desc") },
+    { icon: <ShieldCheck className="w-6 h-6 text-green-500" />, bg: "bg-green-50 border-green-200", title: t("home_feat_secure"), desc: t("home_feat_secure_desc") },
+    { icon: <Headphones className="w-6 h-6 text-purple-500" />, bg: "bg-purple-50 border-purple-200", title: t("home_feat_support"), desc: t("home_feat_support_desc") },
   ];
 
   return (
     <div className="w-full flex flex-col items-center overflow-x-hidden">
 
       {/* ── Hero ───────────────────────────────────────────────────── */}
-      <section className="w-full relative min-h-[92vh] flex items-center justify-center overflow-hidden">
+      <section className="w-full relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        {/* Soft decorative blobs */}
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-blue-600/20 blur-[120px]" />
-          <div className="absolute bottom-0 right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/15 blur-[100px]" />
-          <div className="absolute top-[30%] right-[15%] w-[350px] h-[350px] rounded-full bg-rose-500/10 blur-[100px]" />
-          <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] rounded-full bg-cyan-500/8 blur-[80px]" />
-          <div className="absolute inset-0 grid-overlay-60" />
+          <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-blue-200/30 blur-[120px]" />
+          <div className="absolute bottom-0 right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px]" />
+          <div className="absolute top-[30%] right-[15%] w-[350px] h-[350px] rounded-full bg-rose-200/20 blur-[100px]" />
         </div>
 
         <div className="container max-w-7xl mx-auto px-4 relative z-10 py-24 flex flex-col lg:flex-row items-center gap-16">
@@ -92,15 +91,15 @@ export default function Home() {
               {t("home_badge")}
             </motion.div>
 
-            <motion.h1 {...fadeUp(0.1)} className="text-5xl md:text-6xl xl:text-7xl font-display font-extrabold text-white leading-[1.08] tracking-tight mb-6">
+            <motion.h1 {...fadeUp(0.1)} className="text-5xl md:text-6xl xl:text-7xl font-display font-extrabold text-gray-900 leading-[1.08] tracking-tight mb-6">
               {t("home_hero_title1")}<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-primary to-rose-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-primary to-rose-500">
                 {t("home_hero_accent")}
               </span>{" "}
               {t("home_hero_title2")}
             </motion.h1>
 
-            <motion.p {...fadeUp(0.2)} className="text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed">
+            <motion.p {...fadeUp(0.2)} className="text-lg text-gray-500 max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed">
               {t("home_hero_sub")}
             </motion.p>
 
@@ -111,42 +110,42 @@ export default function Home() {
                 </Button>
               </Link>
               <Link href="/buy">
-                <Button size="lg" variant="outline" className="h-14 px-8 rounded-xl text-base font-semibold border-white/20 bg-white/5 hover:bg-white/10 text-white transition-all">
+                <Button size="lg" variant="outline" className="h-14 px-8 rounded-xl text-base font-semibold border-gray-300 bg-white hover:bg-gray-50 text-gray-800 transition-all shadow-sm">
                   {t("nav_buy")}
                 </Button>
               </Link>
             </motion.div>
 
-            <motion.div {...fadeUp(0.4)} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-10 max-w-sm lg:max-w-none mx-auto lg:mx-0 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] px-3 py-2 rounded-lg"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> {t("home_cta_no_card")}</span>
-              <span className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] px-3 py-2 rounded-lg"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> {t("footer_countries")}</span>
-              <span className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] px-3 py-2 rounded-lg"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> {t("home_feat_instant")}</span>
+            <motion.div {...fadeUp(0.4)} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-10 max-w-sm lg:max-w-none mx-auto lg:mx-0 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm"><CheckCircle className="w-4 h-4 text-green-500 shrink-0" /> {t("home_cta_no_card")}</span>
+              <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm"><CheckCircle className="w-4 h-4 text-green-500 shrink-0" /> {t("footer_countries")}</span>
+              <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm"><CheckCircle className="w-4 h-4 text-green-500 shrink-0" /> {t("home_feat_instant")}</span>
             </motion.div>
           </div>
 
-          {/* Right: floating card */}
+          {/* Right: floating card — intentionally kept dark as product demo */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
             className="flex-shrink-0 w-full max-w-sm lg:max-w-md relative"
           >
-            <div className="relative rounded-3xl border border-white/10 bg-[#0d1526]/90 backdrop-blur-xl p-6 shadow-2xl shadow-black/50">
+            <div className="relative rounded-3xl border border-white/10 bg-[#0d1526]/90 backdrop-blur-xl p-6 shadow-2xl shadow-black/20">
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
                   <img src="https://cdn.simpleicons.org/telegram/ffffff" className="w-6 h-6" alt="Telegram" />
                 </div>
                 <div>
                   <p className="text-white font-bold">Telegram</p>
-                  <p className="text-muted-foreground text-xs">{t("login_subtitle").split("/")[0].trim()}</p>
+                  <p className="text-white/50 text-xs">{t("login_subtitle").split("/")[0].trim()}</p>
                 </div>
                 <span className="ml-auto text-xs font-semibold text-green-400 bg-green-400/10 border border-green-400/20 px-2 py-0.5 rounded-full">ACTIF</span>
               </div>
 
               <div className="bg-black/40 rounded-2xl p-4 mb-4 border border-white/5">
-                <p className="text-xs text-muted-foreground mb-1">{t("buy_phone")}</p>
+                <p className="text-xs text-white/40 mb-1">{t("buy_phone")}</p>
                 <p className="text-2xl font-bold text-white font-mono tracking-wider">+63 912 345 6789</p>
-                <p className="text-xs text-muted-foreground mt-1">🇵🇭 Philippines · virtual2</p>
+                <p className="text-xs text-white/40 mt-1">🇵🇭 Philippines · virtual2</p>
               </div>
 
               <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 flex items-start gap-3">
@@ -154,18 +153,18 @@ export default function Home() {
                   <MessageSquare className="w-4 h-4 text-green-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">SMS reçu il y a 3 sec</p>
+                  <p className="text-xs text-white/40 mb-0.5">SMS reçu il y a 3 sec</p>
                   <p className="text-sm text-white font-medium">Telegram code: <span className="text-green-400 font-bold text-lg">84 271</span></p>
                 </div>
               </div>
 
               <div className="mt-4 flex gap-2">
                 <div className="flex-1 bg-primary/10 border border-primary/20 rounded-xl p-3 text-center">
-                  <p className="text-xs text-muted-foreground">{t("buy_price")}</p>
+                  <p className="text-xs text-white/40">{t("buy_price")}</p>
                   <p className="font-bold text-white">62 FCFA</p>
                 </div>
                 <div className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-                  <p className="text-xs text-muted-foreground">{t("buy_time_left")}</p>
+                  <p className="text-xs text-white/40">{t("buy_time_left")}</p>
                   <p className="font-bold text-white">3 sec</p>
                 </div>
               </div>
@@ -177,18 +176,18 @@ export default function Home() {
             </div>
 
             <Link href="/register">
-              <div className="absolute -bottom-4 -left-4 bg-[#0d1526] border border-white/10 rounded-2xl px-4 py-3 shadow-xl flex items-center gap-2 cursor-pointer hover:bg-[#111d38] hover:border-white/20 transition-all group">
+              <div className="absolute -bottom-4 -left-4 bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-xl flex items-center gap-2 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all group">
                 <div className="relative">
                   <div className="flex -space-x-2">
                     {["/avatar1.jpeg", "/avatar2.jpeg", "/avatar3.jpeg"].map((src, i) => (
-                      <img key={i} src={src} alt="user" className="w-6 h-6 rounded-full border-2 border-[#0d1526] object-cover" style={{ zIndex: 3 - i }} />
+                      <img key={i} src={src} alt="user" className="w-6 h-6 rounded-full border-2 border-white object-cover" style={{ zIndex: 3 - i }} />
                     ))}
                   </div>
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-[#0d1526] animate-pulse" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-white animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-white text-xs font-bold group-hover:text-primary transition-colors">50K+ utilisateurs</p>
-                  <p className="text-[10px] text-muted-foreground leading-none">Rejoindre →</p>
+                  <p className="text-gray-900 text-xs font-bold group-hover:text-primary transition-colors">50K+ utilisateurs</p>
+                  <p className="text-[10px] text-gray-400 leading-none">Rejoindre →</p>
                 </div>
               </div>
             </Link>
@@ -197,7 +196,7 @@ export default function Home() {
       </section>
 
       {/* ── Stats ──────────────────────────────────────────────────── */}
-      <section className="w-full border-y border-white/5 bg-gradient-to-r from-blue-950/30 via-white/[0.02] to-rose-950/20">
+      <section className="w-full border-y border-gray-200 bg-white">
         <div className="container max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {STATS.map((s, i) => (
@@ -209,8 +208,8 @@ export default function Home() {
                 transition={{ delay: i * 0.1 }}
                 className="text-center"
               >
-                <p className="text-4xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-1">{s.value}</p>
-                <p className="text-sm text-muted-foreground">{s.label}</p>
+                <p className="text-4xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-primary to-blue-400 mb-1">{s.value}</p>
+                <p className="text-sm text-gray-500">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -218,19 +217,14 @@ export default function Home() {
       </section>
 
       {/* ── Services ───────────────────────────────────────────────── */}
-      <section className="w-full py-24 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-[-10%] w-[400px] h-[400px] rounded-full bg-rose-500/5 blur-[100px]" />
-          <div className="absolute bottom-0 right-[-5%] w-[300px] h-[300px] rounded-full bg-blue-600/10 blur-[80px]" />
-        </div>
+      <section className="w-full py-24 relative overflow-hidden bg-gray-50">
         <div className="container max-w-7xl mx-auto px-4 relative z-10">
           <motion.div {...fadeUp()} className="text-center mb-14">
-            <p className="text-rose-400 font-semibold text-sm uppercase tracking-widest mb-3">200+ {t("home_stats_services").toLowerCase()}</p>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">{t("home_services_title")}</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">{t("home_services_sub")}</p>
+            <p className="text-rose-500 font-semibold text-sm uppercase tracking-widest mb-3">200+ {t("home_stats_services").toLowerCase()}</p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-4">{t("home_services_title")}</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">{t("home_services_sub")}</p>
           </motion.div>
 
-          {/* ── Services populaires (grande mise en avant) ── */}
           {(() => {
             const FEATURED_IDS = ["whatsapp","telegram","facebook","tiktok","instagram","google","twitter","discord","snapchat","netflix"];
             const all = servicesData?.services ?? [];
@@ -247,14 +241,14 @@ export default function Home() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.04 }}
-                        className="relative flex flex-col items-center gap-3 p-5 rounded-2xl cursor-pointer group overflow-hidden"
-                        style={{ background: `linear-gradient(135deg, ${svc.color}18 0%, ${svc.color}08 100%)`, border: `1px solid ${svc.color}30` }}
+                        className="relative flex flex-col items-center gap-3 p-5 rounded-2xl cursor-pointer group overflow-hidden bg-white shadow-sm hover:shadow-md transition-all"
+                        style={{ border: `1px solid ${svc.color}30` }}
                       >
                         <div className="group-hover:scale-110 transition-transform duration-200">
                           <HomeSvcLogo icon={svc.icon} color={svc.color} name={svc.name} size={52} />
                         </div>
-                        <span className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors text-center leading-tight">{svc.name}</span>
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${svc.color}28 0%, transparent 100%)` }} />
+                        <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors text-center leading-tight">{svc.name}</span>
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${svc.color}12 0%, transparent 100%)` }} />
                       </motion.div>
                     </Link>
                   ))}
@@ -262,9 +256,9 @@ export default function Home() {
 
                 {/* Divider */}
                 <div className="flex items-center gap-4 my-6">
-                  <div className="flex-1 h-px bg-white/5" />
-                  <span className="text-xs text-muted-foreground/60 uppercase tracking-widest">Autres services</span>
-                  <div className="flex-1 h-px bg-white/5" />
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-400 uppercase tracking-widest">Autres services</span>
+                  <div className="flex-1 h-px bg-gray-200" />
                 </div>
 
                 {/* Other services smaller grid */}
@@ -276,12 +270,12 @@ export default function Home() {
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.02 }}
-                        className="flex flex-col items-center gap-2.5 p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 transition-all cursor-pointer group"
+                        className="flex flex-col items-center gap-2.5 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer group"
                       >
                         <div className="group-hover:scale-110 transition-transform">
                           <HomeSvcLogo icon={svc.icon} color={svc.color} name={svc.name} size={40} />
                         </div>
-                        <span className="text-[11px] font-medium text-muted-foreground group-hover:text-white transition-colors text-center leading-tight line-clamp-1">{svc.name}</span>
+                        <span className="text-[11px] font-medium text-gray-500 group-hover:text-gray-800 transition-colors text-center leading-tight line-clamp-1">{svc.name}</span>
                       </motion.div>
                     </Link>
                   ))}
@@ -292,7 +286,7 @@ export default function Home() {
 
           <div className="text-center mt-10">
             <Link href="/buy">
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:text-white">
+              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900">
                 {t("home_see_prices")} <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
@@ -301,13 +295,11 @@ export default function Home() {
       </section>
 
       {/* ── How it works ───────────────────────────────────────────── */}
-      <section className="w-full py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-950/15 to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-1/4 w-[300px] h-[300px] rounded-full bg-rose-500/5 blur-[90px] pointer-events-none" />
+      <section className="w-full py-24 relative overflow-hidden bg-white">
         <div className="container max-w-7xl mx-auto px-4 relative z-10">
           <motion.div {...fadeUp()} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">{t("home_how_title")}</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">{t("home_how_sub")}</p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-4">{t("home_how_title")}</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">{t("home_how_sub")}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
@@ -319,12 +311,12 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="relative flex flex-col items-center text-center p-8 rounded-3xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] transition-all"
+                className="relative flex flex-col items-center text-center p-8 rounded-3xl border border-gray-200 bg-gray-50 hover:bg-white hover:shadow-md transition-all"
               >
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-5">{step.icon}</div>
-                <span className="absolute top-6 right-6 text-4xl font-black text-white/5 leading-none select-none">{step.num}</span>
-                <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
+                <span className="absolute top-6 right-6 text-4xl font-black text-gray-100 leading-none select-none">{step.num}</span>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -340,10 +332,10 @@ export default function Home() {
       </section>
 
       {/* ── Features ───────────────────────────────────────────────── */}
-      <section className="w-full py-24 border-t border-white/5">
+      <section className="w-full py-24 border-t border-gray-200 bg-gray-50">
         <div className="container max-w-7xl mx-auto px-4">
           <motion.div {...fadeUp()} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white">{t("home_why_title")}</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900">{t("home_why_title")}</h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -354,22 +346,19 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-2xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] transition-all group"
+                className="p-6 rounded-2xl border border-gray-200 bg-white hover:shadow-md transition-all group"
               >
                 <div className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-5 ${feat.bg} group-hover:scale-110 transition-transform`}>{feat.icon}</div>
-                <h3 className="text-lg font-bold text-white mb-2">{feat.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feat.desc}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{feat.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{feat.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── API CTA ────────────────────────────────────────────────── */}
-      <section className="w-full py-24 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-rose-500/5" />
-        </div>
+      {/* ── API CTA — intentionally dark contrast section ────────── */}
+      <section className="w-full py-24 relative overflow-hidden bg-white">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0d1a35] via-[#0d1226] to-[#1a0d1a] p-8 md:p-16 text-center relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/15 blur-[80px] rounded-full pointer-events-none" />
@@ -381,7 +370,7 @@ export default function Home() {
               <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-5">
                 Intégrez ZyNum<br />dans votre application
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+              <p className="text-lg text-white/60 max-w-2xl mx-auto mb-10">
                 API REST simple et puissante. Documentation complète, uptime garanti à 99.9%.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -402,19 +391,19 @@ export default function Home() {
       </section>
 
       {/* ── Final CTA ──────────────────────────────────────────────── */}
-      <section className="w-full py-24 border-t border-white/5 relative overflow-hidden">
+      <section className="w-full py-24 border-t border-gray-200 relative overflow-hidden bg-gradient-to-b from-white to-blue-50">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-rose-500/10 via-primary/5 to-transparent blur-[80px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-primary/5 to-transparent blur-[80px]" />
         </div>
         <div className="container max-w-4xl mx-auto px-4 text-center relative z-10">
           <motion.div {...fadeUp()}>
             <div className="flex justify-center mb-6 gap-1">
               {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />)}
             </div>
-            <h2 className="text-3xl md:text-5xl font-display font-extrabold text-white mb-5">
+            <h2 className="text-3xl md:text-5xl font-display font-extrabold text-gray-900 mb-5">
               {t("home_cta_title")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-rose-400">{t("home_cta_accent")}</span> {t("home_cta_title2")}
             </h2>
-            <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
+            <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto">
               {t("home_cta_sub")}
             </p>
             <Link href="/register">
@@ -422,7 +411,7 @@ export default function Home() {
                 {t("home_cta_btn")} <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
-            <p className="text-xs text-muted-foreground mt-4">{t("home_cta_no_card")}</p>
+            <p className="text-xs text-gray-400 mt-4">{t("home_cta_no_card")}</p>
           </motion.div>
         </div>
       </section>

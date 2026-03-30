@@ -34,12 +34,7 @@ const queryClient = new QueryClient({
 function ThemeByRoute() {
   const [location] = useLocation();
   useEffect(() => {
-    const isHome = location === "/" || location === "";
-    if (isHome) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.remove("dark");
   }, [location]);
   return null;
 }
