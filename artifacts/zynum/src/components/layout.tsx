@@ -38,9 +38,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   });
 
   const navLinks = [
-    { href: "/buy",     label: t("nav_buy"),     icon: <Phone         className="w-4 h-4 mr-2" /> },
-    { href: "/aide",    label: t("nav_help"),    icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
-    { href: "/contact", label: t("nav_contact"), icon: <MessageSquare className="w-4 h-4 mr-2" /> },
+    { href: "/login",   label: t("nav_services"), icon: <Phone         className="w-4 h-4 mr-2" /> },
+    { href: "/login",   label: t("nav_pricing"),  icon: <Wallet        className="w-4 h-4 mr-2" /> },
+    { href: "/aide",    label: t("nav_help"),     icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
+    { href: "/about",   label: t("nav_about"),    icon: <MessageSquare className="w-4 h-4 mr-2" /> },
   ];
 
   const footerLinks = {
@@ -97,7 +98,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <nav className="hidden md:flex items-center space-x-0.5">
               {navLinks.map((link) => (
                 <Link
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     location === link.href
@@ -232,7 +233,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </Link>
               {navLinks.map((link) => (
                 <Link
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center justify-between px-6 py-4 border-b border-gray-100 text-base font-semibold transition-colors ${
