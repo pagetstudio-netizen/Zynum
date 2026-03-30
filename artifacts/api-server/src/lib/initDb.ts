@@ -134,6 +134,13 @@ async function ensureSchema() {
       CONSTRAINT "social_links_platform_unique" UNIQUE("platform")
     )
   `);
+  // Deduplicate social_links by platform before adding unique constraint (keep highest id per platform)
+  await db.execute(sql`
+    DELETE FROM social_links
+    WHERE id NOT IN (
+      SELECT MAX(id) FROM social_links GROUP BY platform
+    )
+  `).catch(() => {});
   // Ensure the unique constraint exists on already-created tables (idempotent)
   await db.execute(sql`
     ALTER TABLE social_links ADD CONSTRAINT social_links_platform_unique UNIQUE (platform)
