@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import iconOverview  from "@assets/1239292_1774829368223.png";
 import iconBuy       from "@assets/84426_1774829368186.png";
-import iconHistory   from "@assets/blog_1774828482035.png";
+import iconHistory   from "@assets/5708960_1774829436660.png";
 import iconRecharge  from "@assets/2534215_1774829355101.png";
 import iconProfile   from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
 import iconHelp      from "@assets/images_(12)_1774828482000.png";
