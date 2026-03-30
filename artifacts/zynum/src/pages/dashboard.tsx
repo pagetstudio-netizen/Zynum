@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import {
   LogOut, ShoppingCart, HelpCircle,
   MessageSquare, User, PlusCircle,
-  Wallet, Package, TrendingUp, ChevronRight,
+  CreditCard, Package, ChevronRight,
   Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Globe2,
 } from "lucide-react";
@@ -66,7 +66,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
         {/* Solde */}
         <div className="rounded-2xl p-5 bg-gradient-to-br from-red-500 to-primary text-white shadow-lg shadow-red-500/20 flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <Wallet className="w-6 h-6 text-white" />
+            <CreditCard className="w-6 h-6 text-white" />
           </div>
           <div>
             <p className="text-sm text-white/70 mb-1">{t("dash_balance")}</p>
@@ -77,7 +77,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
         {/* Commandes */}
         <div className="rounded-2xl p-5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20 flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <Package className="w-6 h-6 text-white" />
+            <ShoppingCart className="w-6 h-6 text-white" />
           </div>
           <div>
             <p className="text-sm text-white/70 mb-1">{t("dash_orders_total")}</p>
@@ -88,7 +88,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
         {/* SMS reçus */}
         <div className="rounded-2xl p-5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-6 h-6 text-white" />
+            <MessageSquare className="w-6 h-6 text-white" />
           </div>
           <div>
             <p className="text-sm text-white/70 mb-1">{t("dash_sms_received")}</p>
