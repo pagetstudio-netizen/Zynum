@@ -228,6 +228,20 @@ html.light [style*="background:#0d"] .text-white,
 html.light [style*="background: #0a"] .text-white,
 html.light [style*="background:#0a"] .text-white { color: #ffffff !important; }
 
+/* ── 4b. Intentionally dark cards (product demos, API sections) ─────────── */
+html.light .dark-card,
+html.light .dark-card .text-white,
+html.light .dark-card .text-white\/90,
+html.light .dark-card .text-white\/80,
+html.light .dark-card .text-white\/70,
+html.light .dark-card .text-white\/60,
+html.light .dark-card .text-white\/50,
+html.light .dark-card .text-white\/40,
+html.light .dark-card .text-white\/30,
+html.light .dark-card .text-white\/20,
+html.light .dark-card .text-white\/10 { color: #ffffff !important; }
+html.light .dark-card .text-muted-foreground { color: rgba(255,255,255,0.55) !important; }
+
 /* ── 5. Placeholders ─────────────────────────────────────────────────────── */
 html.light .placeholder\:text-white\/30::placeholder { color: rgba(0,0,0,0.30) !important; }
 html.light .placeholder\:text-white\/20::placeholder { color: rgba(0,0,0,0.25) !important; }
@@ -286,10 +300,6 @@ html.light .divide-white\/5 > * + * { border-color: rgba(0,0,0,0.07) !important;
 
 /* ── 9. Ring colors ──────────────────────────────────────────────────────── */
 html.light .focus-visible\:ring-primary\/50:focus-visible { --tw-ring-color: hsl(var(--primary) / 0.4); }
-
-/* ── 10. Gradient glow orbs — reduced opacity ───────────────────────────── */
-html.light .blur-\[120px\],
-html.light .blur-\[100px\] { opacity: 0.25; }
 
 /* ── 11. Shadow adjustments ──────────────────────────────────────────────── */
 html.light .shadow-black\/50 { --tw-shadow-color: rgba(0,0,0,0.15); }

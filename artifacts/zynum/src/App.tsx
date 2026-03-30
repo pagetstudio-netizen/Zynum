@@ -35,6 +35,7 @@ function ThemeByRoute() {
   const [location] = useLocation();
   useEffect(() => {
     document.documentElement.classList.remove("dark");
+    document.documentElement.classList.add("light");
   }, [location]);
   return null;
 }

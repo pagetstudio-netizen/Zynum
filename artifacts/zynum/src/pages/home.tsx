@@ -131,7 +131,7 @@ export default function Home() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="flex-shrink-0 w-full max-w-sm lg:max-w-md relative"
           >
-            <div className="relative rounded-3xl border border-white/10 bg-[#0d1526]/90 backdrop-blur-xl p-6 shadow-2xl shadow-black/20">
+            <div className="dark-card relative rounded-3xl border border-white/10 bg-[#0d1526]/90 backdrop-blur-xl p-6 shadow-2xl shadow-black/20">
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
                   <img src="https://cdn.simpleicons.org/telegram/ffffff" className="w-6 h-6" alt="Telegram" />
@@ -361,7 +361,7 @@ export default function Home() {
       {/* ── API CTA — intentionally dark contrast section ────────── */}
       <section className="w-full py-24 relative overflow-hidden bg-white">
         <div className="container max-w-6xl mx-auto px-4">
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0d1a35] via-[#0d1226] to-[#1a0d1a] p-8 md:p-16 text-center relative overflow-hidden shadow-2xl">
+          <div className="dark-card rounded-3xl border border-white/10 bg-gradient-to-br from-[#0d1a35] via-[#0d1226] to-[#1a0d1a] p-8 md:p-16 text-center relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/15 blur-[80px] rounded-full pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-rose-500/10 blur-[60px] rounded-full pointer-events-none" />
             <div className="relative z-10">
