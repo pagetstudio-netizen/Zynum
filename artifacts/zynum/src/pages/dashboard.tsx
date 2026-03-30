@@ -3,11 +3,20 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import {
-  LayoutDashboard, ShoppingCart, History, User, LogOut,
-  Wallet, Package, TrendingUp, ChevronRight, PlusCircle,
-  Check, Menu, X, Shield, HelpCircle, MessageSquare,
+  LogOut, ShoppingCart, HelpCircle,
+  MessageSquare, User, PlusCircle,
+  Wallet, Package, TrendingUp, ChevronRight,
+  Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Sun, Moon, Globe2,
 } from "lucide-react";
+import iconOverview  from "@assets/1-2_1774828481921.png";
+import iconBuy       from "@assets/images_(10)_1774828482052.png";
+import iconHistory   from "@assets/blog_1774828482035.png";
+import iconRecharge  from "@assets/4-1_1774828481905.png";
+import iconProfile   from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
+import iconHelp      from "@assets/images_(12)_1774828482000.png";
+import iconSupport   from "@assets/2-2_1774828481887.png";
+import iconEmpty     from "@assets/no_1774828481941.png";
 import { useTheme } from "@/hooks/use-theme";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
@@ -107,7 +116,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
         </div>
         {orders.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-sm">
-            <Package className="w-10 h-10 mx-auto mb-3 opacity-20" />
+            <img src={iconEmpty} alt="Aucune commande" className="w-20 h-20 mx-auto mb-3 object-contain opacity-80" />
             {t("dash_no_orders")}
             <div className="mt-4">
               <button
@@ -606,14 +615,14 @@ export default function Dashboard() {
     );
   }
 
-  const NAV = [
-    { id: "overview",  label: t("dash_tab_overview"), icon: LayoutDashboard },
-    { id: "buy",       label: t("dash_tab_buy"),      icon: ShoppingCart },
-    { id: "history",   label: t("dash_tab_history"),  icon: History },
-    { id: "recharge",  label: t("dash_tab_recharge"), icon: PlusCircle },
-    { id: "profile",   label: t("dash_tab_profile"),  icon: User },
-    ...(user?.isAdmin ? [{ id: "admin", label: "Administration", icon: Shield }] : []),
-  ] as { id: Tab; label: string; icon: React.ElementType }[];
+  const NAV: { id: Tab; label: string; imgSrc?: string; isLucide?: boolean }[] = [
+    { id: "overview",  label: t("dash_tab_overview"), imgSrc: iconOverview },
+    { id: "buy",       label: t("dash_tab_buy"),      imgSrc: iconBuy },
+    { id: "history",   label: t("dash_tab_history"),  imgSrc: iconHistory },
+    { id: "recharge",  label: t("dash_tab_recharge"), imgSrc: iconRecharge },
+    { id: "profile",   label: t("dash_tab_profile"),  imgSrc: iconProfile },
+    ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", isLucide: true }] : []),
+  ];
 
   const formatPrice = (v: number) =>
     currency === "FCFA" ? `${Math.round(v * 620).toLocaleString()} FCFA` : `$${v.toFixed(2)}`;
@@ -662,7 +671,6 @@ export default function Dashboard() {
         {/* Nav */}
         <nav className="flex-1 py-4 px-3 space-y-1">
           {NAV.map((item) => {
-            const Icon = item.icon;
             const active = activeTab === item.id;
             return (
               <button
@@ -675,7 +683,10 @@ export default function Dashboard() {
                     : "text-muted-foreground hover:text-white hover:bg-white/5"}
                 `}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                {item.imgSrc
+                  ? <img src={item.imgSrc} alt={item.label} className="w-5 h-5 shrink-0 object-contain" />
+                  : <Shield className="w-4 h-4 shrink-0" />
+                }
                 {item.label}
               </button>
             );
@@ -687,14 +698,14 @@ export default function Dashboard() {
               href="/aide"
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
             >
-              <HelpCircle className="w-4 h-4 shrink-0" />
+              <img src={iconHelp} alt="Centre d'aide" className="w-5 h-5 shrink-0 object-contain" />
               {t("dash_help_center")}
             </Link>
             <Link
               href="/contact"
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
             >
-              <MessageSquare className="w-4 h-4 shrink-0" />
+              <img src={iconSupport} alt="Support" className="w-5 h-5 shrink-0 object-contain" />
               {t("profile_contact_support")}
             </Link>
           </div>
@@ -743,7 +754,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors" title="Centre d'aide">
-              <HelpCircle className="w-4 h-4" />
+              <img src={iconHelp} alt="Centre d'aide" className="w-4 h-4 object-contain" />
             </Link>
             {/* User widget */}
             <UserWidget user={user} onProfileClick={() => setActiveTab("profile")} onLogout={() => logoutMutation.mutate({})} />

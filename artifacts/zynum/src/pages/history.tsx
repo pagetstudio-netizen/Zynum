@@ -7,6 +7,7 @@ import {
   Package, CheckCircle2, Clock, XCircle, Copy, Check,
   X, Loader2,
 } from "lucide-react";
+import iconEmpty from "@assets/no_1774828481941.png";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
@@ -211,7 +212,7 @@ export default function OrderHistory() {
 
       {!isLoading && orders.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <History className="w-12 h-12 mb-4 text-muted-foreground/30" />
+          <img src={iconEmpty} alt="Aucune commande" className="w-24 h-24 mb-4 object-contain opacity-80" />
           <p className="text-lg font-semibold text-white mb-1">{t("history_no_orders")}</p>
           <p className="text-muted-foreground text-sm mb-5">{t("history_no_orders_desc")}</p>
           <button
