@@ -923,6 +923,170 @@ function AdminMessages() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   SECTION: DISCOUNT CODES
+══════════════════════════════════════════════════════════════════════════════ */
+function AdminDiscountCodes() {
+  const { toast } = useToast();
+  const { data, loading, refetch } = useAdminFetch<any>("/v1/admin/discount-codes", []);
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [form, setForm] = useState({ code: "", percent: "", country: "", isActive: false });
+  const [saving, setSaving] = useState(false);
+
+  const codes: any[] = data?.codes ?? [];
+
+  const reset = () => { setForm({ code: "", percent: "", country: "", isActive: false }); setEditId(null); setShowForm(false); };
+
+  const save = async () => {
+    if (!form.code || !form.percent) { toast({ title: "Code et pourcentage requis", variant: "destructive" }); return; }
+    setSaving(true);
+    const payload = { code: form.code.toUpperCase().trim(), percent: parseFloat(form.percent), country: form.country || null, isActive: form.isActive };
+    const url = editId ? `/v1/admin/discount-codes/${editId}` : "/v1/admin/discount-codes";
+    const method = editId ? "PATCH" : "POST";
+    const r = await fetch(`${API}${url}`, { method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("zynum_token")}` }, body: JSON.stringify(payload) });
+    setSaving(false);
+    if (!r.ok) { const err = await r.json(); toast({ title: err.error || "Erreur", variant: "destructive" }); return; }
+    toast({ title: editId ? "Code modifié" : "Code créé" });
+    reset(); refetch();
+  };
+
+  const toggle = async (id: number, isActive: boolean) => {
+    await fetch(`${API}/v1/admin/discount-codes/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("zynum_token")}` }, body: JSON.stringify({ isActive: !isActive }) });
+    refetch();
+  };
+
+  const remove = async (id: number) => {
+    if (!confirm("Supprimer ce code ?")) return;
+    await fetch(`${API}/v1/admin/discount-codes/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${localStorage.getItem("zynum_token")}` } });
+    refetch();
+  };
+
+  const startEdit = (c: any) => {
+    setForm({ code: c.code, percent: String(c.percent), country: c.country ?? "", isActive: c.isActive });
+    setEditId(c.id);
+    setShowForm(true);
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
+
+  return (
+    <div className="space-y-5">
+      {/* Stats totales */}
+      {codes.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-2xl border border-white/10 bg-card/40 p-4 text-center">
+            <p className="text-2xl font-bold text-white">{codes.reduce((s: number, c: any) => s + c.usedCount, 0)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Utilisations totales</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-card/40 p-4 text-center">
+            <p className="text-2xl font-bold text-green-400">{codes.reduce((s: number, c: any) => s + Math.round(c.totalSavedFcfa), 0).toLocaleString("fr-FR")} F</p>
+            <p className="text-xs text-muted-foreground mt-1">Total économisé FCFA</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-card/40 p-4 text-center">
+            <p className="text-2xl font-bold text-primary">{codes.filter((c: any) => c.isActive).length}</p>
+            <p className="text-xs text-muted-foreground mt-1">Codes actifs</p>
+          </div>
+        </div>
+      )}
+
+      {/* Bouton créer */}
+      <Button onClick={() => { reset(); setShowForm(true); }} className="bg-primary hover:bg-primary/90 text-white w-full">
+        <Plus className="w-4 h-4 mr-2" /> Nouveau code de réduction
+      </Button>
+
+      {/* Formulaire création / édition */}
+      {showForm && (
+        <div className="rounded-2xl border border-white/10 bg-card/40 p-5 space-y-4">
+          <h4 className="font-bold text-white">{editId ? "Modifier le code" : "Créer un code de réduction"}</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Code promo</label>
+              <input value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="EX: PROMO20" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm uppercase placeholder:normal-case" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Réduction (%)</label>
+              <input type="number" min="1" max="100" step="0.5" value={form.percent} onChange={e => setForm({ ...form, percent: e.target.value })} placeholder="Ex: 20" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Pays (laisser vide = tous les pays)</label>
+            <input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder="Ex: cameroon, nigeria... (vide = tous)" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+          </div>
+          <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-white/5 border border-white/10">
+            <span className="text-sm text-white">Activer immédiatement</span>
+            <button onClick={() => setForm({ ...form, isActive: !form.isActive })} className="transition-transform">
+              {form.isActive ? <ToggleRight className="w-8 h-8 text-primary" /> : <ToggleLeft className="w-8 h-8 text-muted-foreground" />}
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={save} disabled={saving} className="flex-1 bg-primary hover:bg-primary/90 text-white">{saving ? "Sauvegarde..." : editId ? "Modifier" : "Créer le code"}</Button>
+            <Button onClick={reset} variant="outline" className="border-white/10 text-muted-foreground hover:text-white">Annuler</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Liste des codes */}
+      {codes.length === 0 && !showForm && (
+        <div className="text-center py-12 text-muted-foreground">
+          <Percent className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p>Aucun code de réduction créé</p>
+        </div>
+      )}
+      <div className="space-y-3">
+        {codes.map((c: any) => (
+          <div key={c.id} className="rounded-2xl border border-white/10 bg-card/40 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Percent className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-white text-sm font-mono">{c.code}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.percent}% de réduction · {c.country ? `Pays: ${c.country}` : "Tous les pays"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => toggle(c.id, c.isActive)} className="transition-transform" title={c.isActive ? "Désactiver" : "Activer"}>
+                  {c.isActive ? <ToggleRight className="w-7 h-7 text-primary" /> : <ToggleLeft className="w-7 h-7 text-muted-foreground" />}
+                </button>
+                <button onClick={() => startEdit(c)} className="p-1.5 rounded-lg hover:bg-white/5 text-muted-foreground hover:text-white transition-colors">
+                  <Edit3 className="w-4 h-4" />
+                </button>
+                <button onClick={() => remove(c.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-1 border-t border-white/5">
+              <div className="text-center">
+                <p className="text-sm font-bold text-white">{c.usedCount}</p>
+                <p className="text-[10px] text-muted-foreground">Utilisations</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-green-400">{Math.round(c.totalSavedFcfa).toLocaleString("fr-FR")} F</p>
+                <p className="text-[10px] text-muted-foreground">Économisé FCFA</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-primary">${(c.totalSavedUsd ?? 0).toFixed(2)}</p>
+                <p className="text-[10px] text-muted-foreground">Économisé USD</p>
+              </div>
+            </div>
+            {c.isActive && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20">
+                <CheckCircle className="w-3 h-3 text-green-400 shrink-0" />
+                <span className="text-[11px] text-green-300 font-medium">Code actif — visible sur la page d'achat</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    SECTION: PLATFORM SETTINGS
 ══════════════════════════════════════════════════════════════════════════════ */
 function AdminSettings() {
@@ -1587,13 +1751,14 @@ function AdminWaitlist() {
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN ADMIN PANEL COMPONENT
 ══════════════════════════════════════════════════════════════════════════════ */
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist";
+type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
   { id: "users",        label: "Utilisateurs",    icon: <Users className="w-4 h-4" /> },
   { id: "orders",       label: "Commandes",       icon: <ShoppingBag className="w-4 h-4" /> },
   { id: "transactions", label: "Transactions",    icon: <CreditCard className="w-4 h-4" /> },
+  { id: "promos",       label: "Codes Promo",     icon: <Percent className="w-4 h-4" /> },
   { id: "messages",     label: "Messages",        icon: <MessageSquare className="w-4 h-4" /> },
   { id: "contact",      label: "Contacts",        icon: <Send className="w-4 h-4" /> },
   { id: "waitlist",     label: "Liste d'attente API", icon: <Bell className="w-4 h-4" /> },
@@ -1650,6 +1815,7 @@ export default function AdminPanel() {
           {activeTab === "users"        && <AdminUsers />}
           {activeTab === "orders"       && <AdminOrders />}
           {activeTab === "transactions" && <AdminTransactions />}
+          {activeTab === "promos"       && <AdminDiscountCodes />}
           {activeTab === "messages"     && <AdminMessages />}
           {activeTab === "contact"      && <AdminContactMessages />}
           {activeTab === "waitlist"     && <AdminWaitlist />}

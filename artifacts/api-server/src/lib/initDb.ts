@@ -178,6 +178,21 @@ async function ensureSchema() {
       CONSTRAINT "api_waitlist_email_unique" UNIQUE("email")
     )
   `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "discount_codes" (
+      "id" serial PRIMARY KEY NOT NULL,
+      "code" text NOT NULL,
+      "percent" real DEFAULT 0 NOT NULL,
+      "country" text,
+      "is_active" boolean DEFAULT false NOT NULL,
+      "used_count" integer DEFAULT 0 NOT NULL,
+      "total_saved_fcfa" real DEFAULT 0 NOT NULL,
+      "total_saved_usd" real DEFAULT 0 NOT NULL,
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+      "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+      CONSTRAINT "discount_codes_code_unique" UNIQUE("code")
+    )
+  `);
 }
 
 async function seedData() {

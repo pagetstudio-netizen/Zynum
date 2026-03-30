@@ -176,6 +176,36 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [buyCount, setBuyCount] = useState(0);
 
+  // ── Code de réduction ───────────────────────────────────────────────────────
+  const [discountInput, setDiscountInput] = useState("");
+  const [discountApplied, setDiscountApplied] = useState<{
+    code: string; percent: number; discountedPriceUsd: number; discountedPriceFcfa: number; savedFcfa: number; savedUsd: number;
+  } | null>(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+
+  const validateDiscount = async () => {
+    if (!discountInput.trim() || !selectedOperator) return;
+    const op = operatorsData?.operators?.find((o) => o.name === selectedOperator);
+    if (!op) return;
+    setDiscountLoading(true);
+    setDiscountError(null);
+    setDiscountApplied(null);
+    try {
+      const r = await fetch(`/api/v1/validate-discount`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("zynum_token")}` },
+        body: JSON.stringify({ code: discountInput.trim(), country: selectedCountry, priceUsd: op.priceUsd }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.valid) { setDiscountError(d.error || "Code invalide"); }
+      else { setDiscountApplied({ code: discountInput.trim().toUpperCase(), percent: d.percent, discountedPriceUsd: d.discountedPriceUsd, discountedPriceFcfa: d.discountedPriceFcfa, savedFcfa: d.savedFcfa, savedUsd: d.savedUsd }); }
+    } catch { setDiscountError("Impossible de valider le code"); }
+    setDiscountLoading(false);
+  };
+
+  const removeDiscount = () => { setDiscountApplied(null); setDiscountInput(""); setDiscountError(null); };
+
   useEffect(() => {
     const handler = (e: Event) => {
       const { service, country } = (e as CustomEvent<{ service: string; country: string }>).detail;
@@ -254,8 +284,14 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   const handleGetNumber = useCallback(() => {
     if (!selectedService || !selectedCountry) return;
     setBuyCount((c) => c + 1);
-    buyMutation.mutate({ data: { service: selectedService, country: selectedCountry, currency: currency as "USD" | "FCFA", operator: selectedOperator ?? "any" } });
-  }, [selectedService, selectedCountry, selectedOperator, currency, buyMutation]);
+    buyMutation.mutate({ data: {
+      service: selectedService,
+      country: selectedCountry,
+      currency: currency as "USD" | "FCFA",
+      operator: selectedOperator ?? "any",
+      discountCode: discountApplied?.code,
+    }});
+  }, [selectedService, selectedCountry, selectedOperator, currency, discountApplied, buyMutation]);
 
   const handleChangeNumber = () => {
     if (!activeOrder) return;
@@ -533,6 +569,61 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                 })}
               </div>
             )}
+            {/* ── Code de réduction ── */}
+            {selectedOperator && (
+              <div className="mb-5 rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+                <p className="text-sm font-semibold text-gray-700">Code de réduction</p>
+                {discountApplied ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-green-50 border border-green-200">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                        <div>
+                          <p className="text-sm font-bold text-green-700">{discountApplied.code} — {discountApplied.percent}% de réduction</p>
+                          <p className="text-xs text-green-600">Économie : {discountApplied.savedFcfa.toLocaleString("fr-FR")} FCFA</p>
+                        </div>
+                      </div>
+                      <button onClick={removeDiscount} className="p-1 rounded-lg hover:bg-green-100 text-green-500">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex justify-between items-center px-3 py-2 rounded-xl bg-white border border-gray-200">
+                      <span className="text-xs text-gray-500 line-through">
+                        {currency === "FCFA"
+                          ? `${(operatorsData?.operators?.find(o => o.name === selectedOperator)?.priceFcfa ?? 0).toLocaleString("fr-FR")} FCFA`
+                          : `$${(operatorsData?.operators?.find(o => o.name === selectedOperator)?.priceUsd ?? 0).toFixed(2)}`
+                        }
+                      </span>
+                      <span className="text-sm font-bold text-primary">
+                        {currency === "FCFA"
+                          ? `${discountApplied.discountedPriceFcfa.toLocaleString("fr-FR")} FCFA`
+                          : `$${discountApplied.discountedPriceUsd.toFixed(2)}`
+                        }
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      value={discountInput}
+                      onChange={e => { setDiscountInput(e.target.value.toUpperCase()); setDiscountError(null); }}
+                      onKeyDown={e => e.key === "Enter" && validateDiscount()}
+                      placeholder="Entrez votre code promo"
+                      className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 uppercase"
+                    />
+                    <button
+                      onClick={validateDiscount}
+                      disabled={!discountInput.trim() || discountLoading}
+                      className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold disabled:opacity-50 hover:bg-primary/90 transition-colors"
+                    >
+                      {discountLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Appliquer"}
+                    </button>
+                  </div>
+                )}
+                {discountError && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{discountError}</p>}
+              </div>
+            )}
+
             <Button
               className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/25"
               disabled={!selectedOperator || buyMutation.isPending || balance === 0}

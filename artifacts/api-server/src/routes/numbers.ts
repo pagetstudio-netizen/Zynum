@@ -14,6 +14,7 @@ import {
   mapFiveSimStatus,
 } from "../lib/fivesim.js";
 import { applyTieredPricing } from "../lib/pricing.js";
+import { applyDiscountCode } from "./discounts.js";
 
 const router: IRouter = Router();
 
@@ -61,7 +62,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
     return;
   }
 
-  const { service, country, currency, operator } = parsed.data;
+  const { service, country, currency, operator, discountCode } = parsed.data;
   const userId = req.userId!;
   const serviceName = getServiceName(service);
   const countryName = getCountryName(country);
@@ -76,7 +77,14 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   }
 
   // Applique la tarification à paliers ZyNum
-  const { priceUsd, priceFcfa } = applyTieredPricing(fiveSimOrder.price);
+  let { priceUsd, priceFcfa } = applyTieredPricing(fiveSimOrder.price);
+
+  // Applique le code de réduction si fourni
+  if (discountCode) {
+    const result = await applyDiscountCode(discountCode, country, priceUsd, priceFcfa);
+    priceUsd = result.finalPriceUsd;
+    priceFcfa = result.finalPriceFcfa;
+  }
 
   let order;
   try {

@@ -108,6 +108,7 @@ export const BuyNumberBody = zod.object({
   country: zod.string(),
   currency: zod.enum(["USD", "FCFA"]).default(buyNumberBodyCurrencyDefault),
   operator: zod.string().optional(),
+  discountCode: zod.string().optional(),
 });
 
 export const BuyNumberResponse = zod.object({
