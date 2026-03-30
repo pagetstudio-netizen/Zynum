@@ -547,4 +547,39 @@ router.post("/v1/admin/send-broadcast-email", ...auth, async (req, res): Promise
   res.json({ success: true, sent, failed, total: users.length });
 });
 
+/* ─── ADMIN: Réinitialiser ses propres statistiques ─────────────────────── */
+router.post("/v1/admin/reset-my-stats", ...auth, async (req: any, res): Promise<void> => {
+  try {
+    const adminId = req.userId as number;
+
+    // Vérifier que l'utilisateur est bien admin
+    const [admin] = await db.select({ id: usersTable.id, isAdmin: usersTable.isAdmin })
+      .from(usersTable).where(eq(usersTable.id, adminId)).limit(1);
+    if (!admin?.isAdmin) { res.status(403).json({ error: "Accès refusé" }); return; }
+
+    // Remettre le solde à 0
+    await db.update(usersTable).set({ balanceUsd: 0 }).where(eq(usersTable.id, adminId));
+
+    // Supprimer les transactions personnelles de l'admin
+    const deleted = await db.delete(transactionsTable)
+      .where(eq(transactionsTable.userId, adminId))
+      .returning({ id: transactionsTable.id });
+
+    // Supprimer les commandes personnelles de l'admin
+    const deletedOrders = await db.delete(ordersTable)
+      .where(eq(ordersTable.userId, adminId))
+      .returning({ id: ordersTable.id });
+
+    res.json({
+      success: true,
+      message: "Statistiques réinitialisées",
+      deletedTransactions: deleted.length,
+      deletedOrders: deletedOrders.length,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    res.status(500).json({ error: message });
+  }
+});
+
 export default router;

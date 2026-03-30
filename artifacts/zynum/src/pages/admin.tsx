@@ -131,28 +131,63 @@ function StatusBadge({ status }: { status: string }) {
    SECTION: STATS DASHBOARD
 ══════════════════════════════════════════════════════════════════════════════ */
 function AdminStats() {
+  const { toast } = useToast();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [queryStr, setQueryStr] = useState("");
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const { data, loading, refetch } = useAdminFetch<any>(`/v1/admin/stats${queryStr}`, [queryStr]);
 
   const applyDates = () => setQueryStr(from || to ? `?from=${from}&to=${to}` : "");
   const s = data ?? {};
 
+  const handleResetMyStats = async () => {
+    setResetting(true);
+    try {
+      const r = await fetch(`${API}/v1/admin/reset-my-stats`, { method: "POST", credentials: "include" });
+      const d = await r.json();
+      if (d.success) {
+        toast({ title: "Statistiques réinitialisées", description: `${d.deletedTransactions} transaction(s) et ${d.deletedOrders} commande(s) supprimées de votre compte.` });
+        refetch();
+      } else {
+        toast({ variant: "destructive", title: "Erreur", description: d.error ?? "Échec de la réinitialisation" });
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Erreur réseau" });
+    } finally { setResetting(false); setResetConfirm(false); }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-3 items-end">
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Du</label>
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+      <div className="flex flex-wrap gap-3 items-end justify-between">
+        <div className="flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Du</label>
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Au</label>
+            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+          </div>
+          <Button onClick={applyDates} className="bg-primary hover:bg-primary/90 text-white">Filtrer</Button>
+          <Button variant="outline" onClick={() => { setFrom(""); setTo(""); setQueryStr(""); }} className="border-white/10 text-white hover:bg-white/5">Reset</Button>
+          <button onClick={refetch} className="p-2 rounded-xl border border-white/10 text-muted-foreground hover:text-white hover:bg-white/5"><RefreshCw className="w-4 h-4" /></button>
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Au</label>
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
-        </div>
-        <Button onClick={applyDates} className="bg-primary hover:bg-primary/90 text-white">Filtrer</Button>
-        <Button variant="outline" onClick={() => { setFrom(""); setTo(""); setQueryStr(""); }} className="border-white/10 text-white hover:bg-white/5">Reset</Button>
-        <button onClick={refetch} className="p-2 rounded-xl border border-white/10 text-muted-foreground hover:text-white hover:bg-white/5"><RefreshCw className="w-4 h-4" /></button>
+        {/* Reset mes stats */}
+        {!resetConfirm ? (
+          <Button onClick={() => setResetConfirm(true)} variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 text-xs h-8 px-3">
+            <AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Réinitialiser mes stats
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2 p-3 rounded-xl border border-red-500/30 bg-red-500/5">
+            <p className="text-xs text-red-400">Supprimer vos transactions &amp; commandes admin ?</p>
+            <Button onClick={handleResetMyStats} disabled={resetting} className="bg-red-600 hover:bg-red-500 text-white h-7 px-2 text-xs">
+              {resetting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Confirmer"}
+            </Button>
+            <button onClick={() => setResetConfirm(false)} className="text-xs text-muted-foreground hover:text-white">Annuler</button>
+          </div>
+        )}
       </div>
 
       {loading ? <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> : (
@@ -692,7 +727,20 @@ function AdminTransactions() {
                           <p className="text-xs text-muted-foreground">{Math.round(n(t.amountFcfa)).toLocaleString()} FCFA</p>
                         </td>
                         <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
-                        <td className="px-4 py-3 text-muted-foreground text-xs font-mono max-w-[120px] truncate" title={t.reference ?? ""}>{t.reference ?? "—"}</td>
+                        <td className="px-4 py-3 max-w-[150px]">
+                          {t.reference ? (
+                            <div className="flex items-center gap-1.5 group">
+                              <span className="text-muted-foreground text-xs font-mono truncate" title={t.reference}>{t.reference}</span>
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(t.reference); toast({ title: "Référence copiée", description: t.reference }); }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-white flex-shrink-0"
+                                title="Copier la référence"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                              </button>
+                            </div>
+                          ) : <span className="text-muted-foreground text-xs">—</span>}
+                        </td>
                         <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">{new Date(t.createdAt).toLocaleString("fr")}</td>
                       </tr>
                     ))}
