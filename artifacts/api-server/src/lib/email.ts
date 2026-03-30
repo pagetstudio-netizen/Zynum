@@ -29,12 +29,21 @@ function htmlLayout(content: string, previewText: string) {
         <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);max-width:90vw;">
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#ef4444,#dc2626);padding:32px 40px;">
+            <td style="background:linear-gradient(135deg,#ef4444,#dc2626);padding:28px 40px;">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td>
-                    <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">ZyNum</span>
-                    <span style="font-size:12px;color:rgba(255,255,255,0.7);margin-left:8px;">Numéros virtuels</span>
+                  <td style="vertical-align:middle;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="vertical-align:middle;">
+                          <img src="https://zynum.net/logo.jpg" alt="ZyNum" width="40" height="40" style="border-radius:10px;display:block;border:0;" />
+                        </td>
+                        <td style="padding-left:12px;vertical-align:middle;">
+                          <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">ZyNum</span>
+                          <span style="font-size:12px;color:rgba(255,255,255,0.7);margin-left:8px;">Numéros virtuels</span>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
