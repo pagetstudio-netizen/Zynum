@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "kjRVMJBHcAcTnuf0mb-5E"
+uri = "file://screenshots/home_desktop.jpg"
+type = "image"
+title = "ZyNum - Page d'accueil (desktop 1440×900)"
