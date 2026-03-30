@@ -17,38 +17,57 @@ router.get("/v1/admin/stats", ...auth, async (req, res): Promise<void> => {
   const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 3600 * 1000);
   const toDate = to ? new Date(to) : new Date();
 
-  const [totalUsers] = await db.select({ c: count() }).from(usersTable);
-  const [activeUsers] = await db.select({ c: count() }).from(usersTable).where(eq(usersTable.isBanned, false));
-  const [bannedUsers] = await db.select({ c: count() }).from(usersTable).where(eq(usersTable.isBanned, true));
-  const [totalOrders] = await db.select({ c: count() }).from(ordersTable);
-  const [completedOrders] = await db.select({ c: count() }).from(ordersTable).where(eq(ordersTable.status, "RECEIVED"));
-  const [totalRevUsd] = await db.select({ s: sum(ordersTable.priceUsd) }).from(ordersTable).where(eq(ordersTable.status, "RECEIVED"));
-  const [totalRevFcfa] = await db.select({ s: sum(ordersTable.priceFcfa) }).from(ordersTable).where(eq(ordersTable.status, "RECEIVED"));
-  const [totalBalances] = await db.select({ s: sum(usersTable.balanceUsd) }).from(usersTable);
-  const [totalTransactions] = await db.select({ c: count() }).from(transactionsTable);
-  const [totalRechargeUsd] = await db.select({ s: sum(transactionsTable.amountUsd) }).from(transactionsTable).where(and(eq(transactionsTable.status, "completed"), eq(transactionsTable.type, "recharge")));
+  // Lire la date de réinitialisation des stats (si définie)
+  const [resetSetting] = await db.select({ value: adminSettingsTable.value })
+    .from(adminSettingsTable).where(eq(adminSettingsTable.key, "stats_reset_at")).limit(1);
+  const statsBase: Date | undefined = resetSetting ? new Date(resetSetting.value) : undefined;
+
+  const baseFilter = (col: any) => statsBase ? gte(col, statsBase) : undefined;
+  const withBase = (col: any, ...extra: any[]) => {
+    const base = baseFilter(col);
+    return base ? and(base, ...extra) : and(...extra);
+  };
+
+  const [totalUsers]        = await db.select({ c: count() }).from(usersTable).where(baseFilter(usersTable.createdAt));
+  const [activeUsers]       = await db.select({ c: count() }).from(usersTable).where(withBase(usersTable.createdAt, eq(usersTable.isBanned, false)));
+  const [bannedUsers]       = await db.select({ c: count() }).from(usersTable).where(withBase(usersTable.createdAt, eq(usersTable.isBanned, true)));
+  const [totalOrders]       = await db.select({ c: count() }).from(ordersTable).where(baseFilter(ordersTable.createdAt));
+  const [completedOrders]   = await db.select({ c: count() }).from(ordersTable).where(withBase(ordersTable.createdAt, eq(ordersTable.status, "RECEIVED")));
+  const [totalRevUsd]       = await db.select({ s: sum(ordersTable.priceUsd) }).from(ordersTable).where(withBase(ordersTable.createdAt, eq(ordersTable.status, "RECEIVED")));
+  const [totalRevFcfa]      = await db.select({ s: sum(ordersTable.priceFcfa) }).from(ordersTable).where(withBase(ordersTable.createdAt, eq(ordersTable.status, "RECEIVED")));
+  const [totalBalances]     = await db.select({ s: sum(usersTable.balanceUsd) }).from(usersTable);
+  const [totalTransactions] = await db.select({ c: count() }).from(transactionsTable).where(baseFilter(transactionsTable.createdAt));
+  const [totalRechargeUsd]  = await db.select({ s: sum(transactionsTable.amountUsd) }).from(transactionsTable)
+    .where(withBase(transactionsTable.createdAt, eq(transactionsTable.status, "completed"), eq(transactionsTable.type, "recharge")));
 
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-  const yearStart = new Date(); yearStart.setMonth(0, 1); yearStart.setHours(0, 0, 0, 0);
+  const yearStart  = new Date(); yearStart.setMonth(0, 1); yearStart.setHours(0, 0, 0, 0);
 
-  const [ordersToday] = await db.select({ c: count(), s: sum(ordersTable.priceUsd) }).from(ordersTable).where(and(eq(ordersTable.status, "RECEIVED"), gte(ordersTable.createdAt, todayStart)));
-  const [ordersMonth] = await db.select({ c: count(), s: sum(ordersTable.priceUsd) }).from(ordersTable).where(and(eq(ordersTable.status, "RECEIVED"), gte(ordersTable.createdAt, monthStart)));
-  const [ordersYear] = await db.select({ c: count(), s: sum(ordersTable.priceUsd) }).from(ordersTable).where(and(eq(ordersTable.status, "RECEIVED"), gte(ordersTable.createdAt, yearStart)));
+  // Pour les sous-périodes (aujourd'hui/mois/année), prendre le max entre la base et la période
+  const todayBase  = statsBase && statsBase > todayStart  ? statsBase : todayStart;
+  const monthBase  = statsBase && statsBase > monthStart  ? statsBase : monthStart;
+  const yearBase   = statsBase && statsBase > yearStart   ? statsBase : yearStart;
 
-  const [newUsersToday] = await db.select({ c: count() }).from(usersTable).where(gte(usersTable.createdAt, todayStart));
-  const [newUsersMonth] = await db.select({ c: count() }).from(usersTable).where(gte(usersTable.createdAt, monthStart));
+  const [ordersToday]    = await db.select({ c: count(), s: sum(ordersTable.priceUsd) }).from(ordersTable).where(and(eq(ordersTable.status, "RECEIVED"), gte(ordersTable.createdAt, todayBase)));
+  const [ordersMonth]    = await db.select({ c: count(), s: sum(ordersTable.priceUsd) }).from(ordersTable).where(and(eq(ordersTable.status, "RECEIVED"), gte(ordersTable.createdAt, monthBase)));
+  const [ordersYear]     = await db.select({ c: count(), s: sum(ordersTable.priceUsd) }).from(ordersTable).where(and(eq(ordersTable.status, "RECEIVED"), gte(ordersTable.createdAt, yearBase)));
+  const [newUsersToday]  = await db.select({ c: count() }).from(usersTable).where(gte(usersTable.createdAt, todayBase));
+  const [newUsersMonth]  = await db.select({ c: count() }).from(usersTable).where(gte(usersTable.createdAt, monthBase));
+  const [ordersRange]    = await db.select({ c: count(), s: sum(ordersTable.priceUsd) }).from(ordersTable)
+    .where(and(eq(ordersTable.status, "RECEIVED"), gte(ordersTable.createdAt, fromDate), lte(ordersTable.createdAt, toDate)));
 
-  const [ordersRange] = await db.select({ c: count(), s: sum(ordersTable.priceUsd) }).from(ordersTable).where(and(eq(ordersTable.status, "RECEIVED"), gte(ordersTable.createdAt, fromDate), lte(ordersTable.createdAt, toDate)));
-
-  const topServices = await db.select({ service: ordersTable.serviceName, c: count() }).from(ordersTable).groupBy(ordersTable.serviceName).orderBy(desc(count())).limit(5);
-  const topCountries = await db.select({ country: ordersTable.countryName, c: count() }).from(ordersTable).groupBy(ordersTable.countryName).orderBy(desc(count())).limit(5);
+  const topServices  = await db.select({ service: ordersTable.serviceName, c: count() }).from(ordersTable)
+    .where(baseFilter(ordersTable.createdAt)).groupBy(ordersTable.serviceName).orderBy(desc(count())).limit(5);
+  const topCountries = await db.select({ country: ordersTable.countryName, c: count() }).from(ordersTable)
+    .where(baseFilter(ordersTable.createdAt)).groupBy(ordersTable.countryName).orderBy(desc(count())).limit(5);
 
   res.json({
-    users: { total: totalUsers.c, active: activeUsers.c, banned: bannedUsers.c, newToday: newUsersToday.c, newMonth: newUsersMonth.c },
-    orders: { total: totalOrders.c, completed: completedOrders.c, today: { count: ordersToday.c, revenueUsd: ordersToday.s || 0 }, month: { count: ordersMonth.c, revenueUsd: ordersMonth.s || 0 }, year: { count: ordersYear.c, revenueUsd: ordersYear.s || 0 }, range: { count: ordersRange.c, revenueUsd: ordersRange.s || 0 } },
-    revenue: { totalUsd: totalRevUsd.s || 0, totalFcfa: totalRevFcfa.s || 0, totalRechargeUsd: totalRechargeUsd.s || 0 },
-    balances: { totalUsd: totalBalances.s || 0 },
+    statsResetAt: statsBase?.toISOString() ?? null,
+    users:        { total: totalUsers.c, active: activeUsers.c, banned: bannedUsers.c, newToday: newUsersToday.c, newMonth: newUsersMonth.c },
+    orders:       { total: totalOrders.c, completed: completedOrders.c, today: { count: ordersToday.c, revenueUsd: ordersToday.s || 0 }, month: { count: ordersMonth.c, revenueUsd: ordersMonth.s || 0 }, year: { count: ordersYear.c, revenueUsd: ordersYear.s || 0 }, range: { count: ordersRange.c, revenueUsd: ordersRange.s || 0 } },
+    revenue:      { totalUsd: totalRevUsd.s || 0, totalFcfa: totalRevFcfa.s || 0, totalRechargeUsd: totalRechargeUsd.s || 0 },
+    balances:     { totalUsd: totalBalances.s || 0 },
     transactions: { total: totalTransactions.c },
     topServices,
     topCountries,
@@ -547,35 +566,16 @@ router.post("/v1/admin/send-broadcast-email", ...auth, async (req, res): Promise
   res.json({ success: true, sent, failed, total: users.length });
 });
 
-/* ─── ADMIN: Réinitialiser ses propres statistiques ─────────────────────── */
-router.post("/v1/admin/reset-my-stats", ...auth, async (req: any, res): Promise<void> => {
+/* ─── ADMIN: Réinitialiser les compteurs de statistiques ────────────────── */
+// Sauvegarde uniquement une date de référence — aucune donnée supprimée
+router.post("/v1/admin/reset-my-stats", ...auth, async (_req: any, res): Promise<void> => {
   try {
-    const adminId = req.userId as number;
+    const resetAt = new Date().toISOString();
+    await db.insert(adminSettingsTable)
+      .values({ key: "stats_reset_at", value: resetAt })
+      .onConflictDoUpdate({ target: adminSettingsTable.key, set: { value: resetAt } });
 
-    // Vérifier que l'utilisateur est bien admin
-    const [admin] = await db.select({ id: usersTable.id, isAdmin: usersTable.isAdmin })
-      .from(usersTable).where(eq(usersTable.id, adminId)).limit(1);
-    if (!admin?.isAdmin) { res.status(403).json({ error: "Accès refusé" }); return; }
-
-    // Remettre le solde à 0
-    await db.update(usersTable).set({ balanceUsd: 0 }).where(eq(usersTable.id, adminId));
-
-    // Supprimer les transactions personnelles de l'admin
-    const deleted = await db.delete(transactionsTable)
-      .where(eq(transactionsTable.userId, adminId))
-      .returning({ id: transactionsTable.id });
-
-    // Supprimer les commandes personnelles de l'admin
-    const deletedOrders = await db.delete(ordersTable)
-      .where(eq(ordersTable.userId, adminId))
-      .returning({ id: ordersTable.id });
-
-    res.json({
-      success: true,
-      message: "Statistiques réinitialisées",
-      deletedTransactions: deleted.length,
-      deletedOrders: deletedOrders.length,
-    });
+    res.json({ success: true, resetAt, message: "Compteurs réinitialisés à partir de maintenant. Aucune donnée supprimée." });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur";
     res.status(500).json({ error: message });

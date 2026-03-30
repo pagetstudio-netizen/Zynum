@@ -149,7 +149,7 @@ function AdminStats() {
       const r = await fetch(`${API}/v1/admin/reset-my-stats`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       const d = await r.json();
       if (d.success) {
-        toast({ title: "Statistiques réinitialisées", description: `${d.deletedTransactions} transaction(s) et ${d.deletedOrders} commande(s) supprimées de votre compte.` });
+        toast({ title: "Compteurs réinitialisés", description: "Les statistiques repartent de zéro. Aucune donnée supprimée." });
         refetch();
       } else {
         toast({ variant: "destructive", title: "Erreur", description: d.error ?? "Échec de la réinitialisation" });
@@ -177,19 +177,26 @@ function AdminStats() {
         </div>
         {/* Reset mes stats */}
         {!resetConfirm ? (
-          <Button onClick={() => setResetConfirm(true)} variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 text-xs h-8 px-3">
-            <AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Réinitialiser mes stats
+          <Button onClick={() => setResetConfirm(true)} variant="outline" className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 text-xs h-8 px-3">
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Réinitialiser les compteurs
           </Button>
         ) : (
-          <div className="flex items-center gap-2 p-3 rounded-xl border border-red-500/30 bg-red-500/5">
-            <p className="text-xs text-red-400">Supprimer vos transactions &amp; commandes admin ?</p>
-            <Button onClick={handleResetMyStats} disabled={resetting} className="bg-red-600 hover:bg-red-500 text-white h-7 px-2 text-xs">
+          <div className="flex items-center gap-2 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5">
+            <p className="text-xs text-amber-400">Les compteurs repartent à 0 — aucune donnée supprimée.</p>
+            <Button onClick={handleResetMyStats} disabled={resetting} className="bg-amber-600 hover:bg-amber-500 text-white h-7 px-2 text-xs">
               {resetting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Confirmer"}
             </Button>
             <button onClick={() => setResetConfirm(false)} className="text-xs text-muted-foreground hover:text-white">Annuler</button>
           </div>
         )}
       </div>
+
+      {s.statsResetAt && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-400">
+          <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+          Compteurs réinitialisés le {new Date(s.statsResetAt).toLocaleString("fr-FR")} — les données antérieures sont conservées.
+        </div>
+      )}
 
       {loading ? <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> : (
         <>
