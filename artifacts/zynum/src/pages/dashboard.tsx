@@ -5,10 +5,13 @@ import { format } from "date-fns";
 import {
   LogOut, ShoppingCart, HelpCircle,
   MessageSquare, User, PlusCircle,
-  CreditCard, Package, ChevronRight,
+  Package, ChevronRight,
   Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Globe2,
 } from "lucide-react";
+import iconCardSolde   from "@assets/internet_15229770_1774888657109.png";
+import iconAchat       from "@assets/freepik__icônes_produits_ou_achat_1774888657188.png";
+import iconSms         from "@assets/freepik__icônes_sms_ou_message_1774888657216.png";
 import iconOverview  from "@assets/1239292_1774829368223.png";
 import iconBuy       from "@assets/84426_1774829368186.png";
 import iconHistory   from "@assets/5708960_1774829436660.png";
@@ -66,7 +69,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
         {/* Solde */}
         <div className="rounded-2xl p-5 bg-gradient-to-br from-red-500 to-primary text-white shadow-lg shadow-red-500/20 flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <CreditCard className="w-6 h-6 text-white" />
+            <img src={iconCardSolde} alt="solde" className="w-6 h-6" style={{ filter: "brightness(0) invert(1)" }} />
           </div>
           <div>
             <p className="text-sm text-white/70 mb-1">{t("dash_balance")}</p>
@@ -77,7 +80,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
         {/* Commandes */}
         <div className="rounded-2xl p-5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20 flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <ShoppingCart className="w-6 h-6 text-white" />
+            <img src={iconAchat} alt="commandes" className="w-6 h-6" style={{ filter: "brightness(0) invert(1)" }} />
           </div>
           <div>
             <p className="text-sm text-white/70 mb-1">{t("dash_orders_total")}</p>
@@ -88,7 +91,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
         {/* SMS reçus */}
         <div className="rounded-2xl p-5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <MessageSquare className="w-6 h-6 text-white" />
+            <img src={iconSms} alt="sms" className="w-6 h-6" style={{ filter: "brightness(0) invert(1)" }} />
           </div>
           <div>
             <p className="text-sm text-white/70 mb-1">{t("dash_sms_received")}</p>
