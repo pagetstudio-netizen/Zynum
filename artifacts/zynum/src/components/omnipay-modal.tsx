@@ -285,7 +285,8 @@ export function OmnipayModal({
   function startPolling(reference: string) {
     stopPolling();
     pollCount.current = 0;
-    pollRef.current = setInterval(() => pollStatus(reference), 3000);
+    void pollStatus(reference);
+    pollRef.current = setInterval(() => pollStatus(reference), 2000);
   }
 
   async function submit() {
