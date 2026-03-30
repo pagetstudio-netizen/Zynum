@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
-import { getAvailableServices, getCountriesForService, MIN_PRICE_FCFA } from "../lib/fivesim.js";
+import { getAvailableServices, getCountriesForService } from "../lib/fivesim.js";
 import { GetCountriesQueryParams } from "@workspace/api-zod";
 import { db, countryOverridesTable } from "@workspace/db";
-import { getCommissionMultiplier } from "../lib/commission.js";
+import { applyTieredPricing } from "../lib/pricing.js";
 
 const router: IRouter = Router();
 
@@ -19,10 +19,9 @@ router.get("/v1/countries", async (req, res): Promise<void> => {
   }
 
   const service = parsed.data.service ?? "telegram";
-  const [countries, overrides, commissionMultiplier] = await Promise.all([
+  const [countries, overrides] = await Promise.all([
     getCountriesForService(service),
     db.select().from(countryOverridesTable),
-    getCommissionMultiplier(),
   ]);
 
   const overrideMap = new Map(overrides.map((o) => [o.countrySlug, o]));
@@ -35,14 +34,9 @@ router.get("/v1/countries", async (req, res): Promise<void> => {
     .map((c) => {
       const ov = overrideMap.get(c.code);
       const countryMultiplier = ov && ov.priceMultiplier !== 1.0 ? ov.priceMultiplier : 1.0;
-      const totalMultiplier = countryMultiplier * commissionMultiplier;
-      const finalPriceFcfa = Math.max(MIN_PRICE_FCFA, Math.round(c.priceFcfa * totalMultiplier));
-      if (totalMultiplier === 1.0 && c.priceFcfa >= MIN_PRICE_FCFA) return c;
-      return {
-        ...c,
-        priceUsd: Math.round(c.priceUsd * totalMultiplier * 100) / 100,
-        priceFcfa: finalPriceFcfa,
-      };
+      // Apply tiered pricing on the raw 5sim price, then apply country multiplier on top
+      const { priceUsd, priceFcfa } = applyTieredPricing(c.priceUsd * countryMultiplier);
+      return { ...c, priceUsd, priceFcfa };
     });
 
   res.json({ countries: filtered });

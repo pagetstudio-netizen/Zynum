@@ -1003,23 +1003,47 @@ function AdminSettings() {
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
-        <h3 className="font-bold text-white flex items-center gap-2"><DollarSign className="w-5 h-5 text-primary" /> Commissions & Prix</h3>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Type de commission</label>
-          <div className="flex gap-3">
-            {[{ v: "percent", l: "Pourcentage (%)" }, { v: "fixed", l: "Montant fixe ($)" }].map(({ v, l }) => (
-              <button key={v} onClick={() => setForm({ ...form, commission_type: v })} className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all ${form.commission_type === v ? "bg-primary text-white border-primary" : "border-white/10 text-muted-foreground hover:text-white hover:bg-white/5"}`}>{l}</button>
-            ))}
+        <h3 className="font-bold text-white flex items-center gap-2"><DollarSign className="w-5 h-5 text-primary" /> Tarification à paliers (1 USD = 620 FCFA)</h3>
+        <p className="text-xs text-muted-foreground">Les prix affichés aux clients sont calculés automatiquement selon le prix brut 5sim.</p>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold text-primary uppercase tracking-wider">Palier 1</span>
+              <span className="text-xs text-muted-foreground">— numéros économiques</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Prix 5sim</span>
+              <span className="text-white font-medium">30F → 500F</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Prix ZyNum</span>
+              <span className="text-green-400 font-semibold">1 100F → 2 200F</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-muted-foreground">En USD</span>
+              <span className="text-muted-foreground">$1.77 → $3.55</span>
+            </div>
+          </div>
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold text-orange-400 uppercase tracking-wider">Palier 2</span>
+              <span className="text-xs text-muted-foreground">— numéros premium</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Prix 5sim</span>
+              <span className="text-white font-medium">1 000F → 3 000F</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Prix ZyNum</span>
+              <span className="text-green-400 font-semibold">2 000F → 4 500F</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-muted-foreground">En USD</span>
+              <span className="text-muted-foreground">$3.23 → $7.26</span>
+            </div>
           </div>
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Valeur de la commission {form.commission_type === "percent" ? "(%)" : "($)"}</label>
-          <input type="number" step="0.01" value={form.commission_value ?? "0"} onChange={(e) => setForm({ ...form, commission_value: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Réduction globale (%) — 0 = aucune</label>
-          <input type="number" step="0.1" min="0" max="100" value={form.global_discount ?? "0"} onChange={(e) => setForm({ ...form, global_discount: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
-        </div>
+        <p className="text-xs text-muted-foreground">Plancher minimum : <span className="text-white font-medium">1 100 FCFA</span> · Au-delà de 3 000F : extrapolation palier 2</p>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-3">

@@ -12,11 +12,8 @@ import {
   getServiceName,
   getCountryName,
   mapFiveSimStatus,
-  usdToFcfa,
-  MIN_PRICE_FCFA,
-  FCFA_RATE,
 } from "../lib/fivesim.js";
-import { getCommissionMultiplier, applyCommission } from "../lib/commission.js";
+import { applyTieredPricing } from "../lib/pricing.js";
 
 const router: IRouter = Router();
 
@@ -48,7 +45,11 @@ router.get("/v1/operators", requireAuth, async (req: AuthRequest, res): Promise<
     res.status(400).json({ error: "Validation error", message: "service and country are required" });
     return;
   }
-  const operators = await getOperatorsForServiceCountry(service, country);
+  const rawOperators = await getOperatorsForServiceCountry(service, country);
+  const operators = rawOperators.map((op) => {
+    const { priceUsd, priceFcfa } = applyTieredPricing(op.priceUsd);
+    return { ...op, priceUsd, priceFcfa };
+  });
   res.json({ operators });
 });
 
@@ -66,27 +67,16 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   const countryName = getCountryName(country);
 
   let fiveSimOrder;
-  let commissionMultiplier: number;
   try {
-    [fiveSimOrder, commissionMultiplier] = await Promise.all([
-      buyNumber(service, country, operator ?? "any"),
-      getCommissionMultiplier(),
-    ]);
+    fiveSimOrder = await buyNumber(service, country, operator ?? "any");
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat du numéro";
     res.status(400).json({ error: "Purchase failed", message });
     return;
   }
 
-  const rawPriceUsd = fiveSimOrder.price;
-  let priceUsd = applyCommission(rawPriceUsd, commissionMultiplier);
-  let priceFcfa = usdToFcfa(priceUsd);
-
-  // Apply minimum FCFA price floor — ensure the platform always earns at least MIN_PRICE_FCFA
-  if (priceFcfa < MIN_PRICE_FCFA) {
-    priceFcfa = MIN_PRICE_FCFA;
-    priceUsd = Math.round((MIN_PRICE_FCFA / FCFA_RATE) * 100) / 100;
-  }
+  // Applique la tarification à paliers ZyNum
+  const { priceUsd, priceFcfa } = applyTieredPricing(fiveSimOrder.price);
 
   let order;
   try {

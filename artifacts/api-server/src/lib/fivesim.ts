@@ -1,6 +1,6 @@
 const BASE_URL = "https://5sim.net/v1";
-export const FCFA_RATE = 4000;
-export const MIN_PRICE_FCFA = 950;
+export const FCFA_RATE = 620;       // taux affiché : 1 USD = 620 FCFA
+export const MIN_PRICE_FCFA = 1100; // plancher minimum ZyNum
 
 export function usdToFcfa(usd: number): number {
   return Math.round(usd * FCFA_RATE);
