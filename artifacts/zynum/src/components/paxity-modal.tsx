@@ -766,7 +766,7 @@ export function PaxityModal({ open, onClose, amountXof, userId, onSuccess, initi
                     </Button>
 
                     <p className="text-center text-xs text-gray-400 pb-1">
-                      Paiement sécurisé · Powered by <span className="text-gray-700 font-semibold">Paxity</span>
+                      Paiement sécurisé et rapide
                     </p>
                   </div>
                 )}
