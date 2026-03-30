@@ -125,7 +125,7 @@ function StepIndicator({ current }: { current: BuyStep }) {
             <div className="flex flex-col items-center gap-1 min-w-[40px]">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 done   ? "bg-green-500 text-white shadow-lg shadow-green-500/30" :
-                active ? "bg-primary text-white shadow-lg shadow-primary/30 ring-2 ring-primary/30" :
+                active ? "bg-gradient-to-br from-red-500 to-primary text-white shadow-lg shadow-red-500/30 ring-2 ring-red-400/30" :
                          "bg-gray-100 border border-gray-200 text-gray-400"
               }`}>
                 {done ? <Check className="w-3.5 h-3.5" /> : i + 1}

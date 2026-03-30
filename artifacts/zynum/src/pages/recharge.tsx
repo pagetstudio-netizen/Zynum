@@ -120,10 +120,10 @@ export default function Recharge() {
         <p className="text-muted-foreground text-sm">{t("recharge_sub")}</p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-primary/10 to-blue-500/5 p-5 flex items-center justify-between gap-4 shadow-sm">
+      <div className="rounded-2xl border border-red-100 bg-gradient-to-br from-red-500/10 via-primary/5 to-blue-500/5 p-5 flex items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-            <Wallet className="w-6 h-6 text-primary" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500/20 to-primary/20 flex items-center justify-center">
+            <Wallet className="w-6 h-6 text-red-500" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground">{t("recharge_balance_label")}</p>

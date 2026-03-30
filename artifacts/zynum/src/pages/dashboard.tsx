@@ -80,11 +80,11 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <StatCard
-          icon={<Wallet className="w-6 h-6 text-primary" />}
+          icon={<Wallet className="w-6 h-6 text-red-500" />}
           label={t("dash_balance")}
           value={currency === "FCFA" ? `${Math.round(balance * 620).toLocaleString()} FCFA` : `$${balance.toFixed(2)}`}
           sub={balance === 0 ? t("dash_balance_low") : t("dash_balance_available")}
-          color="bg-primary/20"
+          color="bg-gradient-to-br from-red-500/20 to-primary/10"
         />
         <StatCard
           icon={<Package className="w-6 h-6 text-blue-400" />}
@@ -258,7 +258,7 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
       {/* User Info */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-primary flex items-center justify-center text-2xl font-bold text-white">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div>
@@ -458,7 +458,7 @@ function UserWidget({
           open ? "bg-gray-100" : "hover:bg-gray-100"
         }`}
       >
-        <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/20 to-primary/15 border border-red-200 flex items-center justify-center shrink-0 overflow-hidden">
           <img src={iconProfile} alt="Profil" className="w-5 h-5 object-contain" />
         </div>
         <div className="hidden sm:block text-left">
@@ -616,9 +616,9 @@ export default function Dashboard() {
       `} style={{ background: "hsl(var(--surface))" }}>
 
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-red-100 bg-gradient-to-r from-red-500/8 to-primary/5">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-md shadow-primary/20">
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-md shadow-red-500/20">
               <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
             </div>
             <span className="font-bold text-gray-900 text-lg">ZyNum</span>
@@ -631,7 +631,7 @@ export default function Dashboard() {
         {/* User info */}
         <div className="px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-primary flex items-center justify-center font-bold text-white text-sm shrink-0">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
@@ -652,7 +652,7 @@ export default function Dashboard() {
                 className={`
                   w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
                   ${active
-                    ? "bg-primary/10 text-primary font-semibold"
+                    ? "bg-gradient-to-r from-red-500/15 to-primary/10 text-red-600 font-semibold border-l-2 border-red-500"
                     : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"}
                 `}
               >
