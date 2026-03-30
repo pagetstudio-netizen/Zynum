@@ -17,7 +17,7 @@ const CURRENCY_TO_USD: Record<string, number> = {
 };
 
 interface OmniOperatorInfo {
-  omnipayOperator: string | null;
+  omnipayOperator: string;
   needsOtp: boolean;
   needsReturnUrl: boolean;
   prefix: string;
@@ -26,38 +26,38 @@ interface OmniOperatorInfo {
 
 const OMNIPAY_OPERATORS: Record<string, OmniOperatorInfo> = {
   // Côte d'Ivoire
-  ORANGE_CI: { omnipayOperator: null,     needsOtp: true,  needsReturnUrl: false, prefix: "225", currency: "XOF" },
-  MTN_CI:    { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "225", currency: "XOF" },
-  MOOV_CI:   { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "225", currency: "XOF" },
-  WAVE_CI:   { omnipayOperator: "wave",   needsOtp: false, needsReturnUrl: true,  prefix: "225", currency: "XOF" },
-  MIXX_CI:   { omnipayOperator: "mixx",   needsOtp: false, needsReturnUrl: false, prefix: "225", currency: "XOF" },
+  ORANGE_CI: { omnipayOperator: "orange",   needsOtp: true,  needsReturnUrl: false, prefix: "225", currency: "XOF" },
+  MTN_CI:    { omnipayOperator: "mtn",      needsOtp: false, needsReturnUrl: false, prefix: "225", currency: "XOF" },
+  MOOV_CI:   { omnipayOperator: "moov",     needsOtp: false, needsReturnUrl: false, prefix: "225", currency: "XOF" },
+  WAVE_CI:   { omnipayOperator: "wave",     needsOtp: false, needsReturnUrl: true,  prefix: "225", currency: "XOF" },
+  MIXX_CI:   { omnipayOperator: "mixx",     needsOtp: false, needsReturnUrl: false, prefix: "225", currency: "XOF" },
   // Sénégal
-  WAVE_SN:   { omnipayOperator: "wave",   needsOtp: false, needsReturnUrl: true,  prefix: "221", currency: "XOF" },
-  ORANGE_SN: { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "221", currency: "XOF" },
-  FREE_SN:   { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "221", currency: "XOF" },
+  WAVE_SN:   { omnipayOperator: "wave",     needsOtp: false, needsReturnUrl: true,  prefix: "221", currency: "XOF" },
+  ORANGE_SN: { omnipayOperator: "orange",   needsOtp: false, needsReturnUrl: false, prefix: "221", currency: "XOF" },
+  FREE_SN:   { omnipayOperator: "free",     needsOtp: false, needsReturnUrl: false, prefix: "221", currency: "XOF" },
   // Burkina Faso
-  ORANGE_BF: { omnipayOperator: null,     needsOtp: true,  needsReturnUrl: false, prefix: "226", currency: "XOF" },
-  MOOV_BF:   { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "226", currency: "XOF" },
+  ORANGE_BF: { omnipayOperator: "orange",   needsOtp: true,  needsReturnUrl: false, prefix: "226", currency: "XOF" },
+  MOOV_BF:   { omnipayOperator: "moov",     needsOtp: false, needsReturnUrl: false, prefix: "226", currency: "XOF" },
   // Mali
-  ORANGE_ML: { omnipayOperator: null,     needsOtp: true,  needsReturnUrl: false, prefix: "223", currency: "XOF" },
-  MOOV_ML:   { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "223", currency: "XOF" },
+  ORANGE_ML: { omnipayOperator: "orange",   needsOtp: true,  needsReturnUrl: false, prefix: "223", currency: "XOF" },
+  MOOV_ML:   { omnipayOperator: "moov",     needsOtp: false, needsReturnUrl: false, prefix: "223", currency: "XOF" },
   // Guinée
-  ORANGE_GN: { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "224", currency: "GNF" },
-  MTN_GN:    { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "224", currency: "GNF" },
+  ORANGE_GN: { omnipayOperator: "orange",   needsOtp: false, needsReturnUrl: false, prefix: "224", currency: "GNF" },
+  MTN_GN:    { omnipayOperator: "mtn",      needsOtp: false, needsReturnUrl: false, prefix: "224", currency: "GNF" },
   // Cameroun
-  MTN_CM:    { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "237", currency: "XAF" },
-  ORANGE_CM: { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "237", currency: "XAF" },
+  MTN_CM:    { omnipayOperator: "mtn",      needsOtp: false, needsReturnUrl: false, prefix: "237", currency: "XAF" },
+  ORANGE_CM: { omnipayOperator: "orange",   needsOtp: false, needsReturnUrl: false, prefix: "237", currency: "XAF" },
   // Bénin
-  MTN_BJ:    { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "229", currency: "XOF" },
-  MOOV_BJ:   { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "229", currency: "XOF" },
+  MTN_BJ:    { omnipayOperator: "mtn",      needsOtp: false, needsReturnUrl: false, prefix: "229", currency: "XOF" },
+  MOOV_BJ:   { omnipayOperator: "moov",     needsOtp: false, needsReturnUrl: false, prefix: "229", currency: "XOF" },
   // Togo
-  MOOV_TG:    { omnipayOperator: null,    needsOtp: false, needsReturnUrl: false, prefix: "228", currency: "XOF" },
-  TOGOCEL_TG: { omnipayOperator: null,    needsOtp: false, needsReturnUrl: false, prefix: "228", currency: "XOF" },
+  MOOV_TG:    { omnipayOperator: "moov",    needsOtp: false, needsReturnUrl: false, prefix: "228", currency: "XOF" },
+  TOGOCEL_TG: { omnipayOperator: "togocel", needsOtp: false, needsReturnUrl: false, prefix: "228", currency: "XOF" },
   // Ghana
-  MTN_GH:    { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "233", currency: "GHS" },
-  AIRTEL_GH: { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "233", currency: "GHS" },
+  MTN_GH:    { omnipayOperator: "mtn",      needsOtp: false, needsReturnUrl: false, prefix: "233", currency: "GHS" },
+  AIRTEL_GH: { omnipayOperator: "airtel",   needsOtp: false, needsReturnUrl: false, prefix: "233", currency: "GHS" },
   // Niger
-  MOOV_NE:   { omnipayOperator: null,     needsOtp: false, needsReturnUrl: false, prefix: "227", currency: "XOF" },
+  MOOV_NE:   { omnipayOperator: "moov",     needsOtp: false, needsReturnUrl: false, prefix: "227", currency: "XOF" },
 };
 
 function buildMsisdn(phone: string, prefix: string): string {
@@ -128,8 +128,8 @@ router.post("/v1/payments/omnipay/initiate", async (req: Request, res: Response)
       last_name:  String(lastName  ?? `User${uid}`),
     };
 
-    if (opInfo.omnipayOperator) body.operator = opInfo.omnipayOperator;
-    if (opInfo.needsOtp)        body.otp = String(otp);
+    body.operator = opInfo.omnipayOperator;
+    if (opInfo.needsOtp)       body.otp = String(otp);
     if (opInfo.needsReturnUrl)  body.return_url = `${baseUrl}/recharge?omnipay_ref=${encodeURIComponent(reference)}`;
 
     // Save pending transaction
