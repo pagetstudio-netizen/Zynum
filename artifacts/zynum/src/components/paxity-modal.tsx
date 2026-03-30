@@ -14,6 +14,7 @@ import imgVodacom     from "@assets/vodacom_1774832430195.png";
 import imgAirtel      from "@assets/Airtel_logo-01_1774832430216.png";
 import imgTMoney      from "@assets/images_(1)_1774832430242.png";
 import imgWizall      from "@assets/wizall_1763835083090-BfalgIrK_1774832430339.png";
+import imgMoov        from "@assets/moov_(1)_1763835082986-GKkwwfPK_1774832019539.png";
 
 export interface PaxityModalProps {
   open: boolean;
@@ -57,7 +58,7 @@ interface PaxityTxData {
 const MTN_LOGO    = imgMTN;
 const OM_LOGO     = imgOrangeMoney;
 const WAVE_LOGO   = imgWave;
-const MOOV_LOGO   = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Moov_Africa_logo.svg/120px-Moov_Africa_logo.svg.png";
+const MOOV_LOGO   = imgMoov;
 const MPESA_LOGO  = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/M-PESA_LOGO-01.svg/120px-M-PESA_LOGO-01.svg.png";
 const OPAY_LOGO   = imgOPay;
 const AIRTEL_LOGO = imgAirtel;
