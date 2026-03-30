@@ -6,6 +6,7 @@ import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import { hashPassword } from "../lib/auth.js";
 import { invalidateCommissionCache } from "../lib/commission.js";
+import { sendBroadcastEmail } from "../lib/email.js";
 
 const router = Router();
 const auth = [requireAuth, requireAdmin];
@@ -516,6 +517,34 @@ router.patch("/v1/admin/countries/:id", ...auth, async (req, res): Promise<void>
   if (priceMultiplier !== undefined) updates.priceMultiplier = priceMultiplier;
   const [c] = await db.update(countryOverridesTable).set(updates as any).where(eq(countryOverridesTable.id, id)).returning();
   res.json({ success: true, override: c });
+});
+
+/* ─── EMAIL BROADCAST ──────────────────────────────────────────────── */
+router.post("/v1/admin/send-broadcast-email", ...auth, async (req, res): Promise<void> => {
+  const { subject, message } = req.body;
+  if (!subject || !message) {
+    res.status(400).json({ error: "Validation error", message: "Sujet et message requis" });
+    return;
+  }
+
+  const users = await db
+    .select({ id: usersTable.id, name: usersTable.name, email: usersTable.email })
+    .from(usersTable)
+    .where(and(eq(usersTable.isBanned, false), eq(usersTable.emailVerified, true)));
+
+  let sent = 0;
+  let failed = 0;
+  for (const user of users) {
+    try {
+      await sendBroadcastEmail({ to: user.email, name: user.name, subject, message });
+      sent++;
+    } catch (err) {
+      console.error(`Broadcast to ${user.email} failed:`, err);
+      failed++;
+    }
+  }
+
+  res.json({ success: true, sent, failed, total: users.length });
 });
 
 export default router;

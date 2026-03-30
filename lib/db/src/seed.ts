@@ -27,10 +27,12 @@ async function seed() {
       balanceUsd: 0,
       isAdmin: true,
       isBanned: false,
+      emailVerified: true,
+      lastLoginAt: new Date(),
     })
     .onConflictDoUpdate({
       target: usersTable.email,
-      set: { isAdmin: true, name: "Admin" },
+      set: { isAdmin: true, name: "Admin", emailVerified: true },
     });
 
   console.log(`Admin account ready: ${adminEmail}`);

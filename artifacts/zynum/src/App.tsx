@@ -20,6 +20,7 @@ import Privacy from "@/pages/privacy";
 import Contact from "@/pages/contact";
 import HelpCenter from "@/pages/aide";
 import ApiDocs from "@/pages/api-docs";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route>
         <Layout>
           <Switch>

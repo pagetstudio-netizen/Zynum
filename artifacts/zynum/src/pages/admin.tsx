@@ -6,7 +6,7 @@ import {
   Zap, Shield, Plus, Trash2, Edit3, Ban, CheckCircle,
   Search, ChevronLeft, ChevronRight, RefreshCw, Send,
   ToggleLeft, ToggleRight, DollarSign, Percent, Star,
-  Package, AlertTriangle, Clock, Database, Bell, Eye, EyeOff, Key,
+  Package, AlertTriangle, Clock, Database, Bell, Eye, EyeOff, Key, Mail, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -1790,9 +1790,78 @@ function AdminWaitlist() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MAIN ADMIN PANEL COMPONENT
+   EMAIL BROADCAST
 ══════════════════════════════════════════════════════════════════════════════ */
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos";
+function AdminEmailBroadcast() {
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
+
+  const handleSend = async () => {
+    if (!subject.trim() || !message.trim()) return;
+    if (!window.confirm(`Envoyer cet email à tous les utilisateurs vérifiés ?`)) return;
+    setLoading(true);
+    setResult(null);
+    try {
+      const data = await adminPost("/v1/admin/send-broadcast-email", { subject, message });
+      setResult(data);
+      if (data.sent > 0) {
+        setSubject("");
+        setMessage("");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="p-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/5">
+        <p className="text-sm text-yellow-400 font-medium">⚠️ Cet email sera envoyé à tous les utilisateurs vérifiés actifs. Utilisez avec précaution.</p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-muted-foreground mb-2">Sujet de l'email</label>
+        <input
+          type="text"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="Ex: Nouvelle fonctionnalité disponible !"
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-muted-foreground mb-2">Message</label>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Rédigez votre message ici..."
+          rows={8}
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground resize-none"
+        />
+      </div>
+
+      <Button
+        onClick={handleSend}
+        disabled={loading || !subject.trim() || !message.trim()}
+        className="bg-primary hover:bg-primary/90 text-white gap-2"
+      >
+        {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Envoi en cours...</> : <><Send className="w-4 h-4" /> Envoyer à tous les utilisateurs</>}
+      </Button>
+
+      {result && (
+        <div className={`p-4 rounded-2xl border text-sm font-medium ${result.failed > 0 ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-400" : "border-green-500/30 bg-green-500/10 text-green-400"}`}>
+          ✓ Email envoyé à <strong>{result.sent}</strong> utilisateur(s) sur <strong>{result.total}</strong>.
+          {result.failed > 0 && ` (${result.failed} échec(s))`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
@@ -1803,6 +1872,7 @@ const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "messages",     label: "Messages",        icon: <MessageSquare className="w-4 h-4" /> },
   { id: "contact",      label: "Contacts",        icon: <Send className="w-4 h-4" /> },
   { id: "waitlist",     label: "Liste d'attente API", icon: <Bell className="w-4 h-4" /> },
+  { id: "email",        label: "Email Broadcast", icon: <Mail className="w-4 h-4" /> },
   { id: "settings",     label: "Paramètres",      icon: <Settings className="w-4 h-4" /> },
   { id: "payments",     label: "Paiements",       icon: <Wallet className="w-4 h-4" /> },
   { id: "faq",          label: "Centre d'aide",   icon: <HelpCircle className="w-4 h-4" /> },
@@ -1860,6 +1930,7 @@ export default function AdminPanel() {
           {activeTab === "messages"     && <AdminMessages />}
           {activeTab === "contact"      && <AdminContactMessages />}
           {activeTab === "waitlist"     && <AdminWaitlist />}
+          {activeTab === "email"        && <AdminEmailBroadcast />}
           {activeTab === "settings"     && <AdminSettings />}
           {activeTab === "payments"     && <AdminPayments />}
           {activeTab === "faq"          && <AdminFaq />}

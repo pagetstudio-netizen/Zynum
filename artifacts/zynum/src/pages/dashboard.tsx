@@ -551,6 +551,16 @@ export default function Dashboard() {
   });
 
   React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const authToken = params.get("auth_token");
+    if (authToken) {
+      localStorage.setItem("zynum_token", authToken);
+      queryClient.invalidateQueries();
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  React.useEffect(() => {
     const handler = (e: Event) => {
       const tab = (e as CustomEvent).detail as Tab;
       setActiveTab(tab);
