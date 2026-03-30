@@ -1,8 +1,8 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, CreditCard, ChevronRight, Loader2, CheckCircle2,
-  AlertCircle, Phone, ExternalLink, RefreshCw, QrCode,
+  AlertCircle, Phone, ExternalLink, QrCode,
   Smartphone, Search, ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -284,7 +284,14 @@ export function PaxityModal({ open, onClose, amountXof, userId, onSuccess, initi
   const [expiry, setExpiry]         = useState("");
   const [cvv, setCvv]               = useState("");
 
-  const apiBase = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+  const apiBase       = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+  const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCountRef  = useRef(0);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    pollCountRef.current = 0;
+  }, []);
 
   function selectCountry(c: CountryDef) {
     setSelectedCountry(c);
@@ -295,6 +302,7 @@ export function PaxityModal({ open, onClose, amountXof, userId, onSuccess, initi
   }
 
   function reset() {
+    stopPolling();
     setState("idle");
     setErrorMsg("");
     setTxData(null);
@@ -306,35 +314,35 @@ export function PaxityModal({ open, onClose, amountXof, userId, onSuccess, initi
     onClose();
   }
 
-  async function handleDone() {
-    if (txData?.transactionId) {
-      setState("loading");
-      try {
-        const res = await fetch(`${apiBase}/api/v1/payments/paxity/confirm`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ reference: txData.transactionId, userId: String(userId) }),
-        });
-        const json = (await res.json()) as Record<string, unknown>;
-        if (json.credited) {
-          setState("success");
-          onSuccess();
-          setTimeout(handleClose, 2000);
-          return;
-        }
-        // Not yet confirmed by Paxity — show message and close after delay
-        setState("error");
-        setErrorMsg("Votre paiement est en cours de traitement. Votre solde sera crédité automatiquement dès confirmation.");
-        setTimeout(() => { onSuccess(); handleClose(); }, 4000);
-        return;
-      } catch {
-        // Network error — still close gracefully
+  // Automatic polling — called every 3 s after payment is initiated
+  const pollStatus = useCallback(async (reference: string) => {
+    pollCountRef.current += 1;
+    if (pollCountRef.current > 120) { stopPolling(); return; } // max 6 min
+    try {
+      const res  = await fetch(`${apiBase}/api/v1/payments/paxity/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reference, userId: String(userId) }),
+      });
+      const json = (await res.json()) as Record<string, unknown>;
+      if (json.credited) {
+        stopPolling();
+        setState("success");
+        onSuccess();
+        setTimeout(() => { reset(); setView("form"); onClose(); }, 2500);
       }
-    }
-    onSuccess();
-    handleClose();
+    } catch { /* réseau — on continue */ }
+  }, [apiBase, userId, stopPolling, onSuccess, onClose]);
+
+  function startPolling(reference: string) {
+    stopPolling();
+    pollCountRef.current = 0;
+    pollRef.current = setInterval(() => pollStatus(reference), 3000);
   }
+
+  // Nettoyage si le modal se ferme
+  useEffect(() => { return () => stopPolling(); }, [stopPolling]);
 
   async function submit() {
     setState("loading");
@@ -396,11 +404,14 @@ export function PaxityModal({ open, onClose, amountXof, userId, onSuccess, initi
 
       if (tab === "card") {
         setState("success");
-        setTimeout(handleDone, 2500);
+        onSuccess();
+        setTimeout(handleClose, 2500);
       } else if (tx.qrCode || tx.link) {
         setState("qr");
+        if (tx.transactionId) startPolling(tx.transactionId);
       } else {
         setState("push");
+        if (tx.transactionId) startPolling(tx.transactionId);
       }
     } catch {
       setState("error");
@@ -491,90 +502,118 @@ export function PaxityModal({ open, onClose, amountXof, userId, onSuccess, initi
                       </div>
                       {txData.qrCode && (
                         <div className="bg-white p-3 rounded-2xl shadow-lg border border-gray-100">
-                          <img
-                            src={`data:image/png;base64,${txData.qrCode}`}
-                            alt="QR Code de paiement"
-                            className="w-48 h-48 object-contain"
-                          />
+                          <img src={`data:image/png;base64,${txData.qrCode}`} alt="QR Code" className="w-48 h-48 object-contain" />
                         </div>
                       )}
                       {txData.link && (
-                        <a
-                          href={txData.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/15 transition-colors"
-                        >
+                        <a href={txData.link} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/15 transition-colors">
                           <ExternalLink className="w-4 h-4" />
                           Ouvrir dans {operator.label}
                         </a>
                       )}
                     </div>
-                    <div className="flex items-start gap-3 p-3 rounded-xl bg-yellow-50 border border-yellow-200">
-                      <RefreshCw className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" style={{ animation: "spin 3s linear infinite" }} />
-                      <p className="text-xs text-yellow-700">
-                        Votre solde sera crédité automatiquement après confirmation. Cela peut prendre quelques secondes.
-                      </p>
+                    {/* 3-dot auto-detection indicator */}
+                    <div className="flex flex-col items-center gap-2 py-2">
+                      <div className="flex items-center gap-1.5">
+                        {[0, 1, 2].map((i) => (
+                          <span key={i} className="w-2 h-2 rounded-full bg-primary/60"
+                            style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400">Détection automatique du paiement…</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button variant="outline" onClick={handleClose} className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50">
-                        Fermer
-                      </Button>
-                      <Button onClick={handleDone} className="rounded-xl bg-gradient-to-r from-red-500 to-primary hover:opacity-90 text-white font-bold shadow-md shadow-red-500/20">
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        J'ai payé
-                      </Button>
-                    </div>
+                    <Button variant="outline" onClick={handleClose} className="w-full rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50">
+                      Annuler
+                    </Button>
                     {txData.transactionId && (
-                      <p className="text-center text-xs text-gray-400">Réf : {txData.transactionId}</p>
+                      <p className="text-center text-xs text-gray-300">Réf : {txData.transactionId}</p>
                     )}
                   </div>
                 )}
 
                 {/* ── PUSH screen ── */}
                 {state === "push" && (
-                  <div className="flex flex-col items-center justify-center py-10 px-6 gap-5">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500/15 to-primary/10 border border-red-100 flex items-center justify-center">
-                      <Smartphone className="w-8 h-8 text-primary" />
+                  <div className="flex flex-col items-center justify-center py-10 px-6 gap-6">
+                    {/* Operator logo in circle */}
+                    <div className="relative">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500/10 to-primary/10 border-2 border-red-100 flex items-center justify-center shadow-lg">
+                        <img src={operator.logo} alt={operator.label} className="w-12 h-12 object-contain rounded-full"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      </div>
+                      {/* Pulse ring */}
+                      <span className="absolute inset-0 rounded-full border-2 border-red-300/40 animate-ping" />
                     </div>
-                    <div className="text-center space-y-2">
+
+                    <div className="text-center space-y-1.5">
                       <p className="text-gray-900 font-bold text-lg">Confirmez sur votre téléphone</p>
-                      <p className="text-gray-500 text-sm">
-                        Une notification a été envoyée sur le numéro{" "}
+                      <p className="text-gray-500 text-sm leading-relaxed">
+                        Une notification push a été envoyée sur{" "}
                         <span className="text-gray-900 font-semibold">{phone}</span>.<br />
-                        Acceptez la demande dans votre application {operator.label}.
+                        Acceptez dans votre app <span className="font-semibold text-gray-700">{operator.label}</span>.
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: "2s" }} />
-                      En attente de confirmation…
+
+                    {/* Animated 3 dots */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        {[0, 1, 2].map((i) => (
+                          <span key={i} className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-400 to-primary"
+                            style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 font-medium">En attente de confirmation…</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 w-full">
-                      <Button variant="outline" onClick={handleClose} className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50">
-                        Fermer
-                      </Button>
-                      <Button onClick={handleDone} className="rounded-xl bg-gradient-to-r from-red-500 to-primary hover:opacity-90 text-white font-bold shadow-md shadow-red-500/20">
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        J'ai confirmé
-                      </Button>
+
+                    {/* Steps */}
+                    <div className="w-full bg-gray-50 rounded-2xl border border-gray-100 p-4 space-y-3">
+                      {[
+                        { n: 1, text: "Ouvrez votre application " + operator.label, done: true },
+                        { n: 2, text: "Acceptez la demande de paiement", done: false },
+                        { n: 3, text: "Votre solde est crédité automatiquement", done: false },
+                      ].map((s) => (
+                        <div key={s.n} className="flex items-center gap-3">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${s.done ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}>
+                            {s.done ? <CheckCircle2 className="w-3.5 h-3.5" /> : s.n}
+                          </div>
+                          <p className={`text-xs ${s.done ? "text-gray-700 font-medium" : "text-gray-500"}`}>{s.text}</p>
+                        </div>
+                      ))}
                     </div>
+
+                    <Button variant="outline" onClick={handleClose} className="w-full rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50">
+                      Annuler
+                    </Button>
                     {txData?.transactionId && (
-                      <p className="text-center text-xs text-gray-400">Réf : {txData.transactionId}</p>
+                      <p className="text-center text-xs text-gray-300">Réf : {txData.transactionId}</p>
                     )}
                   </div>
                 )}
 
                 {/* ── Success screen ── */}
                 {state === "success" && (
-                  <div className="flex flex-col items-center justify-center py-16 px-6 gap-4">
-                    <div className="w-16 h-16 rounded-full bg-green-50 border border-green-200 flex items-center justify-center">
-                      <CheckCircle2 className="w-8 h-8 text-green-600" />
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex flex-col items-center justify-center py-14 px-6 gap-4"
+                  >
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+                      className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/30"
+                    >
+                      <CheckCircle2 className="w-10 h-10 text-white" />
+                    </motion.div>
+                    <div className="text-center space-y-1">
+                      <p className="text-gray-900 font-bold text-xl">Paiement confirmé !</p>
+                      <p className="text-gray-500 text-sm">Votre solde a été crédité avec succès.</p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-gray-900 font-bold text-xl">Paiement initié !</p>
-                      <p className="text-gray-500 text-sm mt-1">Votre solde sera mis à jour automatiquement.</p>
+                    <div className="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full bg-green-50 border border-green-200 text-green-700">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Solde mis à jour
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* ── Payment form ── */}

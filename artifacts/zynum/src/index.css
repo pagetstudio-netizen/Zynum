@@ -381,3 +381,8 @@ html.light .bg-clip-text.from-white {
 ::-webkit-scrollbar-thumb {
   @apply bg-secondary rounded-full hover:bg-muted-foreground/50 transition-colors;
 }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%           { transform: translateY(-8px); opacity: 1; }
+}
