@@ -33,6 +33,7 @@ interface OmniOperatorDef {
   needsOtp: boolean;
   needsReturnUrl: boolean;
   otpHint?: string;
+  validationHint?: string; // Instructions push (sans saisie de code)
 }
 
 interface OmniCountryDef {
@@ -57,7 +58,7 @@ const OMNIPAY_COUNTRIES: OmniCountryDef[] = [
   {
     code: "CI", name: "Côte d'Ivoire", flag: "🇨🇮", prefix: "225", currency: "XOF", currencySymbol: "FCFA",
     operators: [
-      { id: "ORANGE_CI", label: "Orange Money", logo: OM_LOGO,   needsOtp: true,  needsReturnUrl: false, otpHint: "Composez #144*82# sur votre téléphone Orange pour obtenir votre OTP." },
+      { id: "ORANGE_CI", label: "Orange Money", logo: OM_LOGO,   needsOtp: true,  needsReturnUrl: false, otpHint: "Composez #144*82# sur votre téléphone pour générer votre code OTP, puis saisissez-le ci-dessous." },
       { id: "MTN_CI",    label: "MTN MoMo",     logo: MTN_LOGO,  needsOtp: false, needsReturnUrl: false },
       { id: "MOOV_CI",   label: "Moov Money",   logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
       { id: "WAVE_CI",   label: "Wave",          logo: WAVE_LOGO, needsOtp: false, needsReturnUrl: true  },
@@ -74,14 +75,14 @@ const OMNIPAY_COUNTRIES: OmniCountryDef[] = [
   {
     code: "BF", name: "Burkina Faso", flag: "🇧🇫", prefix: "226", currency: "XOF", currencySymbol: "FCFA",
     operators: [
-      { id: "ORANGE_BF", label: "Orange Money", logo: OM_LOGO,   needsOtp: true,  needsReturnUrl: false, otpHint: "Composez #144# sur votre téléphone Orange BF pour recevoir votre OTP." },
+      { id: "ORANGE_BF", label: "Orange Money", logo: OM_LOGO,   needsOtp: true,  needsReturnUrl: false, otpHint: "Composez *144*4*6*montant# sur votre téléphone pour générer votre code OTP, puis saisissez-le ci-dessous." },
       { id: "MOOV_BF",   label: "Moov Money",   logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
     ],
   },
   {
     code: "ML", name: "Mali", flag: "🇲🇱", prefix: "223", currency: "XOF", currencySymbol: "FCFA",
     operators: [
-      { id: "ORANGE_ML", label: "Orange Money", logo: OM_LOGO,   needsOtp: true,  needsReturnUrl: false, otpHint: "Composez #144# sur votre téléphone Orange ML pour recevoir votre OTP." },
+      { id: "ORANGE_ML", label: "Orange Money", logo: OM_LOGO,   needsOtp: false, needsReturnUrl: false, validationHint: "Veuillez valider le paiement sur votre téléphone Orange Money.\n\nSi vous ne recevez pas de notification, composez #144# sur votre téléphone, puis accédez au menu Paiement marchand (option 2).\n\nValidez l'opération en entrant votre code secret." },
       { id: "MOOV_ML",   label: "Moov Money",   logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
     ],
   },
@@ -582,7 +583,9 @@ export function OmnipayModal({
                         {operator.otpHint && (
                           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-orange-50 border border-orange-200">
                             <Info className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-                            <p className="text-xs text-orange-700 leading-relaxed">{operator.otpHint}</p>
+                            <p className={`${operator.otpHint.length > 80 ? "text-[10px]" : "text-xs"} text-orange-700 leading-relaxed`}>
+                              {operator.otpHint}
+                            </p>
                           </div>
                         )}
                         <div>
@@ -601,6 +604,20 @@ export function OmnipayModal({
                               className={`${inputCls} pl-9 font-mono tracking-widest`}
                             />
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Validation push — operators without OTP code input (ex: Orange Mali) */}
+                    {!operator.needsOtp && operator.validationHint && (
+                      <div className="flex items-start gap-2.5 p-3 rounded-xl bg-orange-50 border border-orange-200">
+                        <Info className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+                        <div className="space-y-1.5">
+                          {operator.validationHint.split("\n\n").map((para, i) => (
+                            <p key={i} className={`${operator.validationHint!.length > 150 ? "text-[10px]" : "text-xs"} text-orange-700 leading-relaxed`}>
+                              {para}
+                            </p>
+                          ))}
                         </div>
                       </div>
                     )}
