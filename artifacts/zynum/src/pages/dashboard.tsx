@@ -652,7 +652,7 @@ export default function Dashboard() {
                 className={`
                   w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
                   ${active
-                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                    ? "bg-primary/10 text-primary font-semibold"
                     : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"}
                 `}
               >
@@ -692,7 +692,7 @@ export default function Dashboard() {
                 key={c}
                 onClick={() => setCurrency(c)}
                 className={`flex-1 py-1.5 rounded text-xs font-semibold transition-all ${
-                  currency === c ? "bg-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  currency === c ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {c}
