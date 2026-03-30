@@ -41,56 +41,7 @@
 }
 
 :root {
-  /* DARK NAVY FINTECH THEME - Defaulting to dark */
-  --background: 222 47% 5%;
-  --foreground: 210 40% 98%;
-
-  --surface: 222 47% 8%;       /* sidebar, cards */
-  --surface-raised: 222 47% 11%; /* elevated cards */
-
-  --card: 222 47% 9%;
-  --card-foreground: 210 40% 98%;
-
-  --popover: 222 47% 9%;
-  --popover-foreground: 210 40% 98%;
-
-  --primary: 217 91% 60%;
-  --primary-foreground: 210 40% 98%;
-
-  --secondary: 215 32% 17%;
-  --secondary-foreground: 210 40% 98%;
-
-  --muted: 215 32% 15%;
-  --muted-foreground: 215 20% 65%;
-
-  --accent: 199 89% 48%;
-  --accent-foreground: 210 40% 98%;
-
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-
-  --border: 215 32% 17%;
-  --input: 215 32% 17%;
-  --ring: 217 91% 60%;
-
-  --radius: 0.75rem;
-
-  /* Semantic surface tokens */
-  --color-surface: hsl(var(--surface));
-  --color-surface-raised: hsl(var(--surface-raised));
-
-  /* Overlay tints */
-  --overlay-faint: rgba(255,255,255,0.03);
-  --overlay-subtle: rgba(255,255,255,0.05);
-  --overlay-light: rgba(255,255,255,0.10);
-  --overlay-hover: rgba(255,255,255,0.08);
-  --overlay-border: rgba(255,255,255,0.06);
-  --overlay-text: rgba(255,255,255,1);
-  --overlay-text-muted: rgba(255,255,255,0.55);
-}
-
-/* ── Light mode ──────────────────────────────────────────────────────────── */
-html.light {
+  /* LIGHT THEME — default for all pages except homepage */
   --background: 210 20% 96%;
   --foreground: 222 47% 11%;
 
@@ -122,7 +73,13 @@ html.light {
   --input: 214 20% 88%;
   --ring: 217 91% 55%;
 
-  /* Light mode overlays (dark-on-light instead of light-on-dark) */
+  --radius: 0.75rem;
+
+  /* Semantic surface tokens */
+  --color-surface: hsl(var(--surface));
+  --color-surface-raised: hsl(var(--surface-raised));
+
+  /* Light overlays */
   --overlay-faint: rgba(0,0,0,0.02);
   --overlay-subtle: rgba(0,0,0,0.04);
   --overlay-light: rgba(0,0,0,0.06);
@@ -130,6 +87,51 @@ html.light {
   --overlay-border: rgba(0,0,0,0.08);
   --overlay-text: hsl(222, 47%, 11%);
   --overlay-text-muted: hsl(215, 16%, 42%);
+}
+
+/* ── Dark theme — applied only on the homepage via html.dark ─────────────── */
+html.dark {
+  --background: 222 47% 5%;
+  --foreground: 210 40% 98%;
+
+  --surface: 222 47% 8%;
+  --surface-raised: 222 47% 11%;
+
+  --card: 222 47% 9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222 47% 9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 217 91% 60%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 215 32% 17%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 215 32% 15%;
+  --muted-foreground: 215 20% 65%;
+
+  --accent: 199 89% 48%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 215 32% 17%;
+  --input: 215 32% 17%;
+  --ring: 217 91% 60%;
+
+  --color-surface: hsl(var(--surface));
+  --color-surface-raised: hsl(var(--surface-raised));
+
+  --overlay-faint: rgba(255,255,255,0.03);
+  --overlay-subtle: rgba(255,255,255,0.05);
+  --overlay-light: rgba(255,255,255,0.10);
+  --overlay-hover: rgba(255,255,255,0.08);
+  --overlay-border: rgba(255,255,255,0.06);
+  --overlay-text: rgba(255,255,255,1);
+  --overlay-text-muted: rgba(255,255,255,0.55);
 }
 
 /* ── Surface helper classes ──────────────────────────────────────────────── */

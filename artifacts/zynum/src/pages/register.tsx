@@ -56,16 +56,15 @@ export default function Register() {
   };
 
   const inputClass =
-    "w-full h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20";
+    "w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 shadow-sm";
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-10 bg-background relative overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-10 bg-gray-50 relative overflow-hidden">
 
-      {/* Decorative background orbs */}
+      {/* Subtle background blobs */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[-10%] left-[-5%] w-[450px] h-[450px] rounded-full bg-primary/10 blur-[120px]" />
-        <div className="absolute top-[10%] right-[-8%] w-[350px] h-[350px] rounded-full bg-rose-500/10 blur-[100px]" />
-        <div className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 w-[600px] h-[250px] rounded-full bg-primary/5 blur-[80px]" />
+        <div className="absolute top-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-primary/6 blur-[120px]" />
+        <div className="absolute bottom-[10%] right-[-5%] w-[350px] h-[350px] rounded-full bg-rose-400/6 blur-[100px]" />
       </div>
 
       <div className="w-full max-w-sm relative z-10">
@@ -75,14 +74,14 @@ export default function Register() {
           <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
             <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
           </div>
-          <span className="font-bold text-lg text-white tracking-tight">ZyNum</span>
+          <span className="font-bold text-lg text-gray-900 tracking-tight">ZyNum</span>
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-extrabold text-white leading-tight mb-2">
+        <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">
           Créer un compte
         </h1>
-        <p className="text-[15px] text-muted-foreground mb-8">
+        <p className="text-[15px] text-gray-500 mb-8">
           Déjà utilisateur de ZyNum ?{" "}
           <Link href="/login" className="text-primary font-semibold hover:underline">
             Connectez-vous ici
@@ -91,7 +90,7 @@ export default function Register() {
 
         {/* Error */}
         {registerMutation.isError && (
-          <div className="mb-5 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          <div className="mb-5 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-sm">
             {(registerMutation.error as any)?.response?.data?.message || "Impossible de créer le compte."}
           </div>
         )}
@@ -101,11 +100,11 @@ export default function Register() {
           {/* First + Last name row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
-                Prénom <span className="text-red-400">*</span>
+              <label className="block text-[13px] font-semibold text-gray-600 mb-2">
+                Prénom <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Jean"
@@ -117,11 +116,11 @@ export default function Register() {
               </div>
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
-                Nom <span className="text-red-400">*</span>
+              <label className="block text-[13px] font-semibold text-gray-600 mb-2">
+                Nom <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Dupont"
@@ -136,11 +135,11 @@ export default function Register() {
 
           {/* Email */}
           <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
-              Adresse email <span className="text-red-400">*</span>
+            <label className="block text-[13px] font-semibold text-gray-600 mb-2">
+              Adresse email <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="email"
                 placeholder="votre@email.com"
@@ -154,11 +153,11 @@ export default function Register() {
 
           {/* Password */}
           <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
-              Mot de passe <span className="text-red-400">*</span>
+            <label className="block text-[13px] font-semibold text-gray-600 mb-2">
+              Mot de passe <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
@@ -166,12 +165,12 @@ export default function Register() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20"
+                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 shadow-sm"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -180,29 +179,29 @@ export default function Register() {
 
           {/* Confirm password */}
           <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
-              Confirmer le mot de passe <span className="text-red-400">*</span>
+            <label className="block text-[13px] font-semibold text-gray-600 mb-2">
+              Confirmer le mot de passe <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type={showConfirm ? "text" : "password"}
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20"
+                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 shadow-sm"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             {confirmPassword && password !== confirmPassword && (
-              <p className="text-xs text-red-400 mt-1.5">Les mots de passe ne correspondent pas.</p>
+              <p className="text-xs text-red-500 mt-1.5">Les mots de passe ne correspondent pas.</p>
             )}
           </div>
 
@@ -219,7 +218,7 @@ export default function Register() {
                 className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                   acceptTerms
                     ? "bg-primary border-primary"
-                    : "border-white/20 bg-white/5"
+                    : "border-gray-300 bg-white"
                 }`}
               >
                 {acceptTerms && (
@@ -229,7 +228,7 @@ export default function Register() {
                 )}
               </div>
             </div>
-            <span className="text-[14px] text-muted-foreground leading-snug">
+            <span className="text-[14px] text-gray-500 leading-snug">
               J'accepte les{" "}
               <Link href="/terms" className="text-primary font-semibold hover:underline">
                 termes et conditions
@@ -260,7 +259,7 @@ export default function Register() {
         </form>
 
         {/* Footer */}
-        <p className="text-center text-[13px] text-muted-foreground mt-8 leading-relaxed">
+        <p className="text-center text-[13px] text-gray-500 mt-8 leading-relaxed">
           Avez-vous précédemment acheté sur ZyNum ?{" "}
           <Link href="/login" className="text-primary font-semibold hover:underline">
             Accéder à vos achats ici

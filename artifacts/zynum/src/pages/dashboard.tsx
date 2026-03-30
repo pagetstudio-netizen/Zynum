@@ -7,7 +7,7 @@ import {
   MessageSquare, User, PlusCircle,
   Wallet, Package, TrendingUp, ChevronRight,
   Check, Menu, X, Shield,
-  Eye, EyeOff, Lock, KeyRound, Sun, Moon, Globe2,
+  Eye, EyeOff, Lock, KeyRound, Globe2,
 } from "lucide-react";
 import iconOverview  from "@assets/1239292_1774829368223.png";
 import iconBuy       from "@assets/84426_1774829368186.png";
@@ -17,7 +17,6 @@ import iconProfile   from "@assets/avatar.227e595e234f4d53f478_1774828482017.png
 import iconHelp      from "@assets/images_(12)_1774828482000.png";
 import iconSupport   from "@assets/2-2_1774828481887.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
-import { useTheme } from "@/hooks/use-theme";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -211,7 +210,6 @@ function PasswordInput({ value, onChange, placeholder }: { value: string; onChan
 
 function Profile({ user }: { user: { id: number; name: string; email: string; createdAt: string } }) {
   const { toast } = useToast();
-  const { theme, toggle: toggleTheme } = useTheme();
   const { lang, setLang, t } = useLanguage();
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd]         = useState("");
@@ -376,31 +374,6 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
         <div className="flex items-center gap-1.5 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 shrink-0">
           <Check className="w-3 h-3" /> {t("profile_active")}
         </div>
-      </div>
-
-      {/* Theme toggle */}
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            {theme === "dark" ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-white">{t("profile_theme")}</p>
-            <p className="text-xs text-muted-foreground">
-              {t("profile_theme_sub")} {theme === "dark" ? t("profile_theme_dark") : t("profile_theme_light")}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={toggleTheme}
-          className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
-            theme === "dark" ? "bg-primary" : "bg-muted"
-          }`}
-        >
-          <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${
-            theme === "dark" ? "translate-x-7" : "translate-x-1"
-          }`} />
-        </button>
       </div>
 
       {/* Language selector */}

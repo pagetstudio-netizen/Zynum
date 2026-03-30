@@ -6,20 +6,17 @@ const STORAGE_KEY = "zynum_theme";
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
-  if (theme === "light") {
-    root.classList.add("light");
-    root.classList.remove("dark");
-  } else {
-    root.classList.remove("light");
+  if (theme === "dark") {
     root.classList.add("dark");
+    root.classList.remove("light");
+  } else {
+    root.classList.remove("dark");
+    root.classList.remove("light");
   }
 }
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    return stored ?? "dark";
-  });
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
     applyTheme(theme);

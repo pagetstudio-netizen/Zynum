@@ -41,14 +41,16 @@ export default function Login() {
     loginMutation.mutate({ data: { email, password } });
   };
 
-  return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-10 bg-background relative overflow-hidden">
+  const inputClass =
+    "w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 shadow-sm";
 
-      {/* Decorative background orbs */}
+  return (
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-10 bg-gray-50 relative overflow-hidden">
+
+      {/* Subtle background blobs */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[-10%] right-[-5%] w-[450px] h-[450px] rounded-full bg-primary/10 blur-[120px]" />
-        <div className="absolute top-[20%] left-[-8%] w-[350px] h-[350px] rounded-full bg-rose-500/10 blur-[100px]" />
-        <div className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 w-[600px] h-[250px] rounded-full bg-primary/5 blur-[80px]" />
+        <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] rounded-full bg-primary/6 blur-[120px]" />
+        <div className="absolute bottom-[10%] left-[-5%] w-[350px] h-[350px] rounded-full bg-rose-400/6 blur-[100px]" />
       </div>
 
       <div className="w-full max-w-sm relative z-10">
@@ -58,14 +60,14 @@ export default function Login() {
           <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
             <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
           </div>
-          <span className="font-bold text-lg text-white tracking-tight">ZyNum</span>
+          <span className="font-bold text-lg text-gray-900 tracking-tight">ZyNum</span>
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-extrabold text-white leading-tight mb-2">
+        <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">
           Se connecter
         </h1>
-        <p className="text-[15px] text-muted-foreground mb-8">
+        <p className="text-[15px] text-gray-500 mb-8">
           Pas encore de compte ?{" "}
           <Link href="/register" className="text-primary font-semibold hover:underline">
             Créer un compte
@@ -74,7 +76,7 @@ export default function Login() {
 
         {/* Error */}
         {loginMutation.isError && (
-          <div className="mb-5 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          <div className="mb-5 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-sm">
             {(loginMutation.error as any)?.response?.data?.message || "Email ou mot de passe incorrect."}
           </div>
         )}
@@ -83,18 +85,18 @@ export default function Login() {
 
           {/* Email */}
           <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">
-              Adresse email <span className="text-red-400">*</span>
+            <label className="block text-[13px] font-semibold text-gray-600 mb-2">
+              Adresse email <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="email"
                 placeholder="votre@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20"
+                className={inputClass}
               />
             </div>
           </div>
@@ -102,27 +104,27 @@ export default function Login() {
           {/* Password */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[13px] font-semibold text-muted-foreground">
-                Mot de passe <span className="text-red-400">*</span>
+              <label className="text-[13px] font-semibold text-gray-600">
+                Mot de passe <span className="text-red-500">*</span>
               </label>
               <a href="#" className="text-[12px] text-primary font-semibold hover:underline">
                 Mot de passe oublié ?
               </a>
             </div>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-white/20"
+                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 shadow-sm"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -144,7 +146,7 @@ export default function Login() {
         </form>
 
         {/* Footer */}
-        <p className="text-center text-[13px] text-muted-foreground mt-8 leading-relaxed">
+        <p className="text-center text-[13px] text-gray-500 mt-8 leading-relaxed">
           Avez-vous précédemment acheté sur ZyNum ?{" "}
           <Link href="/register" className="text-primary font-semibold hover:underline">
             Accéder à votre compte ici

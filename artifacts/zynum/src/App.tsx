@@ -1,4 +1,5 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,9 +31,24 @@ const queryClient = new QueryClient({
   },
 });
 
+function ThemeByRoute() {
+  const [location] = useLocation();
+  useEffect(() => {
+    const isHome = location === "/" || location === "";
+    if (isHome) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [location]);
+  return null;
+}
+
 function Router() {
   return (
-    <Switch>
+    <>
+      <ThemeByRoute />
+      <Switch>
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
@@ -54,6 +70,7 @@ function Router() {
         </Layout>
       </Route>
     </Switch>
+    </>
   );
 }
 
