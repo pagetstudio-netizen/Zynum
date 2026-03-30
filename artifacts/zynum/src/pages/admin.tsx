@@ -439,32 +439,269 @@ function AdminOrders() {
 /* ═══════════════════════════════════════════════════════════════════════════
    SECTION: TRANSACTIONS
 ══════════════════════════════════════════════════════════════════════════════ */
+const emptyDepositForm = { userId: "", amountUsd: "", method: "orange_money", provider: "", type: "recharge", status: "completed", reference: "", note: "" };
+
 function AdminTransactions() {
+  const { toast } = useToast();
   const [page, setPage] = useState(1);
-  const { data, loading, refetch } = useAdminFetch<any>(`/v1/admin/transactions?page=${page}&limit=20`, [page]);
+  const [q, setQ] = useState("");
+  const [qInput, setQInput] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [showDepositForm, setShowDepositForm] = useState(false);
+  const [depositForm, setDepositForm] = useState({ ...emptyDepositForm });
+  const [depositSaving, setDepositSaving] = useState(false);
+
+  const params = new URLSearchParams({ page: String(page), limit: "20" });
+  if (q) params.set("q", q);
+  if (statusFilter) params.set("status", statusFilter);
+  if (typeFilter) params.set("type", typeFilter);
+
+  const { data: usersData } = useAdminFetch<any>("/v1/admin/users?limit=100", []);
+  const { data, loading, refetch } = useAdminFetch<any>(`/v1/admin/transactions?${params}`, [page, q, statusFilter, typeFilter]);
+
+  const applySearch = () => { setQ(qInput); setPage(1); };
+  const clearFilters = () => { setQ(""); setQInput(""); setStatusFilter(""); setTypeFilter(""); setPage(1); };
+  const hasFilters = q || statusFilter || typeFilter;
+
+  const handleDeposit = async () => {
+    if (!depositForm.userId || !depositForm.amountUsd) return;
+    setDepositSaving(true);
+    const res = await adminPost("/v1/admin/transactions", depositForm);
+    if (res.success) {
+      toast({ title: "Transaction créée avec succès" });
+      setDepositForm({ ...emptyDepositForm });
+      setShowDepositForm(false);
+      refetch();
+    } else {
+      toast({ variant: "destructive", title: "Erreur", description: res.error });
+    }
+    setDepositSaving(false);
+  };
+
+  const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
+  const selClass = "bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50";
 
   return (
     <div className="space-y-5">
-      <div className="flex justify-end">
-        <button onClick={refetch} className="p-2 rounded-xl border border-white/10 text-muted-foreground hover:text-white hover:bg-white/5"><RefreshCw className="w-4 h-4" /></button>
+      {/* Stats row */}
+      {data && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="rounded-xl border border-white/10 bg-card/40 p-4 text-center">
+            <p className="text-2xl font-bold text-white">{data.total ?? 0}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Transactions{hasFilters ? " (filtrées)" : ""}</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-card/40 p-4 text-center">
+            <p className="text-2xl font-bold text-primary">${n(data.totalRevenue).toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Volume USD</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-card/40 p-4 text-center col-span-2 sm:col-span-1">
+            <p className="text-2xl font-bold text-white">{Math.round(n(data.totalRevenue) * 620).toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Volume FCFA</p>
+          </div>
+        </div>
+      )}
+
+      {/* Toolbar */}
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-4 space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {/* Search */}
+          <div className="flex flex-1 min-w-[200px] items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <input
+              value={qInput}
+              onChange={(e) => setQInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && applySearch()}
+              placeholder="Email, nom, référence..."
+              className="flex-1 bg-transparent text-sm text-white placeholder:text-muted-foreground focus:outline-none"
+            />
+            {qInput && (
+              <button onClick={() => { setQInput(""); setQ(""); setPage(1); }} className="text-muted-foreground hover:text-white">
+                <AlertTriangle className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+          <button onClick={applySearch} className="px-4 py-2 bg-primary/20 border border-primary/30 rounded-xl text-sm text-primary font-medium hover:bg-primary/30 transition-colors">
+            Rechercher
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Status filter */}
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className={selClass}>
+            <option value="">Tous les statuts</option>
+            <option value="completed">Complétées</option>
+            <option value="pending">En attente</option>
+            <option value="failed">Échouées</option>
+          </select>
+
+          {/* Type filter */}
+          <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }} className={selClass}>
+            <option value="">Tous les types</option>
+            <option value="recharge">Recharge</option>
+            <option value="debit">Débit</option>
+          </select>
+
+          {hasFilters && (
+            <button onClick={clearFilters} className="text-xs text-red-400 hover:text-red-300 px-3 py-2 rounded-xl border border-red-500/20 hover:bg-red-500/10 transition-colors">
+              Réinitialiser
+            </button>
+          )}
+
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => setShowDepositForm(!showDepositForm)}
+              className="flex items-center gap-2 px-3 py-2 bg-green-500/15 border border-green-500/30 rounded-xl text-sm text-green-400 font-medium hover:bg-green-500/25 transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Dépôt manuel
+            </button>
+            <button onClick={refetch} className="p-2 rounded-xl border border-white/10 text-muted-foreground hover:text-white hover:bg-white/5">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
-      {loading ? <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> : (
+
+      {/* Manual deposit form */}
+      <AnimatePresence>
+        {showDepositForm && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="rounded-2xl border border-green-500/20 bg-green-500/5 p-6 space-y-4"
+          >
+            <h3 className="font-bold text-white flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-green-400" /> Créer un dépôt manuel
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Utilisateur *</label>
+                <select value={depositForm.userId} onChange={(e) => setDepositForm({ ...depositForm, userId: e.target.value })} className={inp}>
+                  <option value="">Sélectionner un utilisateur</option>
+                  {(usersData?.users ?? []).map((u: any) => (
+                    <option key={u.id} value={u.id}>{u.email} — ${n(u.balanceUsd).toFixed(2)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Montant USD *</label>
+                <input type="number" step="0.01" value={depositForm.amountUsd} onChange={(e) => setDepositForm({ ...depositForm, amountUsd: e.target.value })} placeholder="ex: 5.00" className={inp} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Type</label>
+                <select value={depositForm.type} onChange={(e) => setDepositForm({ ...depositForm, type: e.target.value })} className={inp}>
+                  <option value="recharge">Recharge (crédit)</option>
+                  <option value="debit">Débit</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Méthode *</label>
+                <select value={depositForm.method} onChange={(e) => setDepositForm({ ...depositForm, method: e.target.value })} className={inp}>
+                  <option value="orange_money">Orange Money</option>
+                  <option value="moov_money">Moov Money</option>
+                  <option value="wave">Wave</option>
+                  <option value="mtn_momo">MTN MoMo</option>
+                  <option value="paxity">Paxity</option>
+                  <option value="cash">Cash</option>
+                  <option value="bank_transfer">Virement bancaire</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Statut</label>
+                <select value={depositForm.status} onChange={(e) => setDepositForm({ ...depositForm, status: e.target.value })} className={inp}>
+                  <option value="completed">Complétée</option>
+                  <option value="pending">En attente</option>
+                  <option value="failed">Échouée</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Référence</label>
+                <input value={depositForm.reference} onChange={(e) => setDepositForm({ ...depositForm, reference: e.target.value })} placeholder="Ref. optionnelle" className={inp} />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Note interne</label>
+              <input value={depositForm.note} onChange={(e) => setDepositForm({ ...depositForm, note: e.target.value })} placeholder="Raison du dépôt..." className={inp} />
+            </div>
+            {depositForm.amountUsd && (
+              <div className="text-sm text-green-400/80 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-2">
+                ≈ {Math.round(parseFloat(depositForm.amountUsd || "0") * 620).toLocaleString()} FCFA
+                {depositForm.type === "debit" ? " sera débité" : " sera crédité"} sur le solde
+              </div>
+            )}
+            <div className="flex gap-3">
+              <Button onClick={handleDeposit} disabled={depositSaving || !depositForm.userId || !depositForm.amountUsd} className="bg-green-600 hover:bg-green-500 text-white">
+                <CheckCircle className="w-4 h-4 mr-2" /> {depositSaving ? "Traitement..." : "Valider le dépôt"}
+              </Button>
+              <Button variant="outline" onClick={() => setShowDepositForm(false)} className="border-white/10 text-white hover:bg-white/5">
+                Annuler
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+      ) : (
         <>
-          <Table headers={["ID", "Utilisateur", "Type", "Méthode", "Montant", "Statut", "Référence", "Date"]} empty={!data?.transactions?.length}>
-            {(data?.transactions ?? []).map((t: any) => (
-              <tr key={t.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                <td className="px-4 py-3 text-muted-foreground text-xs">#{t.id}</td>
-                <td className="px-4 py-3"><div><p className="text-white text-sm">{t.userName}</p><p className="text-xs text-muted-foreground">{t.userEmail}</p></div></td>
-                <td className="px-4 py-3 text-white text-sm capitalize">{t.type}</td>
-                <td className="px-4 py-3 text-muted-foreground text-sm">{t.method} {t.provider ? `• ${t.provider}` : ""}</td>
-                <td className="px-4 py-3"><div><p className="text-white font-semibold text-sm">${n(t.amountUsd).toFixed(2)}</p><p className="text-xs text-muted-foreground">{Math.round(n(t.amountFcfa)).toLocaleString()} FCFA</p></div></td>
-                <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
-                <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{t.reference ?? "-"}</td>
-                <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(t.createdAt).toLocaleString("fr")}</td>
-              </tr>
-            ))}
-          </Table>
-          <Pagination page={page} total={data?.total ?? 0} limit={20} onChange={setPage} />
+          <div className="rounded-2xl border border-white/10 bg-card/40 overflow-hidden">
+            {!data?.transactions?.length ? (
+              <div className="py-16 text-center">
+                <Database className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  {hasFilters ? "Aucune transaction ne correspond aux filtres" : "Aucune transaction enregistrée"}
+                </p>
+                {hasFilters && (
+                  <button onClick={clearFilters} className="mt-3 text-xs text-primary hover:underline">Réinitialiser les filtres</button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 bg-white/[0.02]">
+                      {["ID", "Utilisateur", "Type", "Méthode", "Montant", "Statut", "Référence", "Date"].map((h) => (
+                        <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(data?.transactions ?? []).map((t: any) => (
+                      <tr key={t.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                        <td className="px-4 py-3 text-muted-foreground text-xs font-mono">#{t.id}</td>
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="text-white text-sm font-medium">{t.userName ?? "—"}</p>
+                            <p className="text-xs text-muted-foreground">{t.userEmail ?? "—"}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${t.type === "recharge" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`}>
+                            {t.type === "recharge" ? "Recharge" : "Débit"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground text-sm capitalize">
+                          {t.method}{t.provider && t.provider !== t.method ? <span className="text-muted-foreground/50"> • {t.provider}</span> : ""}
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-white font-semibold text-sm">${n(t.amountUsd).toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground">{Math.round(n(t.amountFcfa)).toLocaleString()} FCFA</p>
+                        </td>
+                        <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs font-mono max-w-[120px] truncate" title={t.reference ?? ""}>{t.reference ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">{new Date(t.createdAt).toLocaleString("fr")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          {(data?.total ?? 0) > 20 && <Pagination page={page} total={data?.total ?? 0} limit={20} onChange={setPage} />}
         </>
       )}
     </div>

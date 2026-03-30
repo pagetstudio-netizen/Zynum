@@ -81,9 +81,13 @@ router.get("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => {
   res.json({ user: { ...user, passwordHash: undefined }, orders, transactions: txs });
 });
 
-router.patch("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => {
+router.patch("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void> => {
   const userId = parseInt(req.params.id);
   const { name, email, password, balanceUsd, isAdmin, isBanned } = req.body;
+
+  // Fetch current user to compute balance delta
+  const [current] = await db.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!current) { res.status(404).json({ error: "User not found" }); return; }
 
   const updates: Record<string, unknown> = {};
   if (name !== undefined) updates.name = name;
@@ -95,6 +99,26 @@ router.patch("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => 
 
   const [updated] = await db.update(usersTable).set(updates as any).where(eq(usersTable.id, userId)).returning();
   if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+
+  // Record a transaction when balance is manually adjusted
+  if (balanceUsd !== undefined) {
+    const newBalance = parseFloat(balanceUsd);
+    const delta = newBalance - (current.balanceUsd ?? 0);
+    if (Math.abs(delta) > 0.001) {
+      const FCFA_RATE = 620;
+      await db.insert(transactionsTable).values({
+        userId,
+        type: delta >= 0 ? "recharge" : "debit",
+        amountUsd: Math.abs(delta),
+        amountFcfa: Math.abs(delta) * FCFA_RATE,
+        method: "admin",
+        provider: "admin_adjustment",
+        status: "completed",
+        reference: `ADM-${Date.now()}`,
+        metadata: JSON.stringify({ adminId: req.userId, note: "Ajustement manuel du solde" }),
+      });
+    }
+  }
 
   res.json({ success: true, user: { ...updated, passwordHash: undefined } });
 });
@@ -130,8 +154,20 @@ router.get("/v1/admin/orders", ...auth, async (req, res): Promise<void> => {
 
 /* ─── TRANSACTIONS ───────────────────────────────────────────────────── */
 router.get("/v1/admin/transactions", ...auth, async (req, res): Promise<void> => {
-  const { page = "1", limit = "20" } = req.query as Record<string, string>;
+  const { page = "1", limit = "20", q, status, type } = req.query as Record<string, string>;
   const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const conditions = [];
+  if (status) conditions.push(eq(transactionsTable.status, status));
+  if (type)   conditions.push(eq(transactionsTable.type, type));
+  if (q) {
+    conditions.push(or(
+      like(usersTable.email, `%${q}%`),
+      like(usersTable.name, `%${q}%`),
+      like(transactionsTable.reference, `%${q}%`),
+    ));
+  }
+  const where = conditions.length ? and(...conditions) : undefined;
 
   const txs = await db.select({
     id: transactionsTable.id,
@@ -143,13 +179,60 @@ router.get("/v1/admin/transactions", ...auth, async (req, res): Promise<void> =>
     provider: transactionsTable.provider,
     status: transactionsTable.status,
     reference: transactionsTable.reference,
+    metadata: transactionsTable.metadata,
     createdAt: transactionsTable.createdAt,
     userName: usersTable.name,
     userEmail: usersTable.email,
-  }).from(transactionsTable).leftJoin(usersTable, eq(transactionsTable.userId, usersTable.id)).orderBy(desc(transactionsTable.createdAt)).limit(parseInt(limit)).offset(offset);
+  })
+    .from(transactionsTable)
+    .leftJoin(usersTable, eq(transactionsTable.userId, usersTable.id))
+    .where(where)
+    .orderBy(desc(transactionsTable.createdAt))
+    .limit(parseInt(limit))
+    .offset(offset);
 
-  const [{ c }] = await db.select({ c: count() }).from(transactionsTable);
-  res.json({ transactions: txs, total: c, page: parseInt(page), limit: parseInt(limit) });
+  const [{ c }] = await db.select({ c: count() }).from(transactionsTable)
+    .leftJoin(usersTable, eq(transactionsTable.userId, usersTable.id))
+    .where(where);
+
+  // Total revenue for filtered set
+  const [rev] = await db.select({ s: sum(transactionsTable.amountUsd) }).from(transactionsTable)
+    .leftJoin(usersTable, eq(transactionsTable.userId, usersTable.id))
+    .where(where);
+
+  res.json({ transactions: txs, total: c, page: parseInt(page), limit: parseInt(limit), totalRevenue: rev.s ?? 0 });
+});
+
+// Admin: manually create a transaction (offline deposit, credit, debit)
+router.post("/v1/admin/transactions", ...auth, async (req: any, res): Promise<void> => {
+  const { userId, type, amountUsd, method, provider, status, reference, note } = req.body;
+  if (!userId || !amountUsd || !method) {
+    res.status(400).json({ error: "userId, amountUsd, method required" }); return;
+  }
+
+  const FCFA_RATE = 620;
+  const amount = parseFloat(amountUsd);
+
+  // Update user balance
+  const [user] = await db.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, parseInt(userId))).limit(1);
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  const delta = (type === "debit") ? -amount : amount;
+  await db.update(usersTable).set({ balanceUsd: (user.balanceUsd ?? 0) + delta }).where(eq(usersTable.id, parseInt(userId)));
+
+  const [tx] = await db.insert(transactionsTable).values({
+    userId: parseInt(userId),
+    type: type || "recharge",
+    amountUsd: amount,
+    amountFcfa: amount * FCFA_RATE,
+    method: method || "admin",
+    provider: provider || "manual",
+    status: status || "completed",
+    reference: reference || `ADM-${Date.now()}`,
+    metadata: JSON.stringify({ adminId: req.userId, note: note || "Dépôt manuel" }),
+  }).returning();
+
+  res.json({ success: true, transaction: tx });
 });
 
 /* ─── PUBLIC: Active popup notifications (no auth) ───────────────────── */
