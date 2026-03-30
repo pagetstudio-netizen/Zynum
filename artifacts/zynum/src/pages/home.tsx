@@ -77,8 +77,9 @@ export default function Home() {
 
       {/* ── Hero ───────────────────────────────────────────────────── */}
       <section className="w-full relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        {/* Soft decorative blobs */}
+        {/* Grid + blobs */}
         <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 grid-overlay-60" />
           <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-blue-200/30 blur-[120px]" />
           <div className="absolute bottom-0 right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px]" />
           <div className="absolute top-[30%] right-[15%] w-[350px] h-[350px] rounded-full bg-rose-200/20 blur-[100px]" />
