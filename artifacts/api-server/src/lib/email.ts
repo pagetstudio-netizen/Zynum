@@ -1,45 +1,10 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-function getSmtpConfig() {
-  const fromEmail = process.env.SMTP_FROM_EMAIL || "";
-  const domain = fromEmail.split("@")[1]?.toLowerCase() || "";
-
-  let host = process.env.SMTP_HOST || "";
-  let port = parseInt(process.env.SMTP_PORT || "0");
-
-  if (!host) {
-    if (domain.includes("gmail")) {
-      host = "smtp.gmail.com";
-      port = port || 587;
-    } else if (domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live") || domain.includes("msn")) {
-      host = "smtp.office365.com";
-      port = port || 587;
-    } else if (domain.includes("yahoo")) {
-      host = "smtp.mail.yahoo.com";
-      port = port || 587;
-    } else {
-      host = "smtp.gmail.com";
-      port = port || 587;
-    }
-  }
-
-  return { host, port };
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
 }
 
-function createTransporter() {
-  const { host, port } = getSmtpConfig();
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: {
-      user: process.env.SMTP_FROM_EMAIL,
-      pass: process.env.SMTP_FROM_PASSWORD,
-    },
-  });
-}
-
-const FROM = `ZyNum <${process.env.SMTP_FROM_EMAIL}>`;
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "ZyNum <noreply@zynum.net>";
 
 const BASE_STYLE = `
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -113,7 +78,7 @@ function ctaButton(url: string, label: string) {
 }
 
 export async function sendVerificationEmail(opts: { to: string; name: string; code: string; token: string }) {
-  const link = `https://zynum.net/verify-email?token=${opts.token}`;
+  const link = `https://zynum.net/api/v1/auth/verify-email-link?token=${opts.token}`;
   const body = `
     <h2 style="font-size:22px;font-weight:800;color:#111827;margin:0 0 8px;">Vérifiez votre email ✉️</h2>
     <p style="font-size:15px;color:#6b7280;margin:0 0 24px;">Bonjour <strong>${opts.name}</strong>, entrez ce code pour activer votre compte ZyNum :</p>
@@ -125,9 +90,10 @@ export async function sendVerificationEmail(opts: { to: string; name: string; co
     <p style="font-size:12px;color:#d1d5db;margin:16px 0 0;text-align:center;">Si vous n'avez pas créé ce compte, ignorez cet email.</p>
   `;
 
-  await createTransporter().sendMail({
-    from: FROM,
-    to: opts.to,
+  const resend = getResend();
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: [opts.to],
     subject: `${opts.code} — Vérification de votre compte ZyNum`,
     html: htmlLayout(body, `Votre code de vérification ZyNum : ${opts.code}`),
   });
@@ -148,16 +114,17 @@ export async function sendWelcomeEmail(opts: { to: string; name: string }) {
     <div style="text-align:center;">${ctaButton("https://zynum.net/dashboard", "Accéder au tableau de bord")}</div>
   `;
 
-  await createTransporter().sendMail({
-    from: FROM,
-    to: opts.to,
+  const resend = getResend();
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: [opts.to],
     subject: "Bienvenue sur ZyNum — Votre compte est activé !",
     html: htmlLayout(body, "Votre compte ZyNum est maintenant actif."),
   });
 }
 
 export async function sendPasswordResetEmail(opts: { to: string; name: string; code: string; token: string }) {
-  const link = `https://zynum.net/reset-password?token=${opts.token}`;
+  const link = `https://zynum.net/api/v1/auth/reset-password-link?token=${opts.token}`;
   const body = `
     <h2 style="font-size:22px;font-weight:800;color:#111827;margin:0 0 8px;">Réinitialisation du mot de passe 🔐</h2>
     <p style="font-size:15px;color:#6b7280;margin:0 0 24px;">Bonjour <strong>${opts.name}</strong>, utilisez ce code pour réinitialiser votre mot de passe :</p>
@@ -169,9 +136,10 @@ export async function sendPasswordResetEmail(opts: { to: string; name: string; c
     <p style="font-size:12px;color:#d1d5db;margin:16px 0 0;text-align:center;">Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
   `;
 
-  await createTransporter().sendMail({
-    from: FROM,
-    to: opts.to,
+  const resend = getResend();
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: [opts.to],
     subject: `${opts.code} — Réinitialisation de votre mot de passe ZyNum`,
     html: htmlLayout(body, `Votre code de réinitialisation : ${opts.code}`),
   });
@@ -186,9 +154,10 @@ export async function sendLoginVerificationEmail(opts: { to: string; name: strin
     <p style="font-size:12px;color:#d1d5db;margin:0;text-align:center;">Si ce n'est pas vous, changez votre mot de passe immédiatement.</p>
   `;
 
-  await createTransporter().sendMail({
-    from: FROM,
-    to: opts.to,
+  const resend = getResend();
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: [opts.to],
     subject: `${opts.code} — Code de connexion ZyNum`,
     html: htmlLayout(body, `Votre code de connexion : ${opts.code}`),
   });
@@ -202,9 +171,10 @@ export async function sendBroadcastEmail(opts: { to: string; name: string; subje
     <div style="text-align:center;">${ctaButton("https://zynum.net/dashboard", "Accéder à ZyNum")}</div>
   `;
 
-  await createTransporter().sendMail({
-    from: FROM,
-    to: opts.to,
+  const resend = getResend();
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: [opts.to],
     subject: opts.subject,
     html: htmlLayout(body, opts.message.slice(0, 120)),
   });
