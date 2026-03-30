@@ -145,7 +145,8 @@ function AdminStats() {
   const handleResetMyStats = async () => {
     setResetting(true);
     try {
-      const r = await fetch(`${API}/v1/admin/reset-my-stats`, { method: "POST", credentials: "include" });
+      const token = localStorage.getItem("zynum_token") ?? "";
+      const r = await fetch(`${API}/v1/admin/reset-my-stats`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       const d = await r.json();
       if (d.success) {
         toast({ title: "Statistiques réinitialisées", description: `${d.deletedTransactions} transaction(s) et ${d.deletedOrders} commande(s) supprimées de votre compte.` });
@@ -1342,7 +1343,8 @@ function AdminOmniPay() {
   const fetchBalance = async () => {
     setBalLoading(true);
     try {
-      const r = await fetch(`${API}/v1/admin/omnipay/balance`, { credentials: "include" });
+      const token = localStorage.getItem("zynum_token") ?? "";
+      const r = await fetch(`${API}/v1/admin/omnipay/balance`, { headers: { Authorization: `Bearer ${token}` } });
       const d = await r.json();
       setBalance(d);
     } catch {
@@ -1357,10 +1359,10 @@ function AdminOmniPay() {
     }
     setWLoading(true); setWResult(null);
     try {
+      const token = localStorage.getItem("zynum_token") ?? "";
       const r = await fetch(`${API}/v1/admin/omnipay/withdraw`, {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(withdraw),
       });
       const d = await r.json();
