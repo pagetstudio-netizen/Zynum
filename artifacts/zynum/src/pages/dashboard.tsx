@@ -31,6 +31,7 @@ import BuyNumber from "./buy";
 import OrderHistory from "./history";
 import Recharge from "./recharge";
 import AdminPanel from "./admin";
+import { NotificationBanner } from "@/components/notification-banner";
 
 type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "admin";
 type UserWithAdmin = { id: number; name: string; email: string; isAdmin?: boolean; isBanned?: boolean; createdAt: string };
@@ -740,7 +741,11 @@ export default function Dashboard() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main className="flex-1 overflow-auto">
+          {/* Popup notifications — shown at every login, dismissed per session */}
+          <NotificationBanner />
+
+          <div className="p-4 md:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -757,6 +762,7 @@ export default function Dashboard() {
               {activeTab === "admin"     && user?.isAdmin && <AdminPanel />}
             </motion.div>
           </AnimatePresence>
+          </div>
         </main>
       </div>
     </div>

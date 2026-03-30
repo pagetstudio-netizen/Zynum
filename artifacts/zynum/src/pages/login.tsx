@@ -20,6 +20,9 @@ export default function Login() {
     mutation: {
       onSuccess: (data) => {
         localStorage.setItem("zynum_token", data.token);
+        // Reset popup dismissals on every new login so they show again
+        sessionStorage.removeItem("zynum_dismissed_popups");
+        sessionStorage.setItem("zynum_login_at", String(Date.now()));
         queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
         toast({ title: "Connecté avec succès !", description: "Bienvenue sur ZyNum." });
         const hasPendingBuy = !!sessionStorage.getItem("zynum_buy_intent");

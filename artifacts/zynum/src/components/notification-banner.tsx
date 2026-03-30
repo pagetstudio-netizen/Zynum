@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, Bell } from "lucide-react";
 
 const API = "/api";
-const DISMISS_KEY = "zynum_dismissed_popups";
+const DISMISS_KEY  = "zynum_dismissed_popups";
+const LOGIN_AT_KEY = "zynum_login_at";
 
 type Popup = {
   id: number;
@@ -36,14 +37,17 @@ function dismiss(id: number) {
 export function NotificationBanner() {
   const [popups, setPopups] = useState<Popup[]>([]);
   const [dismissed, setDismissed] = useState<number[]>([]);
+  // Tie fetch to login session: each login sets a new zynum_login_at timestamp
+  const loginAt = sessionStorage.getItem(LOGIN_AT_KEY) ?? "0";
 
   useEffect(() => {
+    // Read dismissed list fresh (cleared on login)
     setDismissed(getDismissed());
     fetch(`${API}/v1/popup-notifications`)
       .then((r) => r.json())
       .then((d) => { if (d.notifications) setPopups(d.notifications); })
       .catch(() => {});
-  }, []);
+  }, [loginAt]);
 
   const visible = popups.filter((p) => !dismissed.includes(p.id));
 
@@ -51,6 +55,9 @@ export function NotificationBanner() {
     dismiss(id);
     setDismissed((prev) => [...prev, id]);
   };
+
+  // Don't render anything when there are no visible notifications
+  if (visible.length === 0 && popups.length === 0) return null;
 
   return (
     <div className="w-full space-y-2 px-4 pt-3">
