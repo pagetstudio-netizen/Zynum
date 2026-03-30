@@ -474,82 +474,210 @@ function AdminTransactions() {
 /* ═══════════════════════════════════════════════════════════════════════════
    SECTION: MESSAGES
 ══════════════════════════════════════════════════════════════════════════════ */
+const POPUP_COLORS = [
+  { value: "blue",   label: "Bleu",    dot: "bg-blue-500" },
+  { value: "green",  label: "Vert",    dot: "bg-green-500" },
+  { value: "red",    label: "Rouge",   dot: "bg-red-500" },
+  { value: "yellow", label: "Jaune",   dot: "bg-yellow-400" },
+  { value: "purple", label: "Violet",  dot: "bg-purple-500" },
+  { value: "orange", label: "Orange",  dot: "bg-orange-500" },
+];
+
+const emptyForm = { type: "popup", target: "all", subject: "", content: "", color: "blue", linkUrl: "", linkLabel: "", imageUrl: "" };
+
 function AdminMessages() {
   const { toast } = useToast();
   const { data, loading, refetch } = useAdminFetch<any>("/v1/admin/messages", []);
-  const [form, setForm] = useState({ type: "popup", target: "all", subject: "", content: "" });
-  const [sending, setSending] = useState(false);
+  const [form, setForm] = useState({ ...emptyForm });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
+  const [toggling, setToggling] = useState<number | null>(null);
 
-  const send = async () => {
-    if (!form.content) return;
-    setSending(true);
-    await adminPost("/v1/admin/messages", form);
-    toast({ title: "Message envoyé" });
-    setForm({ type: "popup", target: "all", subject: "", content: "" });
-    refetch();
-    setSending(false);
+  const handleCreate = async () => {
+    if (!form.content.trim()) return;
+    setSaving(true);
+    const res = await adminPost("/v1/admin/messages", {
+      ...form,
+      linkUrl: form.linkUrl || null,
+      linkLabel: form.linkLabel || null,
+      imageUrl: form.imageUrl || null,
+      subject: form.subject || null,
+    });
+    if (res.success) {
+      toast({ title: "Notification créée" });
+      setForm({ ...emptyForm });
+      refetch();
+    } else {
+      toast({ variant: "destructive", title: "Erreur", description: res.error });
+    }
+    setSaving(false);
   };
+
+  const handleToggle = async (m: any) => {
+    setToggling(m.id);
+    await adminPatch(`/v1/admin/messages/${m.id}`, { isActive: !m.isActive });
+    refetch();
+    setToggling(null);
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeleting(id);
+    await adminDelete(`/v1/admin/messages/${id}`);
+    toast({ title: "Notification supprimée" });
+    refetch();
+    setDeleting(null);
+  };
+
+  const popups = (data?.messages ?? []).filter((m: any) => m.type === "popup");
+  const activeCount = popups.filter((m: any) => m.isActive).length;
+
+  const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
-        <h3 className="font-bold text-white">Envoyer un message global</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Type</label>
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
-              <option value="popup">Popup</option>
-              <option value="email">Email</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Destinataires</label>
-            <select value={form.target} onChange={(e) => setForm({ ...form, target: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
-              <option value="all">Tout le monde</option>
-              <option value="buyers">Acheteurs (ont acheté)</option>
-              <option value="non_buyers">Non acheteurs</option>
-              <option value="daily">Acheteurs quotidiens</option>
-            </select>
-          </div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl border border-white/10 bg-card/40 p-4 text-center">
+          <p className="text-2xl font-bold text-white">{popups.length}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Notifications</p>
         </div>
-        {form.type === "email" && (
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Sujet</label>
-            <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Sujet de l'email" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
-          </div>
-        )}
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Message</label>
-          <textarea rows={4} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="Écrivez votre message..." className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none" />
+        <div className="rounded-xl border border-white/10 bg-card/40 p-4 text-center">
+          <p className="text-2xl font-bold text-green-400">{activeCount}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Actives</p>
         </div>
-        <Button onClick={send} disabled={sending || !form.content} className="bg-primary hover:bg-primary/90 text-white">
-          <Send className="w-4 h-4 mr-2" /> {sending ? "Envoi..." : "Envoyer"}
-        </Button>
+        <div className="rounded-xl border border-white/10 bg-card/40 p-4 text-center">
+          <p className="text-2xl font-bold text-muted-foreground">{popups.length - activeCount}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Inactives</p>
+        </div>
       </div>
 
+      {/* Create form */}
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
+        <h3 className="font-bold text-white flex items-center gap-2">
+          <Bell className="w-4 h-4 text-primary" /> Créer une notification popup
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Titre (optionnel)</label>
+            <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Titre de la notification" className={inp} />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Couleur</label>
+            <select value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className={inp}>
+              {POPUP_COLORS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Message *</label>
+          <textarea rows={3} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="Contenu de la notification..." className={`${inp} resize-none`} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Lien URL (optionnel)</label>
+            <input value={form.linkUrl} onChange={(e) => setForm({ ...form, linkUrl: e.target.value })} placeholder="https://..." className={inp} />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Texte du bouton lien</label>
+            <input value={form.linkLabel} onChange={(e) => setForm({ ...form, linkLabel: e.target.value })} placeholder="En savoir plus" className={inp} />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">URL d'image (optionnel)</label>
+          <input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://exemple.com/image.jpg" className={inp} />
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-2">
+            {POPUP_COLORS.find((c) => c.value === form.color) && (
+              <span className={`w-3 h-3 rounded-full ${POPUP_COLORS.find((c) => c.value === form.color)!.dot}`} />
+            )}
+            <span className="text-xs text-muted-foreground">Aperçu couleur</span>
+          </div>
+          <Button onClick={handleCreate} disabled={saving || !form.content.trim()} className="bg-primary hover:bg-primary/90 text-white">
+            <Plus className="w-4 h-4 mr-2" /> {saving ? "Création..." : "Créer la notification"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Notification list */}
       <div className="rounded-2xl border border-white/10 bg-card/40 overflow-hidden">
         <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Historique des messages</h3>
+          <h3 className="font-semibold text-white">Toutes les notifications popup</h3>
           <button onClick={refetch} className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5"><RefreshCw className="w-4 h-4" /></button>
         </div>
-        {loading ? <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> : (
+
+        {loading ? (
+          <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+        ) : popups.length === 0 ? (
+          <div className="py-12 text-center">
+            <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">Aucune notification popup</p>
+          </div>
+        ) : (
           <div className="divide-y divide-white/5">
-            {(data?.messages ?? []).map((m: any) => (
-              <div key={m.id} className="px-5 py-4 hover:bg-white/[0.02]">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${m.type === "popup" ? "bg-blue-500/20 text-blue-400 border-blue-500/30" : "bg-purple-500/20 text-purple-400 border-purple-500/30"}`}>{m.type}</span>
-                      <span className="text-xs text-muted-foreground">{m.target}</span>
+            {popups.map((m: any) => {
+              const colorDot = POPUP_COLORS.find((c) => c.value === m.color)?.dot ?? "bg-blue-500";
+              return (
+                <div key={m.id} className="px-5 py-4 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-start gap-3">
+                    {/* Color dot */}
+                    <span className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${colorDot}`} />
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${m.isActive ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-white/5 text-muted-foreground border-white/10"}`}>
+                          {m.isActive ? "Actif" : "Inactif"}
+                        </span>
+                        {m.subject && <span className="text-sm font-semibold text-white">{m.subject}</span>}
+                        <span className="text-xs text-muted-foreground">{new Date(m.sentAt).toLocaleString("fr")}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">{m.content}</p>
+                      {(m.linkUrl || m.imageUrl) && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground/70">
+                          {m.linkUrl && <span>🔗 {m.linkUrl}</span>}
+                          {m.imageUrl && <span>🖼 Image</span>}
+                        </div>
+                      )}
                     </div>
-                    {m.subject && <p className="text-sm font-semibold text-white mb-1">{m.subject}</p>}
-                    <p className="text-sm text-muted-foreground">{m.content}</p>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleToggle(m)}
+                        disabled={toggling === m.id}
+                        title={m.isActive ? "Désactiver" : "Activer"}
+                        className={`p-1.5 rounded-lg transition-colors ${m.isActive ? "text-green-400 hover:bg-green-500/10" : "text-muted-foreground hover:text-white hover:bg-white/5"}`}
+                      >
+                        {toggling === m.id ? (
+                          <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin" />
+                        ) : m.isActive ? (
+                          <ToggleRight className="w-4 h-4" />
+                        ) : (
+                          <ToggleLeft className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(m.id)}
+                        disabled={deleting === m.id}
+                        className="p-1.5 rounded-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        {deleting === m.id ? (
+                          <div className="w-4 h-4 border border-red-400 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground shrink-0">{new Date(m.sentAt).toLocaleString("fr")}</p>
                 </div>
-              </div>
-            ))}
-            {!data?.messages?.length && <p className="text-sm text-muted-foreground text-center py-8">Aucun message envoyé</p>}
+              );
+            })}
           </div>
         )}
       </div>

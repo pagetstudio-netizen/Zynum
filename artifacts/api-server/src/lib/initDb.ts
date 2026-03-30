@@ -91,9 +91,24 @@ async function ensureSchema() {
       "target" text DEFAULT 'all' NOT NULL,
       "subject" text,
       "content" text NOT NULL,
+      "color" text DEFAULT 'blue',
+      "link_url" text,
+      "link_label" text,
+      "image_url" text,
+      "is_active" boolean DEFAULT true NOT NULL,
       "sent_at" timestamp with time zone DEFAULT now() NOT NULL
     )
   `);
+  // Add new popup columns to existing admin_messages tables (idempotent)
+  for (const col of [
+    `ALTER TABLE admin_messages ADD COLUMN IF NOT EXISTS color text DEFAULT 'blue'`,
+    `ALTER TABLE admin_messages ADD COLUMN IF NOT EXISTS link_url text`,
+    `ALTER TABLE admin_messages ADD COLUMN IF NOT EXISTS link_label text`,
+    `ALTER TABLE admin_messages ADD COLUMN IF NOT EXISTS image_url text`,
+    `ALTER TABLE admin_messages ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true NOT NULL`,
+  ]) {
+    await db.execute(sql.raw(col)).catch(() => {});
+  }
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "payment_providers" (
       "id" serial PRIMARY KEY NOT NULL,

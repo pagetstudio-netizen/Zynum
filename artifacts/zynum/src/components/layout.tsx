@@ -11,6 +11,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useGetCurrentUser, useLogoutUser, getGetCurrentUserQueryKey, useGetBalance } from "@workspace/api-client-react";
 import { SocialBar } from "@/components/social-bar";
+import { NotificationBanner } from "@/components/notification-banner";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -317,6 +318,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="flex-1 relative z-10 flex flex-col">
+        <NotificationBanner />
         {children}
       </main>
 

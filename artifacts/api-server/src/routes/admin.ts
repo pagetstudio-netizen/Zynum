@@ -152,18 +152,59 @@ router.get("/v1/admin/transactions", ...auth, async (req, res): Promise<void> =>
   res.json({ transactions: txs, total: c, page: parseInt(page), limit: parseInt(limit) });
 });
 
+/* ─── PUBLIC: Active popup notifications (no auth) ───────────────────── */
+router.get("/v1/popup-notifications", async (req, res): Promise<void> => {
+  const msgs = await db.select().from(adminMessagesTable)
+    .where(and(eq(adminMessagesTable.type, "popup"), eq(adminMessagesTable.isActive, true)))
+    .orderBy(desc(adminMessagesTable.sentAt))
+    .limit(5);
+  res.json({ notifications: msgs });
+});
+
 /* ─── MESSAGES ───────────────────────────────────────────────────────── */
 router.get("/v1/admin/messages", ...auth, async (req, res): Promise<void> => {
-  const msgs = await db.select().from(adminMessagesTable).orderBy(desc(adminMessagesTable.sentAt)).limit(50);
+  const msgs = await db.select().from(adminMessagesTable).orderBy(desc(adminMessagesTable.sentAt)).limit(100);
   res.json({ messages: msgs });
 });
 
 router.post("/v1/admin/messages", ...auth, async (req: any, res): Promise<void> => {
-  const { type, target, subject, content } = req.body;
+  const { type, target, subject, content, color, linkUrl, linkLabel, imageUrl, isActive } = req.body;
   if (!content) { res.status(400).json({ error: "Content required" }); return; }
 
-  const [msg] = await db.insert(adminMessagesTable).values({ senderId: req.userId, type: type || "popup", target: target || "all", subject, content }).returning();
+  const [msg] = await db.insert(adminMessagesTable).values({
+    senderId: req.userId,
+    type: type || "popup",
+    target: target || "all",
+    subject,
+    content,
+    color: color || "blue",
+    linkUrl: linkUrl || null,
+    linkLabel: linkLabel || null,
+    imageUrl: imageUrl || null,
+    isActive: isActive !== false,
+  }).returning();
   res.json({ success: true, message: msg });
+});
+
+router.patch("/v1/admin/messages/:id", ...auth, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  const { subject, content, color, linkUrl, linkLabel, imageUrl, isActive } = req.body;
+  const updates: Record<string, unknown> = {};
+  if (subject   !== undefined) updates.subject   = subject;
+  if (content   !== undefined) updates.content   = content;
+  if (color     !== undefined) updates.color     = color;
+  if (linkUrl   !== undefined) updates.linkUrl   = linkUrl;
+  if (linkLabel !== undefined) updates.linkLabel = linkLabel;
+  if (imageUrl  !== undefined) updates.imageUrl  = imageUrl;
+  if (isActive  !== undefined) updates.isActive  = isActive;
+  const [msg] = await db.update(adminMessagesTable).set(updates as any).where(eq(adminMessagesTable.id, id)).returning();
+  if (!msg) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ success: true, message: msg });
+});
+
+router.delete("/v1/admin/messages/:id", ...auth, async (req, res): Promise<void> => {
+  await db.delete(adminMessagesTable).where(eq(adminMessagesTable.id, parseInt(req.params.id)));
+  res.json({ success: true });
 });
 
 /* ─── SETTINGS ───────────────────────────────────────────────────────── */
