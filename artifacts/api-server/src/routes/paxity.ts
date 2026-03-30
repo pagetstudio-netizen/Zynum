@@ -95,6 +95,87 @@ async function verifyPaxityTransaction(reference: string): Promise<{
   }
 }
 
+// POST /v1/payments/paxity/confirm  — manual confirm after "J'ai payé"
+router.post("/v1/payments/paxity/confirm", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { reference, userId } = req.body ?? {};
+
+    if (!reference || !userId) {
+      res.status(400).json({ error: "Missing reference or userId" });
+      return;
+    }
+
+    const uid = parseInt(String(userId), 10);
+    if (isNaN(uid) || uid <= 0) {
+      res.status(400).json({ error: "Invalid userId" });
+      return;
+    }
+
+    // Check for duplicate (already credited)
+    const [existing] = await db
+      .select({ id: transactionsTable.id, status: transactionsTable.status })
+      .from(transactionsTable)
+      .where(eq(transactionsTable.reference, String(reference)))
+      .limit(1);
+
+    if (existing) {
+      res.json({ credited: true, action: "already_credited" });
+      return;
+    }
+
+    // Verify with Paxity
+    const verified = await verifyPaxityTransaction(String(reference));
+    console.log("[Paxity confirm] Verification result:", verified);
+
+    if (!verified.verified) {
+      res.json({ credited: false, status: verified.status, message: "Paiement non confirmé par Paxity" });
+      return;
+    }
+
+    // Normalize currency to USD
+    const XOF_TO_USD: Record<string, number> = {
+      XOF: 1 / 620, XAF: 1 / 620, GHS: 1 / 15,
+      GNF: 1 / 8700, KES: 1 / 130, NGN: 1 / 1550, USD: 1,
+    };
+    const currency   = (verified.currency ?? "XOF").toUpperCase();
+    const amount     = verified.amount ?? 0;
+    const rate       = XOF_TO_USD[currency] ?? (1 / 620);
+    const amountUsd  = currency === "USD" ? amount : amount * rate;
+    const amountFcfa = currency === "XOF" ? amount : Math.round(amountUsd * 620);
+
+    const [user] = await db.select({ id: usersTable.id }).from(usersTable)
+      .where(eq(usersTable.id, uid)).limit(1);
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    await db.update(usersTable)
+      .set({ balanceUsd: sql`${usersTable.balanceUsd} + ${amountUsd}` })
+      .where(eq(usersTable.id, uid));
+
+    await db.insert(transactionsTable).values({
+      userId: uid,
+      type: "recharge",
+      amountUsd,
+      amountFcfa,
+      method: "paxity",
+      provider: "paxity",
+      status: "completed",
+      reference: String(reference),
+      metadata: JSON.stringify({ source: "manual_confirm" }),
+    });
+
+    console.log(`[Paxity confirm] Credited $${amountUsd.toFixed(4)} to user #${uid}`);
+    res.json({ credited: true, action: "credited", amountUsd });
+
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    console.error("[Paxity confirm] Error:", message);
+    res.status(500).json({ error: "confirm_error", message });
+  }
+});
+
 // GET /v1/payments/paxity/methods?country=SN
 router.get("/v1/payments/paxity/methods", async (req: Request, res: Response): Promise<void> => {
   try {
@@ -122,7 +203,8 @@ router.post("/v1/payments/paxity/initiate", async (req: Request, res: Response):
       return;
     }
 
-    const ipnUrl    = ipn || `${process.env.API_BASE_URL ?? ""}/api/v1/webhooks/paxity`;
+    const baseUrl   = process.env.API_BASE_URL ?? "https://zynum0220.replit.app";
+    const ipnUrl    = ipn || `${baseUrl}/api/v1/webhooks/paxity`;
     const rawAmount = Math.round(Number(amount));
     let paxityRes: globalThis.Response;
 

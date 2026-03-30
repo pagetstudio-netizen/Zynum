@@ -305,7 +305,32 @@ export function PaxityModal({ open, onClose, amountXof, userId, onSuccess, initi
     onClose();
   }
 
-  function handleDone() {
+  async function handleDone() {
+    if (txData?.transactionId) {
+      setState("loading");
+      try {
+        const res = await fetch(`${apiBase}/api/v1/payments/paxity/confirm`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ reference: txData.transactionId, userId: String(userId) }),
+        });
+        const json = (await res.json()) as Record<string, unknown>;
+        if (json.credited) {
+          setState("success");
+          onSuccess();
+          setTimeout(handleClose, 2000);
+          return;
+        }
+        // Not yet confirmed by Paxity — show message and close after delay
+        setState("error");
+        setErrorMsg("Votre paiement est en cours de traitement. Votre solde sera crédité automatiquement dès confirmation.");
+        setTimeout(() => { onSuccess(); handleClose(); }, 4000);
+        return;
+      } catch {
+        // Network error — still close gracefully
+      }
+    }
     onSuccess();
     handleClose();
   }
