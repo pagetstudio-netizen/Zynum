@@ -323,6 +323,13 @@ async function getPricesForProduct(
   return data;
 }
 
+// ─── Sync service info lookup ─────────────────────────────────────────────────
+
+export function getServiceInfo(service: string): { icon: string; color: string } {
+  const entry = SERVICE_MAP[service.toLowerCase()];
+  return { icon: entry?.icon ?? "", color: entry?.color ?? "#6B7280" };
+}
+
 // ─── Public helpers ───────────────────────────────────────────────────────────
 
 export async function getProfile(): Promise<FiveSimProfile> {

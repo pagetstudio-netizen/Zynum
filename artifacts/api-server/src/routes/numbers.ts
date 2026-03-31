@@ -10,6 +10,7 @@ import {
   finishOrder,
   getOperatorsForServiceCountry,
   getServiceName,
+  getServiceInfo,
   getCountryName,
   mapFiveSimStatus,
 } from "../lib/fivesim.js";
@@ -19,12 +20,15 @@ import { applyDiscountCode } from "./discounts.js";
 const router: IRouter = Router();
 
 function formatOrder(order: typeof ordersTable.$inferSelect) {
+  const { icon: serviceIcon, color: serviceColor } = getServiceInfo(order.service);
   return {
     id: String(order.id),
     externalId: order.externalId,
     phone: order.phone,
     service: order.service,
     serviceName: order.serviceName,
+    serviceIcon,
+    serviceColor,
     country: order.country,
     countryName: order.countryName,
     status: order.status as "PENDING" | "RECEIVED" | "FINISHED" | "TIMEOUT" | "BANNED" | "CANCELED",

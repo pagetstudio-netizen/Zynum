@@ -7,11 +7,26 @@ import {
   Package, CheckCircle2, Clock, XCircle, Copy, Check,
   X, Loader2,
 } from "lucide-react";
+
 import iconEmpty from "@assets/no_1774828481941.png";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useGetOrderHistory, useGetCurrentUser, useCancelOrder } from "@workspace/api-client-react";
+
+function ServiceLogo({ icon, color, name, size = 36 }: { icon?: string; color?: string; name: string; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const bg = color ?? "#6B7280";
+  const showFallback = failed || !icon;
+  return (
+    <div style={{ width: size, height: size, borderRadius: size * 0.28, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+      {showFallback
+        ? <Package style={{ width: size * 0.5, height: size * 0.5, color: "#fff", opacity: 0.9 }} />
+        : <img src={icon} alt={name} style={{ width: size * 0.62, height: size * 0.62, objectFit: "contain" }} onError={() => setFailed(true)} />
+      }
+    </div>
+  );
+}
 
 const DURATION = 360;
 function useTimeLeft(createdAt: string): number {
@@ -80,11 +95,16 @@ function CopyCode({ code }: { code: string }) {
   );
 }
 
-function CancelPendingButton({ orderId, refetch }: { orderId: string; refetch: () => void }) {
+function CancelPendingButton({ orderId, refetch, compact = false }: { orderId: string; refetch: () => void; compact?: boolean }) {
   const { t } = useLanguage();
   const cancel = useCancelOrder({ mutation: { onSuccess: () => refetch() } });
   return (
-    <Button variant="ghost" size="sm" className="h-7 px-2.5 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg" onClick={() => cancel.mutate(orderId)} disabled={cancel.isPending}>
+    <Button
+      size="sm"
+      className={`${compact ? "h-7 px-2.5 text-xs" : "h-8 px-3 text-xs"} bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-lg font-semibold transition-colors`}
+      onClick={() => cancel.mutate(orderId)}
+      disabled={cancel.isPending}
+    >
       {cancel.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><X className="w-3.5 h-3.5 mr-1" />{t("history_cancel_refund")}</>}
     </Button>
   );
@@ -100,9 +120,7 @@ function OrderCard({ order, formatPrice, refetch }: { order: any; formatPrice: (
     <div className={`bg-white border rounded-2xl p-4 space-y-3 shadow-sm transition-colors ${isPending ? "border-yellow-300" : "border-gray-200"}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500/10 to-primary/10 border border-primary/15 flex items-center justify-center shrink-0">
-            <Package className="w-4 h-4 text-primary" />
-          </div>
+          <ServiceLogo icon={order.serviceIcon} color={order.serviceColor} name={order.serviceName} size={38} />
           <div className="min-w-0">
             <p className="font-semibold text-gray-900 text-sm truncate">{order.serviceName}</p>
             <p className="text-xs text-gray-400">{order.countryName}</p>
@@ -258,7 +276,12 @@ export default function OrderHistory() {
                           <p className="text-sm font-medium text-gray-900">{format(new Date(order.createdAt), "dd MMM yyyy", { locale })}</p>
                           <p className="text-xs text-gray-400 font-mono">{format(new Date(order.createdAt), "HH:mm:ss")}</p>
                         </td>
-                        <td className="px-5 py-3.5 whitespace-nowrap text-sm font-semibold text-gray-900">{order.serviceName}</td>
+                        <td className="px-5 py-3.5 whitespace-nowrap">
+                          <div className="flex items-center gap-2.5">
+                            <ServiceLogo icon={order.serviceIcon} color={order.serviceColor} name={order.serviceName} size={30} />
+                            <span className="text-sm font-semibold text-gray-900">{order.serviceName}</span>
+                          </div>
+                        </td>
                         <td className="px-5 py-3.5 whitespace-nowrap text-sm text-gray-600">{order.countryName}</td>
                         <td className="px-5 py-3.5 whitespace-nowrap font-mono text-sm text-gray-600">{order.phone}</td>
                         <td className="px-5 py-3.5 whitespace-nowrap">
@@ -275,7 +298,7 @@ export default function OrderHistory() {
                               <span className="flex items-center gap-1.5 text-xs text-gray-500">
                                 <RefreshCcw className="w-3 h-3 animate-spin" /> {t("history_waiting_short")}
                               </span>
-                              <CancelPendingButton orderId={order.id} refetch={refetch} />
+                              <CancelPendingButton orderId={order.id} refetch={refetch} compact />
                             </div>
                           ) : (
                             <span className="text-gray-400 text-sm">—</span>
