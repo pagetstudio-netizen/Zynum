@@ -9,7 +9,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
-import { SocialBar } from "@/components/social-bar";
 
 interface Article { id: string; title: string; desc: string; readTime: string; }
 interface Category { id: string; icon: React.ReactNode; color: string; bgColor: string; title: string; desc: string; count: number; articles: Article[]; }
@@ -389,9 +388,6 @@ export default function HelpCenter() {
                       <MessageSquare className="w-4 h-4 mr-2" /> {t("aide_contact_btn")}
                     </Button>
                   </Link>
-                </div>
-                <div className="border-t border-white/10 pt-6">
-                  <SocialBar label="Suivez-nous sur nos réseaux" className="flex flex-col items-center" size="sm" />
                 </div>
               </div>
             </div>

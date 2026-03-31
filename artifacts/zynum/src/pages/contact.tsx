@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
-import { SocialBar } from "@/components/social-bar";
 
 const API = "/api";
 
@@ -73,9 +72,6 @@ export default function Contact() {
             <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
               <p className="text-sm text-primary font-semibold mb-1">{t("contact_fast_title")}</p>
               <p className="text-xs text-gray-500">{t("contact_fast_desc")}</p>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <SocialBar label="Suivez-nous" size="sm" />
             </div>
           </div>
 
