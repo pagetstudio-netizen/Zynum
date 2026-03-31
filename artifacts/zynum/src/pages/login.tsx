@@ -320,6 +320,9 @@ export default function Login() {
                   <p className="text-[15px] text-gray-500 max-w-xs mx-auto">
                     Si cet email correspond à un compte, vous recevrez un lien de réinitialisation dans quelques minutes.
                   </p>
+                  <p className="mt-4 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 max-w-xs mx-auto text-left">
+                    📩 Si vous ne trouvez pas l'email, vérifiez votre dossier <strong>spam / courrier indésirable</strong>.
+                  </p>
                   <button onClick={() => { setShowForgot(false); setForgotSent(false); }} className="mt-6 text-sm text-red-500 font-semibold hover:text-red-600 transition-colors">
                     Retour à la connexion
                   </button>
@@ -344,6 +347,9 @@ export default function Login() {
                     : "Entrez le code envoyé à :"}
                   <br />
                   <span className="font-semibold text-gray-800">{email}</span>
+                </p>
+                <p className="mt-3 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                  📩 Si vous ne trouvez pas l'email, vérifiez votre dossier <strong>spam / courrier indésirable</strong>.
                 </p>
               </div>
 

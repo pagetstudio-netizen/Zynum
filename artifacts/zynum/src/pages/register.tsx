@@ -294,6 +294,9 @@ export default function Register() {
                   Un code à 6 chiffres a été envoyé à :<br />
                   <span className="font-semibold text-gray-800">{pendingEmail}</span>
                 </p>
+                <p className="mt-3 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                  📩 Si vous ne trouvez pas l'email, vérifiez votre dossier <strong>spam / courrier indésirable</strong>.
+                </p>
               </div>
 
               {errorMsg && (

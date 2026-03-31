@@ -127,6 +127,11 @@ export default function ResetPassword() {
                 <p className="text-[15px] text-gray-500">
                   {verifiedFromLink ? "Votre identité a été confirmée. Créez votre nouveau mot de passe." : "Entrez le code reçu par email et créez votre nouveau mot de passe."}
                 </p>
+                {!verifiedFromLink && (
+                  <p className="mt-3 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                    📩 Si vous ne trouvez pas l'email, vérifiez votre dossier <strong>spam / courrier indésirable</strong>.
+                  </p>
+                )}
               </div>
 
               {errorMsg && (
