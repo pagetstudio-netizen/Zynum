@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3, Users, ShoppingBag, CreditCard, MessageSquare,
   Settings, HelpCircle, Share2, Globe2, TrendingUp, Wallet,
-  Zap, Shield, Plus, Trash2, Edit3, Ban, CheckCircle,
+  Zap, Shield, Plus, Trash2, Edit3, Ban, Check, CheckCircle,
   Search, ChevronLeft, ChevronRight, RefreshCw, Send,
   ToggleLeft, ToggleRight, DollarSign, Percent, Star,
   Package, AlertTriangle, Clock, Database, Bell, Eye, EyeOff, Key, Mail, Loader2,
@@ -1683,6 +1683,28 @@ function AdminSocialLinks() {
   const [editId, setEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ platform: "", url: "", icon: "" });
   const [form, setForm] = useState({ platform: "", url: "", icon: "" });
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+
+  const links: any[] = data?.links ?? [];
+  const allSelected = links.length > 0 && selected.size === links.length;
+  const someSelected = selected.size > 0;
+
+  const toggleSelect = (id: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(links.map((l: any) => l.id)));
+    }
+  };
 
   const add = async () => {
     if (!form.platform || !form.url) return;
@@ -1709,11 +1731,42 @@ function AdminSocialLinks() {
   const toggle = async (l: any) => { await adminPatch(`/v1/admin/social-links/${l.id}`, { isActive: !l.isActive }); refetch(); };
   const remove = async (id: number) => { await adminDelete(`/v1/admin/social-links/${id}`); toast({ title: "Supprimé" }); refetch(); };
 
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    setDeleting(true);
+    await Promise.all([...selected].map((id) => adminDelete(`/v1/admin/social-links/${id}`)));
+    toast({ title: `${selected.size} lien(s) supprimé(s)` });
+    setSelected(new Set());
+    setDeleting(false);
+    refetch();
+  };
+
   return (
     <div className="space-y-5">
-      <div className="flex justify-end">
-        <Button onClick={() => setShowAdd(true)} className="bg-primary hover:bg-primary/90 text-white"><Plus className="w-4 h-4 mr-2" /> Ajouter lien</Button>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        {someSelected ? (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">{selected.size} sélectionné(s)</span>
+            <Button
+              onClick={bulkDelete}
+              disabled={deleting}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" /> : <Trash2 className="w-3.5 h-3.5 mr-1.5" />}
+              Supprimer la sélection
+            </Button>
+            <Button onClick={() => setSelected(new Set())} size="sm" variant="ghost" className="text-muted-foreground hover:text-white">Désélectionner</Button>
+          </div>
+        ) : (
+          <div />
+        )}
+        <Button onClick={() => setShowAdd(true)} className="bg-primary hover:bg-primary/90 text-white ml-auto">
+          <Plus className="w-4 h-4 mr-2" /> Ajouter lien
+        </Button>
       </div>
+
       {showAdd && (
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 space-y-4">
           <h3 className="font-bold text-white">Nouveau lien social</h3>
@@ -1737,56 +1790,93 @@ function AdminSocialLinks() {
           </div>
         </div>
       )}
-      {loading ? <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> : (
+
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+      ) : (
         <div className="space-y-3">
-          {(data?.links ?? []).map((l: any) => (
-            <div key={l.id} className={`rounded-2xl border bg-card/40 overflow-hidden ${l.isActive ? "border-white/10" : "border-white/5 opacity-60"}`}>
-              {/* Row */}
-              <div className="flex items-center gap-4 p-4">
-                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                  {l.icon
-                    ? <img src={`https://cdn.simpleicons.org/${l.icon}/ffffff`} className="w-5 h-5" alt={l.platform} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                    : <span className="text-xs font-bold text-muted-foreground">{l.platform.charAt(0)}</span>
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white">{l.platform}</p>
-                  <p className="text-xs text-muted-foreground truncate">{l.url}</p>
-                </div>
-                <div className="flex gap-1">
-                  <button onClick={() => startEdit(l)} className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5" title="Modifier"><Edit3 className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => toggle(l)} className={`p-1.5 rounded-lg ${l.isActive ? "text-green-400 hover:bg-green-500/10" : "text-muted-foreground hover:bg-white/5"}`} title={l.isActive ? "Désactiver" : "Activer"}>
-                    {l.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  </button>
-                  <button onClick={() => remove(l.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10" title="Supprimer"><Trash2 className="w-3.5 h-3.5" /></button>
-                </div>
-              </div>
-              {/* Inline edit form */}
-              {editId === l.id && (
-                <div className="px-4 pb-4 border-t border-white/[0.06] pt-4 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground block mb-1">Plateforme</label>
-                      <input value={editForm.platform} onChange={(e) => setEditForm({ ...editForm, platform: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground block mb-1">URL</label>
-                      <input value={editForm.url} onChange={(e) => setEditForm({ ...editForm, url: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground block mb-1">Icône (slug simpleicons)</label>
-                      <input value={editForm.icon} onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })} placeholder="facebook" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={saveEdit} size="sm" className="bg-primary hover:bg-primary/90 text-white">Sauvegarder</Button>
-                    <Button onClick={() => setEditId(null)} size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5">Annuler</Button>
-                  </div>
-                </div>
-              )}
+          {/* Select-all header */}
+          {links.length > 0 && (
+            <div className="flex items-center gap-3 px-1 pb-1 border-b border-white/[0.06]">
+              <button
+                onClick={toggleAll}
+                className={`w-5 h-5 rounded flex items-center justify-center border transition-colors shrink-0
+                  ${allSelected ? "bg-primary border-primary" : "border-white/20 bg-white/5 hover:border-primary/60"}`}
+              >
+                {allSelected && <Check className="w-3 h-3 text-white" />}
+                {!allSelected && someSelected && <div className="w-2 h-0.5 bg-primary rounded" />}
+              </button>
+              <span className="text-xs text-muted-foreground">Tout sélectionner</span>
             </div>
-          ))}
-          {!data?.links?.length && <p className="text-sm text-muted-foreground text-center py-8">Aucun lien social configuré</p>}
+          )}
+
+          {links.map((l: any) => {
+            const isSelected = selected.has(l.id);
+            return (
+              <div key={l.id} className={`rounded-2xl border bg-card/40 overflow-hidden transition-colors
+                ${isSelected ? "border-primary/50 bg-primary/5" : l.isActive ? "border-white/10" : "border-white/5 opacity-60"}`}>
+                {/* Row */}
+                <div className="flex items-center gap-3 p-4">
+                  {/* Checkbox */}
+                  <button
+                    onClick={() => toggleSelect(l.id)}
+                    className={`w-5 h-5 rounded flex items-center justify-center border transition-colors shrink-0
+                      ${isSelected ? "bg-primary border-primary" : "border-white/20 bg-white/5 hover:border-primary/60"}`}
+                  >
+                    {isSelected && <Check className="w-3 h-3 text-white" />}
+                  </button>
+
+                  {/* Icon */}
+                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                    {l.icon
+                      ? <img src={`https://cdn.simpleicons.org/${l.icon}/ffffff`} className="w-5 h-5" alt={l.platform} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      : <span className="text-xs font-bold text-muted-foreground">{l.platform.charAt(0)}</span>
+                    }
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white">{l.platform}</p>
+                    <p className="text-xs text-muted-foreground truncate">{l.url}</p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-1">
+                    <button onClick={() => startEdit(l)} className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5" title="Modifier"><Edit3 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => toggle(l)} className={`p-1.5 rounded-lg ${l.isActive ? "text-green-400 hover:bg-green-500/10" : "text-muted-foreground hover:bg-white/5"}`} title={l.isActive ? "Désactiver" : "Activer"}>
+                      {l.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => remove(l.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10" title="Supprimer"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                </div>
+
+                {/* Inline edit form */}
+                {editId === l.id && (
+                  <div className="px-4 pb-4 border-t border-white/[0.06] pt-4 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-xs text-muted-foreground block mb-1">Plateforme</label>
+                        <input value={editForm.platform} onChange={(e) => setEditForm({ ...editForm, platform: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground block mb-1">URL</label>
+                        <input value={editForm.url} onChange={(e) => setEditForm({ ...editForm, url: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground block mb-1">Icône (slug simpleicons)</label>
+                        <input value={editForm.icon} onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })} placeholder="facebook" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={saveEdit} size="sm" className="bg-primary hover:bg-primary/90 text-white">Sauvegarder</Button>
+                      <Button onClick={() => setEditId(null)} size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5">Annuler</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {!links.length && <p className="text-sm text-muted-foreground text-center py-8">Aucun lien social configuré</p>}
         </div>
       )}
     </div>
