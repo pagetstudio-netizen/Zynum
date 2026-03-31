@@ -10,6 +10,7 @@ import contactRouter from "./contact.js";
 import paxityRouter from "./paxity.js";
 import omnipayRouter from "./omnipay.js";
 import discountsRouter from "./discounts.js";
+import telegramRouter from "./telegram.js";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(contactRouter);
 router.use(paxityRouter);
 router.use(omnipayRouter);
 router.use(discountsRouter);
+router.use(telegramRouter);
 
 export default router;

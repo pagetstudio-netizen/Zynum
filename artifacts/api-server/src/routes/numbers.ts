@@ -16,6 +16,7 @@ import {
 } from "../lib/fivesim.js";
 import { applyTieredPricing } from "../lib/pricing.js";
 import { applyDiscountCode } from "./discounts.js";
+import { notifyPurchase } from "../lib/telegram.js";
 
 const router: IRouter = Router();
 
@@ -116,6 +117,20 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   }
 
   res.json({ order: formatOrder(order) });
+
+  // Fire-and-forget Telegram notification
+  db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, userId)).limit(1).then(([u]) => {
+    notifyPurchase({
+      userId,
+      userName: u?.name ?? `User#${userId}`,
+      orderId: String(order.id),
+      serviceName,
+      countryName,
+      phone: fiveSimOrder.phone,
+      priceFcfa: order.priceFcfa,
+      priceUsd:  order.priceUsd,
+    }).catch(() => {});
+  }).catch(() => {});
 });
 
 // ─── Check SMS ────────────────────────────────────────────────────────────────

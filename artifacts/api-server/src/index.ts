@@ -1,5 +1,6 @@
 import app from "./app";
 import { initDb } from "./lib/initDb.js";
+import { scheduleDailyReport } from "./lib/telegram.js";
 
 const rawPort = process.env["PORT"];
 
@@ -19,6 +20,7 @@ initDb()
   .then(() => {
     app.listen(port, () => {
       console.log(`Server listening on port ${port}`);
+      scheduleDailyReport();
     });
   })
   .catch((err) => {

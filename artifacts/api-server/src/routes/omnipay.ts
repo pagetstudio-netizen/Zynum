@@ -4,6 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import crypto from "node:crypto";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
+import { notifyDeposit } from "../lib/telegram.js";
 
 const router: IRouter = Router();
 
@@ -276,6 +277,20 @@ router.post("/v1/payments/omnipay/confirm", async (req: Request, res: Response):
     console.log(`[OmniPay confirm] Crédité $${amountUsd.toFixed(4)} → user #${uid}`);
     res.json({ credited: true, action: "credited", amountUsd });
 
+    // Fire-and-forget Telegram notification
+    db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, uid)).limit(1).then(([u]) => {
+      notifyDeposit({
+        userId:    uid,
+        userName:  u?.name ?? `User#${uid}`,
+        amountFcfa,
+        amountUsd,
+        reference: String(reference),
+        method:    "OmniPay",
+        phone:     String(data.phone    ?? data.msisdn    ?? ""),
+        operator:  String(data.operator ?? data.provider  ?? ""),
+      }).catch(() => {});
+    }).catch(() => {});
+
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur";
     console.error("[OmniPay confirm] Error:", message);
@@ -374,6 +389,20 @@ router.post("/v1/webhooks/omnipay", async (req: Request, res: Response): Promise
 
     console.log(`[OmniPay webhook] Crédité $${amountUsd.toFixed(4)} → user #${userId}`);
     res.json({ received: true, action: "credited", amountUsd, userId });
+
+    // Fire-and-forget Telegram notification
+    db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, userId)).limit(1).then(([u]) => {
+      notifyDeposit({
+        userId,
+        userName:  u?.name ?? `User#${userId}`,
+        amountFcfa,
+        amountUsd,
+        reference,
+        method:   "OmniPay",
+        phone:    String(body.phone    ?? body.msisdn    ?? ""),
+        operator: String(body.operator ?? body.provider  ?? ""),
+      }).catch(() => {});
+    }).catch(() => {});
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur webhook";

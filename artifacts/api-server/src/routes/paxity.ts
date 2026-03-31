@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, usersTable, transactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
+import { notifyDeposit } from "../lib/telegram.js";
 
 const router: IRouter = Router();
 
@@ -168,6 +169,18 @@ router.post("/v1/payments/paxity/confirm", async (req: Request, res: Response): 
 
     console.log(`[Paxity confirm] Credited $${amountUsd.toFixed(4)} to user #${uid}`);
     res.json({ credited: true, action: "credited", amountUsd });
+
+    // Fire-and-forget Telegram notification
+    db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, uid)).limit(1).then(([u]) => {
+      notifyDeposit({
+        userId:    uid,
+        userName:  u?.name ?? `User#${uid}`,
+        amountFcfa,
+        amountUsd,
+        reference: String(reference),
+        method:    "Paxity",
+      }).catch(() => {});
+    }).catch(() => {});
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur";
@@ -393,6 +406,18 @@ router.post("/v1/webhooks/paxity", async (req: Request, res: Response): Promise<
 
     console.log(`[Paxity IPN] Credited $${amountUsd.toFixed(4)} to user #${userId}`);
     res.json({ received: true, action: "credited", amountUsd, userId });
+
+    // Fire-and-forget Telegram notification
+    db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, userId)).limit(1).then(([u]) => {
+      notifyDeposit({
+        userId,
+        userName:  u?.name ?? `User#${userId}`,
+        amountFcfa,
+        amountUsd,
+        reference: reference ?? `PAX-${Date.now()}`,
+        method:    "Paxity",
+      }).catch(() => {});
+    }).catch(() => {});
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur webhook";

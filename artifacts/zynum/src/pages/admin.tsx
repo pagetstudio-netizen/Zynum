@@ -2065,7 +2065,172 @@ function AdminEmailBroadcast() {
   );
 }
 
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email";
+// ─── AdminTelegram ────────────────────────────────────────────────────────────
+function AdminTelegram() {
+  const { toast } = useToast();
+  const [info, setInfo]         = useState<any>(null);
+  const [loading, setLoading]   = useState(true);
+  const [chatIdInput, setChatIdInput] = useState("");
+  const [detecting, setDetecting]   = useState(false);
+  const [saving, setSaving]         = useState(false);
+  const [testing, setTesting]       = useState(false);
+  const [reporting, setReporting]   = useState(false);
+  const [detectedChats, setDetectedChats] = useState<any[]>([]);
+
+  const token = () => localStorage.getItem("zynum_token") ?? "";
+  const apiFetch = (url: string, opts?: RequestInit) =>
+    fetch(`${API}${url}`, { ...opts, headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json", ...(opts?.headers ?? {}) } });
+
+  const loadInfo = async () => {
+    setLoading(true);
+    const r = await apiFetch("/v1/admin/telegram/info");
+    const d = await r.json();
+    setInfo(d);
+    if (d.chatId) setChatIdInput(d.chatId);
+    setLoading(false);
+  };
+
+  useEffect(() => { loadInfo(); }, []);
+
+  const detect = async () => {
+    setDetecting(true); setDetectedChats([]);
+    const r = await apiFetch("/v1/admin/telegram/detect");
+    const d = await r.json();
+    setDetectedChats(d.chats ?? []);
+    if (d.chatId && !chatIdInput) setChatIdInput(d.chatId);
+    setDetecting(false);
+    if (!d.chats?.length) toast({ variant: "destructive", title: "Aucun chat détecté", description: "Envoyez /chatid dans votre groupe, puis réessayez." });
+  };
+
+  const save = async () => {
+    if (!chatIdInput.trim()) return;
+    setSaving(true);
+    const r = await apiFetch("/v1/admin/telegram/chat-id", { method: "POST", body: JSON.stringify({ chatId: chatIdInput.trim() }) });
+    const d = await r.json();
+    setSaving(false);
+    if (d.success) { toast({ title: "Chat ID sauvegardé ✅" }); loadInfo(); }
+    else toast({ variant: "destructive", title: "Erreur", description: d.message });
+  };
+
+  const test = async () => {
+    setTesting(true);
+    const r = await apiFetch("/v1/admin/telegram/test", { method: "POST" });
+    const d = await r.json();
+    setTesting(false);
+    if (d.success) toast({ title: "Message de test envoyé ✅", description: `Chat ID : ${d.chatId}` });
+    else toast({ variant: "destructive", title: "Échec", description: d.error ?? "Erreur" });
+  };
+
+  const report = async () => {
+    setReporting(true);
+    const r = await apiFetch("/v1/admin/telegram/report", { method: "POST" });
+    const d = await r.json();
+    setReporting(false);
+    if (d.success) toast({ title: "Rapport envoyé ✅" });
+    else toast({ variant: "destructive", title: "Échec", description: d.error ?? "Erreur" });
+  };
+
+  const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-primary/40";
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary opacity-50" /></div>;
+
+  return (
+    <div className="space-y-5">
+      {/* Bot status */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+            <Bell className="w-5 h-5 text-blue-400" />
+          </div>
+          <div>
+            <h3 className="font-bold text-white text-sm">Bot Telegram</h3>
+            <p className="text-xs text-muted-foreground">Notifications en temps réel</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="bg-white/5 rounded-xl p-3">
+            <p className="text-xs text-muted-foreground mb-1">Token configuré</p>
+            <p className={`font-semibold ${info?.hasToken ? "text-green-400" : "text-red-400"}`}>{info?.hasToken ? "✅ Oui" : "❌ Non"}</p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-3">
+            <p className="text-xs text-muted-foreground mb-1">Nom du bot</p>
+            <p className="font-semibold text-white">{info?.botInfo?.firstName ?? "—"} {info?.botInfo?.username ? `@${info.botInfo.username}` : ""}</p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-3 col-span-2">
+            <p className="text-xs text-muted-foreground mb-1">Chat ID actuel</p>
+            <p className="font-mono text-white">{info?.chatId ?? <span className="text-gray-500">Non configuré</span>}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Setup instructions */}
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 text-sm text-blue-200 space-y-1.5">
+        <p className="font-semibold text-blue-300">🔧 Comment configurer</p>
+        <ol className="list-decimal list-inside space-y-1 text-xs">
+          <li>Ajoutez le bot à votre groupe Telegram</li>
+          <li>Envoyez <code className="bg-blue-500/20 px-1 rounded">/chatid</code> dans le groupe</li>
+          <li>Cliquez <b>Détecter automatiquement</b> ou copiez l'ID manuellement</li>
+          <li>Cliquez <b>Sauvegarder</b> puis <b>Tester la connexion</b></li>
+        </ol>
+      </div>
+
+      {/* Chat ID config */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+        <h3 className="font-bold text-white text-sm">Configuration du groupe</h3>
+        <div className="flex gap-2">
+          <input value={chatIdInput} onChange={(e) => setChatIdInput(e.target.value)} placeholder="ex: -1001234567890" className={inp} />
+          <Button onClick={save} disabled={saving || !chatIdInput.trim()} className="bg-primary hover:bg-primary/80 text-white shrink-0">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sauvegarder"}
+          </Button>
+        </div>
+        <Button onClick={detect} disabled={detecting} variant="outline" className="border-white/10 text-white hover:bg-white/10 w-full sm:w-auto">
+          {detecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Détection…</> : <><RefreshCw className="w-4 h-4 mr-2" /> Détecter automatiquement</>}
+        </Button>
+        {detectedChats.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Groupes détectés :</p>
+            {detectedChats.map((c) => (
+              <button key={c.id} onClick={() => setChatIdInput(c.id)} className="w-full text-left bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm hover:bg-white/10 transition-colors">
+                <span className="text-white font-medium">{c.title}</span>
+                <span className="text-gray-400 ml-2 font-mono text-xs">{c.id}</span>
+                <span className="text-xs text-blue-400 ml-2">[{c.type}]</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+        <h3 className="font-bold text-white text-sm">Actions</h3>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={test} disabled={testing} className="bg-green-600 hover:bg-green-500 text-white">
+            {testing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+            Tester la connexion
+          </Button>
+          <Button onClick={report} disabled={reporting} className="bg-blue-600 hover:bg-blue-500 text-white">
+            {reporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <BarChart3 className="w-4 h-4 mr-2" />}
+            Envoyer le rapport maintenant
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">Le rapport quotidien est automatiquement envoyé à <b>minuit</b> chaque jour.</p>
+      </div>
+
+      {/* What gets notified */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-2">
+        <h3 className="font-bold text-white text-sm">Notifications actives</h3>
+        <ul className="space-y-2 text-sm text-gray-300">
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Chaque dépôt reçu (OmniPay + Paxity)</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Chaque achat de numéro virtuel</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Rapport quotidien automatique à minuit</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Commandes bot : /start, /aide, /stat, /chatid, /ping</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
@@ -2082,6 +2247,7 @@ const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "faq",          label: "Centre d'aide",   icon: <HelpCircle className="w-4 h-4" /> },
   { id: "social",       label: "Réseaux sociaux", icon: <Share2 className="w-4 h-4" /> },
   { id: "countries",    label: "Pays",            icon: <Globe2 className="w-4 h-4" /> },
+  { id: "telegram",     label: "Telegram Bot",    icon: <Bell className="w-4 h-4" /> },
 ];
 
 export default function AdminPanel() {
@@ -2140,6 +2306,7 @@ export default function AdminPanel() {
           {activeTab === "faq"          && <AdminFaq />}
           {activeTab === "social"       && <AdminSocialLinks />}
           {activeTab === "countries"    && <AdminCountries />}
+          {activeTab === "telegram"     && <AdminTelegram />}
         </motion.div>
       </AnimatePresence>
     </div>
