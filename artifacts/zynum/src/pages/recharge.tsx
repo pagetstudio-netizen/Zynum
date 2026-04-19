@@ -11,7 +11,6 @@ import { useLanguage } from "@/hooks/use-language";
 import { useGetBalance, useGetCurrentUser, getGetBalanceQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PaxityModal } from "@/components/paxity-modal";
-import { OmnipayModal } from "@/components/omnipay-modal";
 import iconMobile from "@assets/icons8-argent-mobile-53_1774828244252.png";
 import iconCrypto from "@assets/cryptocurrency-3d-illustration-png_1774828244226.png";
 import iconCard   from "@assets/9242877_1774828244157.png";
@@ -32,7 +31,6 @@ export default function Recharge() {
   const [customAmount,     setCustomAmount]     = useState("");
   const [selectedMethod,   setSelectedMethod]   = useState<string | null>("mobile");
   const [paxityOpen,       setPaxityOpen]       = useState(false);
-  const [omnipayOpen,      setOmnipayOpen]      = useState(false);
   const [modalTab,         setModalTab]         = useState<"mobile" | "card">("mobile");
 
   const METHODS: {
@@ -102,7 +100,8 @@ export default function Recharge() {
       return;
     }
     if (selectedMethod === "mobile") {
-      setOmnipayOpen(true);
+      setModalTab("mobile");
+      setPaxityOpen(true);
       return;
     }
     if (selectedMethod === "card") {
@@ -290,15 +289,6 @@ export default function Recharge() {
         />
       )}
 
-      {user && (
-        <OmnipayModal
-          open={omnipayOpen}
-          onClose={() => setOmnipayOpen(false)}
-          amountXof={finalAmountXof}
-          userId={user.id}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
     </div>
   );
 }
