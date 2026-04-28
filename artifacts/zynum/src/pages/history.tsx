@@ -66,17 +66,20 @@ function TimerBadge({ createdAt }: { createdAt: string }) {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, smsCode }: { status: string; smsCode?: string | null }) {
   const { t } = useLanguage();
+  // RECEIVED without code = still waiting
+  const effective = (status === "RECEIVED" && !smsCode) ? "WAITING" : status;
   const STATUS_MAP: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
     PENDING:  { label: t("history_status_pending"),  cls: "bg-yellow-50 text-yellow-700 border-yellow-200", icon: <Clock className="w-3 h-3" /> },
+    WAITING:  { label: t("history_status_waiting"),  cls: "bg-yellow-50 text-yellow-700 border-yellow-200", icon: <Clock className="w-3 h-3 animate-spin" /> },
     RECEIVED: { label: t("history_status_received"), cls: "bg-green-50  text-green-700  border-green-200",  icon: <CheckCircle2 className="w-3 h-3" /> },
     FINISHED: { label: t("history_status_finished"), cls: "bg-green-50  text-green-700  border-green-200",  icon: <CheckCircle2 className="w-3 h-3" /> },
     TIMEOUT:  { label: t("history_status_timeout"),  cls: "bg-gray-100  text-gray-500   border-gray-200",   icon: <XCircle className="w-3 h-3" /> },
     CANCELED: { label: t("history_status_canceled"), cls: "bg-gray-100  text-gray-500   border-gray-200",   icon: <XCircle className="w-3 h-3" /> },
     BANNED:   { label: t("history_status_banned"),   cls: "bg-red-50    text-red-700    border-red-200",    icon: <XCircle className="w-3 h-3" /> },
   };
-  const s = STATUS_MAP[status] ?? { label: status, cls: "bg-gray-100 text-gray-500 border-gray-200", icon: null };
+  const s = STATUS_MAP[effective] ?? { label: status, cls: "bg-gray-100 text-gray-500 border-gray-200", icon: null };
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>
       {s.icon}{s.label}
@@ -112,12 +115,12 @@ function CancelPendingButton({ orderId, refetch, compact = false }: { orderId: s
 
 function OrderCard({ order, formatPrice, refetch }: { order: any; formatPrice: (usd: number, fcfa?: number) => string; refetch: () => void }) {
   const { t, lang } = useLanguage();
-  const isPending = order.status === "PENDING";
+  const isActive = order.status === "PENDING" || (order.status === "RECEIVED" && !order.smsCode);
   const timeLeft = useTimeLeft(order.createdAt);
   const locale = lang === "fr" ? fr : enUS;
 
   return (
-    <div className={`bg-white border rounded-2xl p-4 space-y-3 shadow-sm transition-colors ${isPending ? "border-yellow-300" : "border-gray-200"}`}>
+    <div className={`bg-white border rounded-2xl p-4 space-y-3 shadow-sm transition-colors ${isActive ? "border-yellow-300" : "border-gray-200"}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <ServiceLogo icon={order.serviceIcon} color={order.serviceColor} name={order.serviceName} size={38} />
@@ -127,8 +130,8 @@ function OrderCard({ order, formatPrice, refetch }: { order: any; formatPrice: (
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <StatusBadge status={order.status} />
-          {isPending && <TimerBadge createdAt={order.createdAt} />}
+          <StatusBadge status={order.status} smsCode={order.smsCode} />
+          {isActive && <TimerBadge createdAt={order.createdAt} />}
         </div>
       </div>
       <div className="bg-gray-100 rounded-xl px-3 py-2 font-mono text-sm text-gray-700">{order.phone}</div>
@@ -137,7 +140,7 @@ function OrderCard({ order, formatPrice, refetch }: { order: any; formatPrice: (
           <span className="text-xs text-gray-500">{t("history_sms_code")}</span>
           <CopyCode code={order.smsCode} />
         </div>
-      ) : isPending ? (
+      ) : isActive ? (
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             <RefreshCcw className="w-3 h-3 animate-spin" />
@@ -168,8 +171,10 @@ export default function OrderHistory() {
       query: {
         enabled: !!user,
         refetchInterval: (query) => {
-          const hasPending = query.state.data?.orders.some((o) => o.status === "PENDING");
-          return hasPending ? 5000 : false;
+          const hasActive = query.state.data?.orders.some(
+            (o: any) => o.status === "PENDING" || (o.status === "RECEIVED" && !o.smsCode)
+          );
+          return hasActive ? 5000 : false;
         },
       },
     }
