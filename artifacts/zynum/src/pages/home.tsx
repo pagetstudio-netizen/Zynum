@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   ArrowRight, ShieldCheck, Zap, Globe2, MessageSquare,
   Code, CheckCircle, Star, ChevronRight, Smartphone,
-  Headphones,
+  Headphones, DollarSign, Users, Share2, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
@@ -70,6 +70,7 @@ export default function Home() {
     { icon: <Globe2 className="w-6 h-6 text-blue-500" />, bg: "bg-blue-50 border-blue-200", title: t("home_feat_global"), desc: t("home_feat_global_desc") },
     { icon: <ShieldCheck className="w-6 h-6 text-green-500" />, bg: "bg-green-50 border-green-200", title: t("home_feat_secure"), desc: t("home_feat_secure_desc") },
     { icon: <Headphones className="w-6 h-6 text-purple-500" />, bg: "bg-purple-50 border-purple-200", title: t("home_feat_support"), desc: t("home_feat_support_desc") },
+    { icon: <DollarSign className="w-6 h-6 text-rose-500" />, bg: "bg-rose-50 border-rose-200", title: t("home_feat_affiliate"), desc: t("home_feat_affiliate_desc") },
   ];
 
   return (
@@ -339,7 +340,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900">{t("home_why_title")}</h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {FEATURES.map((feat, i) => (
               <motion.div
                 key={feat.title}
@@ -354,6 +355,128 @@ export default function Home() {
                 <p className="text-sm text-gray-500 leading-relaxed">{feat.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Affiliate section ──────────────────────────────────────── */}
+      <section className="w-full py-24 relative overflow-hidden bg-white border-t border-gray-200">
+        {/* Background blobs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-[500px] h-[500px] rounded-full bg-rose-100/60 blur-[100px]" />
+          <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] rounded-full bg-amber-100/40 blur-[100px]" />
+        </div>
+
+        <div className="container max-w-7xl mx-auto px-4 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+
+            {/* Left: content */}
+            <div className="flex-1 text-center lg:text-left">
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-rose-200 bg-rose-50 mb-6 text-sm font-semibold text-rose-600"
+              >
+                <DollarSign className="w-4 h-4" />
+                {t("home_aff_badge")}
+              </motion.div>
+
+              <motion.h2
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.05 }}
+                className="text-3xl md:text-5xl font-display font-extrabold text-gray-900 leading-tight mb-5"
+              >
+                {t("home_aff_title")}
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="text-lg text-gray-500 leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0"
+              >
+                {t("home_aff_subtitle")}
+              </motion.p>
+
+              {/* 3 pills */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.15 }}
+                className="flex flex-wrap gap-3 justify-center lg:justify-start mb-10"
+              >
+                <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 border border-rose-200 text-sm font-semibold text-rose-700">
+                  <DollarSign className="w-4 h-4" /> 10% {t("home_aff_commission")}
+                </span>
+                <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-50 border border-green-200 text-sm font-semibold text-green-700">
+                  <Users className="w-4 h-4" /> {t("home_aff_no_limit")}
+                </span>
+                <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 border border-blue-200 text-sm font-semibold text-blue-700">
+                  <Wallet className="w-4 h-4" /> {t("home_aff_withdraw")}
+                </span>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                <Link href="/register">
+                  <Button size="lg" className="h-12 px-8 rounded-xl bg-gradient-to-r from-rose-500 to-primary hover:opacity-90 text-white font-bold shadow-lg shadow-rose-500/30 transition-all hover:-translate-y-1">
+                    {t("home_aff_cta")} <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* Right: 3 steps */}
+            <div className="flex-1 w-full max-w-md">
+              {[
+                { num: "01", icon: <Share2 className="w-5 h-5" />, title: t("home_aff_step1"), desc: t("home_aff_step1_desc"), color: "from-rose-500 to-primary" },
+                { num: "02", icon: <Users className="w-5 h-5" />, title: t("home_aff_step2"), desc: t("home_aff_step2_desc"), color: "from-blue-500 to-indigo-500" },
+                { num: "03", icon: <DollarSign className="w-5 h-5" />, title: t("home_aff_step3"), desc: t("home_aff_step3_desc"), color: "from-amber-500 to-orange-500" },
+              ].map((step, i) => (
+                <motion.div
+                  key={step.num}
+                  initial={{ opacity: 0, x: 24 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-start gap-4 mb-6 last:mb-0"
+                >
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white shadow-lg shrink-0`}>
+                    {step.icon}
+                  </div>
+                  <div className="pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-gray-400 tracking-widest">{step.num}</span>
+                      <h3 className="text-base font-bold text-gray-900">{step.title}</h3>
+                    </div>
+                    <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+
+              {/* Commission highlight */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.35 }}
+                className="mt-8 p-5 rounded-2xl bg-gradient-to-br from-rose-500 to-primary text-white text-center shadow-xl shadow-rose-500/20"
+              >
+                <p className="text-sm font-semibold text-white/70 mb-1">{t("home_aff_commission")}</p>
+                <p className="text-6xl font-extrabold leading-none">10%</p>
+                <p className="text-sm text-white/60 mt-1">{t("home_aff_no_limit").toLowerCase()} · {t("home_aff_withdraw").toLowerCase()}</p>
+              </motion.div>
+            </div>
+
           </div>
         </div>
       </section>
