@@ -193,6 +193,41 @@ async function ensureSchema() {
       CONSTRAINT "discount_codes_code_unique" UNIQUE("code")
     )
   `);
+
+  // Affiliate system columns (idempotent)
+  for (const col of [
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code text`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by integer`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS affiliate_balance real DEFAULT 0 NOT NULL`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS users_referral_code_unique ON users(referral_code) WHERE referral_code IS NOT NULL`,
+  ]) {
+    await db.execute(sql.raw(col)).catch(() => {});
+  }
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "affiliate_commissions" (
+      "id" serial PRIMARY KEY NOT NULL,
+      "user_id" integer NOT NULL,
+      "filleul_id" integer NOT NULL,
+      "order_id" integer NOT NULL,
+      "amount_usd" real NOT NULL,
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL
+    )
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "affiliate_withdrawals" (
+      "id" serial PRIMARY KEY NOT NULL,
+      "user_id" integer NOT NULL,
+      "amount_usd" real NOT NULL,
+      "phone" text NOT NULL,
+      "country" text NOT NULL,
+      "status" text DEFAULT 'pending' NOT NULL,
+      "note" text,
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+      "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+    )
+  `);
 }
 
 async function seedData() {

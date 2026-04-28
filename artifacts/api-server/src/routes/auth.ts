@@ -16,6 +16,13 @@ const router: IRouter = Router();
 
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
+function generateReferralCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "ZYN";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 // ─── REGISTER ────────────────────────────────────────────────────────────────
 
 router.post("/v1/auth/register", async (req, res): Promise<void> => {
@@ -26,6 +33,7 @@ router.post("/v1/auth/register", async (req, res): Promise<void> => {
   }
 
   const { name, email, password, confirmPassword } = parsed.data;
+  const refCode = typeof req.body.referralCode === "string" ? req.body.referralCode.trim().toUpperCase() : null;
 
   if (password !== confirmPassword) {
     res.status(400).json({ error: "Validation error", message: "Les mots de passe ne correspondent pas" });
@@ -39,16 +47,38 @@ router.post("/v1/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
+  // Resolve referrer
+  let referrerId: number | null = null;
+  if (refCode) {
+    const [referrer] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.referralCode, refCode)).limit(1);
+    if (referrer) referrerId = referrer.id;
+  }
+
+  // Generate a unique referral code for the new user
+  let newReferralCode = generateReferralCode();
+  while (true) {
+    const [clash] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.referralCode, newReferralCode)).limit(1);
+    if (!clash) break;
+    newReferralCode = generateReferralCode();
+  }
+
   let user = existing;
   if (!user) {
     const passwordHash = hashPassword(password);
     const apiKey = generateApiKey();
-    [user] = await db.insert(usersTable).values({ name, email, passwordHash, apiKey, emailVerified: false }).returning();
+    [user] = await db.insert(usersTable).values({
+      name, email, passwordHash, apiKey, emailVerified: false,
+      referralCode: newReferralCode,
+      referredBy: referrerId ?? undefined,
+    }).returning();
   } else {
     const passwordHash = hashPassword(password);
+    const updateSet: Record<string, unknown> = { name, passwordHash };
+    if (!existing.referralCode) updateSet.referralCode = newReferralCode;
+    if (!existing.referredBy && referrerId) updateSet.referredBy = referrerId;
     [user] = await db
       .update(usersTable)
-      .set({ name, passwordHash })
+      .set(updateSet as any)
       .where(eq(usersTable.id, existing.id))
       .returning();
   }

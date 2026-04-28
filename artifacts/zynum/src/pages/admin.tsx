@@ -2320,7 +2320,107 @@ function AdminTelegram() {
   );
 }
 
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram";
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION: AFFILIATE WITHDRAWALS
+══════════════════════════════════════════════════════════════════════════════ */
+function AdminAffiliations() {
+  const { toast } = useToast();
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [actionNote, setActionNote] = useState<Record<number, string>>({});
+
+  const query = statusFilter ? `?status=${statusFilter}&page=${page}` : `?page=${page}`;
+  const { data, loading, refetch } = useAdminFetch<any>(`/v1/admin/affiliate/withdrawals${query}`, [statusFilter, page]);
+
+  const withdrawals = data?.withdrawals ?? [];
+  const total = data?.total ?? 0;
+
+  const handleAction = async (id: number, action: "validate" | "reject") => {
+    const r = await adminPost(`/v1/admin/affiliate/withdrawals/${id}/${action}`, { note: actionNote[id] ?? "" });
+    if (r.withdrawal || r.success) {
+      toast({ title: action === "validate" ? "Retrait validé ✅" : "Retrait rejeté" });
+      refetch();
+    } else {
+      toast({ variant: "destructive", title: "Erreur", description: r.error ?? "Échec" });
+    }
+  };
+
+  const statusMap: Record<string, string> = {
+    pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    validated: "bg-green-500/20 text-green-400 border-green-500/30",
+    rejected: "bg-red-500/20 text-red-400 border-red-500/30",
+  };
+  const statusLabel: Record<string, string> = { pending: "En attente", validated: "Validé", rejected: "Rejeté" };
+
+  return (
+    <div className="space-y-5">
+      {/* Filter */}
+      <div className="flex gap-2 flex-wrap">
+        {["", "pending", "validated", "rejected"].map((s) => (
+          <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${statusFilter === s ? "bg-primary text-white border-primary" : "border-white/10 text-muted-foreground hover:bg-white/5"}`}>
+            {s === "" ? "Tous" : statusLabel[s] ?? s}
+          </button>
+        ))}
+        <button onClick={refetch} className="ml-auto p-1.5 rounded-lg border border-white/10 hover:bg-white/5"><RefreshCw className="w-4 h-4 text-muted-foreground" /></button>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary/50" /></div>
+      ) : (
+        <>
+          <Table headers={["#", "Utilisateur", "Montant", "Téléphone", "Pays", "Statut", "Date", "Actions"]} empty={withdrawals.length === 0}>
+            {withdrawals.map((w: any) => (
+              <tr key={w.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                <td className="px-4 py-3 text-xs text-muted-foreground font-mono">#{w.id}</td>
+                <td className="px-4 py-3">
+                  <p className="text-sm font-semibold text-white">{w.userName}</p>
+                  <p className="text-xs text-muted-foreground">{w.userEmail}</p>
+                </td>
+                <td className="px-4 py-3 text-sm font-bold text-white">${Number(w.amountUsd).toFixed(2)}</td>
+                <td className="px-4 py-3 text-sm text-muted-foreground font-mono">{w.phone}</td>
+                <td className="px-4 py-3 text-sm text-muted-foreground">{w.country}</td>
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${statusMap[w.status] ?? "bg-gray-500/20 text-gray-400"}`}>
+                    {statusLabel[w.status] ?? w.status}
+                  </span>
+                  {w.note && <p className="text-xs text-muted-foreground mt-0.5">{w.note}</p>}
+                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{new Date(w.createdAt).toLocaleDateString("fr-FR")}</td>
+                <td className="px-4 py-3">
+                  {w.status === "pending" && (
+                    <div className="flex flex-col gap-1.5 min-w-[180px]">
+                      <input
+                        type="text"
+                        placeholder="Note (optionnel)"
+                        value={actionNote[w.id] ?? ""}
+                        onChange={(e) => setActionNote((prev) => ({ ...prev, [w.id]: e.target.value }))}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-primary/40"
+                      />
+                      <div className="flex gap-1">
+                        <button onClick={() => handleAction(w.id, "validate")}
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-green-600/20 text-green-400 text-xs font-semibold hover:bg-green-600/30 transition-colors border border-green-500/30">
+                          <Check className="w-3 h-3" /> Valider
+                        </button>
+                        <button onClick={() => handleAction(w.id, "reject")}
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-red-500/20 text-red-400 text-xs font-semibold hover:bg-red-500/30 transition-colors border border-red-500/30">
+                          <Ban className="w-3 h-3" /> Rejeter
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </Table>
+          <Pagination page={page} total={total} limit={20} onChange={setPage} />
+        </>
+      )}
+    </div>
+  );
+}
+
+type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
@@ -2338,6 +2438,7 @@ const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "social",       label: "Réseaux sociaux", icon: <Share2 className="w-4 h-4" /> },
   { id: "countries",    label: "Pays",            icon: <Globe2 className="w-4 h-4" /> },
   { id: "telegram",     label: "Telegram Bot",    icon: <Bell className="w-4 h-4" /> },
+  { id: "affiliate",    label: "Affiliations",    icon: <Share2 className="w-4 h-4" /> },
 ];
 
 export default function AdminPanel() {
@@ -2397,6 +2498,7 @@ export default function AdminPanel() {
           {activeTab === "social"       && <AdminSocialLinks />}
           {activeTab === "countries"    && <AdminCountries />}
           {activeTab === "telegram"     && <AdminTelegram />}
+          {activeTab === "affiliate"    && <AdminAffiliations />}
         </motion.div>
       </AnimatePresence>
     </div>

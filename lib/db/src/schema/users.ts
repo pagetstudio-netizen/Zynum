@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, real, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, real, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,6 +13,9 @@ export const usersTable = pgTable("users", {
   isBanned: boolean("is_banned").notNull().default(false),
   emailVerified: boolean("email_verified").notNull().default(false),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  referralCode: text("referral_code").unique(),
+  referredBy: integer("referred_by"),
+  affiliateBalance: real("affiliate_balance").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

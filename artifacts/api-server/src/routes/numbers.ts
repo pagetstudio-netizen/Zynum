@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, ordersTable, usersTable } from "@workspace/db";
+import { db, ordersTable, usersTable, affiliateCommissionsTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { BuyNumberBody, CheckSmsParams, GetOrderHistoryQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js";
@@ -226,11 +226,12 @@ router.post("/v1/cancel/:orderId", requireAuth, async (req: AuthRequest, res): P
 // ─── Finish/confirm order ─────────────────────────────────────────────────────
 router.post("/v1/finish/:orderId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const rawId = req.params.orderId;
+  const userId = req.userId!;
 
   const [dbOrder] = await db
     .select()
     .from(ordersTable)
-    .where(and(eq(ordersTable.id, parseInt(rawId, 10)), eq(ordersTable.userId, req.userId!)))
+    .where(and(eq(ordersTable.id, parseInt(rawId, 10)), eq(ordersTable.userId, userId)))
     .limit(1);
 
   if (!dbOrder) {
@@ -251,6 +252,40 @@ router.post("/v1/finish/:orderId", requireAuth, async (req: AuthRequest, res): P
     .returning();
 
   res.json({ order: formatOrder(updated) });
+
+  // Credit affiliate commission (fire-and-forget)
+  db.select({ referredBy: usersTable.referredBy })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1)
+    .then(async ([buyer]) => {
+      if (!buyer?.referredBy) return;
+
+      // Check this order hasn't already been commissioned
+      const existing = await db
+        .select({ id: affiliateCommissionsTable.id })
+        .from(affiliateCommissionsTable)
+        .where(eq(affiliateCommissionsTable.orderId, dbOrder.id))
+        .limit(1);
+      if (existing.length > 0) return;
+
+      const commission = Math.round(dbOrder.priceUsd * 0.10 * 10000) / 10000;
+      if (commission <= 0) return;
+
+      await db.transaction(async (tx) => {
+        await tx.insert(affiliateCommissionsTable).values({
+          userId: buyer.referredBy!,
+          filleulId: userId,
+          orderId: dbOrder.id,
+          amountUsd: commission,
+        });
+        await tx
+          .update(usersTable)
+          .set({ affiliateBalance: sql`${usersTable.affiliateBalance} + ${commission}` })
+          .where(eq(usersTable.id, buyer.referredBy!));
+      });
+    })
+    .catch(() => {});
 });
 
 // ─── Order history ────────────────────────────────────────────────────────────

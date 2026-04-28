@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable, adminMessagesTable, paymentProvidersTable, faqArticlesTable, socialLinksTable, countryOverridesTable } from "@workspace/db";
+import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable, adminMessagesTable, paymentProvidersTable, faqArticlesTable, socialLinksTable, countryOverridesTable, affiliateWithdrawalsTable } from "@workspace/db";
 import { invalidateFiveSimKeyCache } from "../lib/fivesim.js";
 import { eq, desc, count, sum, and, gte, lte, like, or, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
@@ -580,6 +580,91 @@ router.post("/v1/admin/reset-my-stats", ...auth, async (_req: any, res): Promise
     const message = err instanceof Error ? err.message : "Erreur";
     res.status(500).json({ error: message });
   }
+});
+
+/* ─── AFFILIATE WITHDRAWALS ──────────────────────────────────────────── */
+
+router.get("/v1/admin/affiliate/withdrawals", ...auth, async (req, res): Promise<void> => {
+  const { status, page = "1", limit = "20" } = req.query as Record<string, string>;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const conditions = status ? eq(affiliateWithdrawalsTable.status, status) : undefined;
+
+  const rows = await db
+    .select({
+      id: affiliateWithdrawalsTable.id,
+      userId: affiliateWithdrawalsTable.userId,
+      amountUsd: affiliateWithdrawalsTable.amountUsd,
+      phone: affiliateWithdrawalsTable.phone,
+      country: affiliateWithdrawalsTable.country,
+      status: affiliateWithdrawalsTable.status,
+      note: affiliateWithdrawalsTable.note,
+      createdAt: affiliateWithdrawalsTable.createdAt,
+      userName: usersTable.name,
+      userEmail: usersTable.email,
+    })
+    .from(affiliateWithdrawalsTable)
+    .leftJoin(usersTable, eq(affiliateWithdrawalsTable.userId, usersTable.id))
+    .where(conditions)
+    .orderBy(desc(affiliateWithdrawalsTable.createdAt))
+    .limit(parseInt(limit))
+    .offset(offset);
+
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(affiliateWithdrawalsTable)
+    .where(conditions);
+
+  res.json({ withdrawals: rows, total: Number(total), page: parseInt(page), limit: parseInt(limit) });
+});
+
+router.post("/v1/admin/affiliate/withdrawals/:id/validate", ...auth, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  const { note } = req.body;
+
+  const [updated] = await db
+    .update(affiliateWithdrawalsTable)
+    .set({ status: "validated", note: note ?? null })
+    .where(eq(affiliateWithdrawalsTable.id, id))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  res.json({ withdrawal: updated });
+});
+
+router.post("/v1/admin/affiliate/withdrawals/:id/reject", ...auth, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  const { note } = req.body;
+
+  const [withdrawal] = await db
+    .select()
+    .from(affiliateWithdrawalsTable)
+    .where(eq(affiliateWithdrawalsTable.id, id))
+    .limit(1);
+
+  if (!withdrawal) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  // Refund affiliate balance on rejection
+  await db.transaction(async (tx) => {
+    await tx
+      .update(usersTable)
+      .set({ affiliateBalance: sql`${usersTable.affiliateBalance} + ${withdrawal.amountUsd}` })
+      .where(eq(usersTable.id, withdrawal.userId));
+
+    await tx
+      .update(affiliateWithdrawalsTable)
+      .set({ status: "rejected", note: note ?? null })
+      .where(eq(affiliateWithdrawalsTable.id, id));
+  });
+
+  res.json({ success: true });
 });
 
 export default router;

@@ -31,6 +31,12 @@ export default function Register() {
   const [errorMsg, setErrorMsg] = useState("");
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Pre-fill referral code from URL param ?ref=
+  const [referralCode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("ref") ?? "";
+  });
+
   const registerMutation = useRegisterUser({
     mutation: {
       onSuccess: (data: any) => {
@@ -66,7 +72,7 @@ export default function Register() {
     }
     const fullName = [firstName, lastName].filter(Boolean).join(" ") || firstName;
     if (!fullName || !email || !password) return;
-    registerMutation.mutate({ data: { name: fullName, email, password, confirmPassword } });
+    registerMutation.mutate({ data: { name: fullName, email, password, confirmPassword, ...(referralCode ? { referralCode } : {}) } as any });
   };
 
   const handleCodeChange = (idx: number, value: string) => {
@@ -253,6 +259,15 @@ export default function Register() {
                   </div>
                   {!pwdMatch && <p className="text-xs text-red-600 mt-1.5 font-medium">Les mots de passe ne correspondent pas.</p>}
                 </div>
+
+                {referralCode && (
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-50 border border-green-200">
+                    <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                    <span className="text-sm text-green-700">
+                      Code parrain appliqué : <span className="font-bold">{referralCode}</span>
+                    </span>
+                  </div>
+                )}
 
                 <label className="flex items-start gap-3 cursor-pointer select-none pt-1">
                   <div className="relative mt-0.5 shrink-0" onClick={() => setAcceptTerms(!acceptTerms)}>

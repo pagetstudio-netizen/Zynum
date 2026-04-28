@@ -34,9 +34,10 @@ import BuyNumber from "./buy";
 import OrderHistory from "./history";
 import Recharge from "./recharge";
 import AdminPanel from "./admin";
+import AffiliatePage from "./affiliate";
 import { NotificationBanner } from "@/components/notification-banner";
 
-type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "admin";
+type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "affiliate" | "admin";
 type UserWithAdmin = { id: number; name: string; email: string; isAdmin?: boolean; isBanned?: boolean; createdAt: string };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -607,12 +608,13 @@ export default function Dashboard() {
     );
   }
 
-  const NAV: { id: Tab; label: string; imgSrc?: string; isLucide?: boolean }[] = [
-    { id: "overview",  label: t("dash_tab_overview"), imgSrc: iconOverview },
-    { id: "buy",       label: t("dash_tab_buy"),      imgSrc: iconBuy },
-    { id: "history",   label: t("dash_tab_history"),  imgSrc: iconHistory },
-    { id: "recharge",  label: t("dash_tab_recharge"), imgSrc: iconRecharge },
-    { id: "profile",   label: t("dash_tab_profile"),  imgSrc: iconProfile },
+  const NAV: { id: Tab; label: string; imgSrc?: string; isLucide?: boolean; emoji?: string }[] = [
+    { id: "overview",   label: t("dash_tab_overview"), imgSrc: iconOverview },
+    { id: "buy",        label: t("dash_tab_buy"),      imgSrc: iconBuy },
+    { id: "history",    label: t("dash_tab_history"),  imgSrc: iconHistory },
+    { id: "recharge",   label: t("dash_tab_recharge"), imgSrc: iconRecharge },
+    { id: "affiliate",  label: "Affiliation 🚀",       isLucide: true, emoji: "🚀" },
+    { id: "profile",    label: t("dash_tab_profile"),  imgSrc: iconProfile },
     ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", isLucide: true }] : []),
   ];
 
@@ -677,7 +679,9 @@ export default function Dashboard() {
               >
                 {item.imgSrc
                   ? <img src={item.imgSrc} alt={item.label} className="w-5 h-5 shrink-0 object-contain" />
-                  : <Shield className="w-4 h-4 shrink-0" />
+                  : item.emoji
+                    ? <span className="text-base shrink-0">{item.emoji}</span>
+                    : <Shield className="w-4 h-4 shrink-0" />
                 }
                 {item.label}
               </button>
@@ -767,12 +771,13 @@ export default function Dashboard() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === "overview"  && <Overview currency={currency} formatPrice={formatPrice} />}
-              {activeTab === "buy"       && <BuyNumber isEmbedded={true} />}
-              {activeTab === "history"   && <OrderHistory />}
-              {activeTab === "recharge"  && <Recharge />}
-              {activeTab === "profile"   && <Profile user={user} />}
-              {activeTab === "admin"     && user?.isAdmin && <AdminPanel />}
+              {activeTab === "overview"   && <Overview currency={currency} formatPrice={formatPrice} />}
+              {activeTab === "buy"        && <BuyNumber isEmbedded={true} />}
+              {activeTab === "history"    && <OrderHistory />}
+              {activeTab === "recharge"   && <Recharge />}
+              {activeTab === "affiliate"  && <AffiliatePage />}
+              {activeTab === "profile"    && <Profile user={user} />}
+              {activeTab === "admin"      && user?.isAdmin && <AdminPanel />}
             </motion.div>
           </AnimatePresence>
           </div>
