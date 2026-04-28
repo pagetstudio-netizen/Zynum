@@ -2,6 +2,8 @@ import { Router, type IRouter } from "express";
 import { db, usersTable, affiliateCommissionsTable, affiliateWithdrawalsTable } from "@workspace/db";
 import { eq, sql, desc, count, sum } from "drizzle-orm";
 import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js";
+import { sendAffiliateWithdrawalEmail } from "../lib/email.js";
+import { notifyAffiliateWithdrawal } from "../lib/telegram.js";
 
 const router: IRouter = Router();
 
@@ -92,7 +94,7 @@ router.post("/v1/affiliate/withdraw", requireAuth, async (req: AuthRequest, res)
   }
 
   const [user] = await db
-    .select({ affiliateBalance: usersTable.affiliateBalance })
+    .select({ affiliateBalance: usersTable.affiliateBalance, name: usersTable.name, email: usersTable.email })
     .from(usersTable)
     .where(eq(usersTable.id, userId))
     .limit(1);
@@ -115,6 +117,18 @@ router.post("/v1/affiliate/withdraw", requireAuth, async (req: AuthRequest, res)
   });
 
   res.json({ withdrawal, message: "Demande de retrait soumise. Traitement sous 48h." });
+
+  // Fire-and-forget notifications to admin
+  const notifOpts = {
+    withdrawalId: withdrawal.id,
+    userName: user.name,
+    userEmail: user.email,
+    amountUsd: amount,
+    phone,
+    country,
+  };
+  sendAffiliateWithdrawalEmail(notifOpts).catch(() => {});
+  notifyAffiliateWithdrawal(notifOpts).catch(() => {});
 });
 
 export default router;

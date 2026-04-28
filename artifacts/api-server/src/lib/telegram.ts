@@ -146,6 +146,33 @@ export async function notifyPurchase(opts: {
   await sendMessage(chatId, text).catch(() => {});
 }
 
+export async function notifyAffiliateWithdrawal(opts: {
+  withdrawalId: number;
+  userName: string;
+  userEmail: string;
+  amountUsd: number;
+  phone: string;
+  country: string;
+}): Promise<void> {
+  const chatId = await getChatId();
+  if (!chatId) return;
+  const now = fmtDate(new Date());
+  const text = [
+    `💸 <b>RETRAIT AFFILIÉ — NOUVELLE DEMANDE</b>`,
+    ``,
+    `🔖 Référence: <b>#${opts.withdrawalId}</b>`,
+    `👤 Utilisateur: <b>${opts.userName}</b>`,
+    `📧 Email: ${opts.userEmail}`,
+    `💵 Montant: <b>$${opts.amountUsd.toFixed(2)}</b>`,
+    `📱 Numéro de réception: <code>${opts.phone}</code>`,
+    `🌍 Pays: ${opts.country}`,
+    `📅 Date: ${now}`,
+    ``,
+    `⚙️ Traitez cette demande dans le panneau admin → Affiliations`,
+  ].join("\n");
+  await sendMessage(chatId, text).catch(() => {});
+}
+
 // ─── Daily report ─────────────────────────────────────────────────────────────
 
 export async function sendDailyReport(): Promise<void> {

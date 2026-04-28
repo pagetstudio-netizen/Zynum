@@ -172,6 +172,56 @@ export async function sendLoginVerificationEmail(opts: { to: string; name: strin
   });
 }
 
+export async function sendAffiliateWithdrawalEmail(opts: {
+  withdrawalId: number;
+  userName: string;
+  userEmail: string;
+  amountUsd: number;
+  phone: string;
+  country: string;
+}) {
+  const ADMIN_EMAIL = "pagetstudio@gmail.com";
+  const body = `
+    <h2 style="font-size:22px;font-weight:800;color:#111827;margin:0 0 8px;">💸 Nouvelle demande de retrait affilié</h2>
+    <p style="font-size:15px;color:#6b7280;margin:0 0 24px;">Un affilié a soumis une demande de retrait. Veuillez la traiter sous <strong>48h</strong>.</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:0 0 24px;">
+      <tr><td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+        <span style="font-size:12px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Référence</span>
+        <p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#111827;">#${opts.withdrawalId}</p>
+      </td></tr>
+      <tr><td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+        <span style="font-size:12px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Utilisateur</span>
+        <p style="margin:4px 0 0;font-size:15px;font-weight:600;color:#111827;">${opts.userName}</p>
+        <p style="margin:2px 0 0;font-size:13px;color:#6b7280;">${opts.userEmail}</p>
+      </td></tr>
+      <tr><td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+        <span style="font-size:12px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Montant demandé</span>
+        <p style="margin:4px 0 0;font-size:22px;font-weight:800;color:#dc2626;">$${opts.amountUsd.toFixed(2)}</p>
+      </td></tr>
+      <tr><td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+        <span style="font-size:12px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Mode de paiement / Numéro de réception</span>
+        <p style="margin:4px 0 0;font-size:15px;font-weight:700;color:#111827;font-family:monospace;">${opts.phone}</p>
+      </td></tr>
+      <tr><td style="padding:16px 20px;">
+        <span style="font-size:12px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Pays</span>
+        <p style="margin:4px 0 0;font-size:15px;font-weight:600;color:#111827;">${opts.country}</p>
+      </td></tr>
+    </table>
+
+    <div style="text-align:center;">${ctaButton("https://zynum.net/dashboard", "Gérer via le panneau admin")}</div>
+    <p style="font-size:12px;color:#d1d5db;margin:16px 0 0;text-align:center;">Ce message est envoyé automatiquement par ZyNum à chaque demande de retrait affilié.</p>
+  `;
+
+  const resend = getResend();
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: [ADMIN_EMAIL],
+    subject: `[ZyNum Affiliation] Retrait #${opts.withdrawalId} — $${opts.amountUsd.toFixed(2)} — ${opts.userName}`,
+    html: htmlLayout(body, `Retrait affilié #${opts.withdrawalId} : $${opts.amountUsd.toFixed(2)} de ${opts.userName}`),
+  });
+}
+
 export async function sendBroadcastEmail(opts: { to: string; name: string; subject: string; message: string }) {
   const body = `
     <h2 style="font-size:22px;font-weight:800;color:#111827;margin:0 0 16px;">${opts.subject}</h2>
