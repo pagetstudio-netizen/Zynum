@@ -5,8 +5,10 @@ import {
   ArrowDownToLine, RefreshCw, ChevronRight, AlertCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/hooks/use-currency";
 
 const API = "/api";
+const RATE = 620;
 
 function authHeaders() {
   const token = localStorage.getItem("zynum_token") ?? "";
@@ -56,6 +58,7 @@ const COUNTRIES = [
 
 export default function AffiliatePage() {
   const { toast } = useToast();
+  const { currency } = useCurrency();
   const [stats, setStats] = useState<Stats | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -66,6 +69,25 @@ export default function AffiliatePage() {
   const [withdrawPhone, setWithdrawPhone] = useState("");
   const [withdrawCountry, setWithdrawCountry] = useState("Sénégal");
   const [submitting, setSubmitting] = useState(false);
+
+  // Format a USD amount in the active currency
+  const fmt = (usd: number) =>
+    currency === "FCFA"
+      ? `${Math.round(usd * RATE).toLocaleString("fr-FR")} FCFA`
+      : `$${usd.toFixed(2)}`;
+
+  // Convert the form input (in active currency) to USD for the API
+  const toUsd = (val: string) => {
+    const n = parseFloat(val);
+    if (!n || n <= 0) return 0;
+    return currency === "FCFA" ? n / RATE : n;
+  };
+
+  // Current balance in display currency
+  const balanceDisplay = (usd: number) =>
+    currency === "FCFA"
+      ? Math.round(usd * RATE)
+      : usd;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,19 +123,19 @@ export default function AffiliatePage() {
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
-    const amount = parseFloat(withdrawAmount);
-    if (!amount || amount <= 0) {
+    const amountUsd = toUsd(withdrawAmount);
+    if (!amountUsd || amountUsd <= 0) {
       toast({ variant: "destructive", title: "Montant invalide" });
       return;
     }
-    if (stats && amount > stats.affiliateBalance) {
+    if (stats && amountUsd > stats.affiliateBalance) {
       toast({ variant: "destructive", title: "Solde insuffisant" });
       return;
     }
     setSubmitting(true);
     try {
       const res = await apiPost("/v1/affiliate/withdraw", {
-        amountUsd: amount,
+        amountUsd,
         phone: withdrawPhone,
         country: withdrawCountry,
       });
@@ -150,6 +172,10 @@ export default function AffiliatePage() {
       </span>
     );
   };
+
+  const maxInput = stats
+    ? (currency === "FCFA" ? Math.round(stats.affiliateBalance * RATE) : stats.affiliateBalance)
+    : 0;
 
   if (loading) {
     return (
@@ -203,9 +229,9 @@ export default function AffiliatePage() {
           </div>
           <div>
             <p className="text-sm text-white/70 mb-1">Commissions gagnées</p>
-            <p className="text-3xl font-bold">${(stats?.totalEarned ?? 0).toFixed(2)}</p>
+            <p className="text-3xl font-bold">{fmt(stats?.totalEarned ?? 0)}</p>
             <p className="text-xs text-white/60 mt-1">
-              Solde disponible : <span className="font-bold">${(stats?.affiliateBalance ?? 0).toFixed(2)}</span>
+              Solde disponible : <span className="font-bold">{fmt(stats?.affiliateBalance ?? 0)}</span>
             </p>
           </div>
         </motion.div>
@@ -260,7 +286,7 @@ export default function AffiliatePage() {
         {(stats?.affiliateBalance ?? 0) <= 0 && !showWithdrawForm && (
           <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            Votre solde d'affiliation est de $0.00. Invitez des filleuls pour commencer à gagner !
+            Votre solde d'affiliation est de {fmt(0)}. Invitez des filleuls pour commencer à gagner !
           </div>
         )}
 
@@ -269,20 +295,27 @@ export default function AffiliatePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Montant (USD) <span className="text-red-500">*</span>
-                  <span className="ml-1 text-gray-400 font-normal">Disponible : ${(stats?.affiliateBalance ?? 0).toFixed(2)}</span>
+                  Montant ({currency}) <span className="text-red-500">*</span>
+                  <span className="ml-1 text-gray-400 font-normal">
+                    Disponible : {fmt(stats?.affiliateBalance ?? 0)}
+                  </span>
                 </label>
                 <input
                   type="number"
-                  step="0.01"
-                  min="1"
-                  max={stats?.affiliateBalance ?? 0}
-                  placeholder="Ex: 5.00"
+                  step={currency === "FCFA" ? "1" : "0.01"}
+                  min={currency === "FCFA" ? "620" : "1"}
+                  max={maxInput}
+                  placeholder={currency === "FCFA" ? "Ex: 3100" : "Ex: 5.00"}
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   required
                   className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white"
                 />
+                {currency === "FCFA" && withdrawAmount && parseFloat(withdrawAmount) > 0 && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    ≈ ${(parseFloat(withdrawAmount) / RATE).toFixed(2)} USD
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">Pays <span className="text-red-500">*</span></label>
@@ -342,7 +375,7 @@ export default function AffiliatePage() {
               {withdrawals.map((w) => (
                 <div key={w.id} className="flex items-center justify-between py-2 px-3 rounded-xl bg-gray-50 border border-gray-100">
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">${w.amountUsd.toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-gray-900">{fmt(w.amountUsd)}</p>
                     <p className="text-xs text-gray-400">{w.phone} · {w.country}</p>
                     {w.note && <p className="text-xs text-gray-500 mt-0.5">{w.note}</p>}
                   </div>
