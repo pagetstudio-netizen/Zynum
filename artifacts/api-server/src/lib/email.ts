@@ -222,9 +222,22 @@ export async function sendAffiliateWithdrawalEmail(opts: {
   });
 }
 
-export async function sendBroadcastEmail(opts: { to: string; name: string; subject: string; message: string }) {
+export async function sendBroadcastEmail(opts: {
+  to: string;
+  name: string;
+  subject: string;
+  message: string;
+  imageBase64?: string;
+  imageMimeType?: string;
+}) {
+  const hasImage = !!(opts.imageBase64 && opts.imageMimeType);
+  const imageBlock = hasImage
+    ? `<div style="text-align:center;margin:0 0 24px;"><img src="cid:broadcast_image" alt="" style="max-width:100%;border-radius:12px;display:block;margin:0 auto;" /></div>`
+    : "";
+
   const body = `
     <h2 style="font-size:22px;font-weight:800;color:#111827;margin:0 0 16px;">${opts.subject}</h2>
+    ${imageBlock}
     <div style="font-size:15px;color:#374151;line-height:1.7;white-space:pre-line;">${opts.message}</div>
     <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0;" />
     <div style="text-align:center;">${ctaButton("https://zynum.net/dashboard", "Accéder à ZyNum")}</div>
@@ -236,5 +249,14 @@ export async function sendBroadcastEmail(opts: { to: string; name: string; subje
     to: [opts.to],
     subject: opts.subject,
     html: htmlLayout(body, opts.message.slice(0, 120)),
+    ...(hasImage && {
+      attachments: [
+        {
+          filename: `image.${opts.imageMimeType!.split("/")[1] ?? "jpg"}`,
+          content: opts.imageBase64!,
+          content_id: "broadcast_image",
+        },
+      ],
+    }),
   });
 }

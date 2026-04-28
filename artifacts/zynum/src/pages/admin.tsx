@@ -7,6 +7,7 @@ import {
   Search, ChevronLeft, ChevronRight, RefreshCw, Send,
   ToggleLeft, ToggleRight, DollarSign, Percent, Star,
   Package, AlertTriangle, Clock, Database, Bell, Eye, EyeOff, Key, Mail, Loader2,
+  Image as ImageIcon, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -2089,8 +2090,44 @@ function AdminWaitlist() {
 function AdminEmailBroadcast() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const toBase64 = (file: File): Promise<{ base64: string; mimeType: string }> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        const [meta, base64] = dataUrl.split(",");
+        const mimeType = meta.match(/:(.*?);/)?.[1] ?? file.type;
+        resolve({ base64, mimeType });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image trop grande (max 5 Mo)");
+      return;
+    }
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSend = async () => {
     if (!subject.trim() || !message.trim()) return;
@@ -2098,11 +2135,24 @@ function AdminEmailBroadcast() {
     setLoading(true);
     setResult(null);
     try {
-      const data = await adminPost("/v1/admin/send-broadcast-email", { subject, message });
+      let imageBase64: string | undefined;
+      let imageMimeType: string | undefined;
+      if (imageFile) {
+        const encoded = await toBase64(imageFile);
+        imageBase64 = encoded.base64;
+        imageMimeType = encoded.mimeType;
+      }
+      const data = await adminPost("/v1/admin/send-broadcast-email", {
+        subject,
+        message,
+        imageBase64,
+        imageMimeType,
+      });
       setResult(data);
       if (data.sent > 0) {
         setSubject("");
         setMessage("");
+        removeImage();
       }
     } finally {
       setLoading(false);
@@ -2126,6 +2176,54 @@ function AdminEmailBroadcast() {
         />
       </div>
 
+      {/* Image optionnelle */}
+      <div>
+        <label className="block text-xs font-semibold text-muted-foreground mb-2">
+          Image <span className="font-normal text-muted-foreground/60">(optionnel — affichée en haut du message)</span>
+        </label>
+
+        {imagePreview ? (
+          <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+            <img
+              src={imagePreview}
+              alt="Aperçu"
+              className="w-full max-h-56 object-contain"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3 gap-2">
+              <span className="text-xs text-white/70 flex-1 truncate">{imageFile?.name}</span>
+              <button
+                onClick={removeImage}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-semibold hover:bg-red-500 transition-colors"
+              >
+                <X className="w-3 h-3" /> Supprimer
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10 bg-white/3 hover:bg-white/8 hover:border-primary/40 transition-all py-8 px-4 text-muted-foreground cursor-pointer"
+          >
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+              <ImageIcon className="w-5 h-5" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-white/70">Cliquer pour importer une image</p>
+              <p className="text-xs text-muted-foreground mt-0.5">PNG, JPG, GIF, WebP — max 5 Mo</p>
+            </div>
+          </button>
+        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="hidden"
+        />
+      </div>
+
       <div>
         <label className="block text-xs font-semibold text-muted-foreground mb-2">Message</label>
         <textarea
@@ -2142,7 +2240,10 @@ function AdminEmailBroadcast() {
         disabled={loading || !subject.trim() || !message.trim()}
         className="bg-primary hover:bg-primary/90 text-white gap-2"
       >
-        {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Envoi en cours...</> : <><Send className="w-4 h-4" /> Envoyer à tous les utilisateurs</>}
+        {loading
+          ? <><Loader2 className="w-4 h-4 animate-spin" /> Envoi en cours...</>
+          : <><Send className="w-4 h-4" /> Envoyer à tous les utilisateurs</>
+        }
       </Button>
 
       {result && (

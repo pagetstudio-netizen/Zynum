@@ -540,7 +540,7 @@ router.patch("/v1/admin/countries/:id", ...auth, async (req, res): Promise<void>
 
 /* ─── EMAIL BROADCAST ──────────────────────────────────────────────── */
 router.post("/v1/admin/send-broadcast-email", ...auth, async (req, res): Promise<void> => {
-  const { subject, message } = req.body;
+  const { subject, message, imageBase64, imageMimeType } = req.body;
   if (!subject || !message) {
     res.status(400).json({ error: "Validation error", message: "Sujet et message requis" });
     return;
@@ -555,7 +555,14 @@ router.post("/v1/admin/send-broadcast-email", ...auth, async (req, res): Promise
   let failed = 0;
   for (const user of users) {
     try {
-      await sendBroadcastEmail({ to: user.email, name: user.name, subject, message });
+      await sendBroadcastEmail({
+        to: user.email,
+        name: user.name,
+        subject,
+        message,
+        imageBase64: imageBase64 || undefined,
+        imageMimeType: imageMimeType || undefined,
+      });
       sent++;
     } catch (err) {
       console.error(`Broadcast to ${user.email} failed:`, err);
