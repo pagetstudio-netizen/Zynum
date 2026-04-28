@@ -176,6 +176,46 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [buyCount, setBuyCount] = useState(0);
 
+  // ── Persistence de la commande active ───────────────────────────────────────
+  const clearSavedOrder = useCallback(() => {
+    localStorage.removeItem("zynum_active_order");
+  }, []);
+
+  // Restaurer la commande active depuis localStorage au montage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("zynum_active_order");
+      if (!saved) return;
+      const data = JSON.parse(saved);
+      const order: Order = data.order;
+      if (order && !["CANCELED", "TIMEOUT", "BANNED"].includes(order.status)) {
+        setActiveOrder(order);
+        setStep(data.step || "active");
+        if (data.service) setSelectedService(data.service);
+        if (data.country) setSelectedCountry(data.country);
+        if (data.operator) setSelectedOperator(data.operator);
+      } else {
+        localStorage.removeItem("zynum_active_order");
+      }
+    } catch {
+      localStorage.removeItem("zynum_active_order");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sauvegarder la commande active dans localStorage
+  useEffect(() => {
+    if (activeOrder && (step === "preview" || step === "active")) {
+      localStorage.setItem("zynum_active_order", JSON.stringify({
+        order: activeOrder,
+        step,
+        service: selectedService,
+        country: selectedCountry,
+        operator: selectedOperator,
+      }));
+    }
+  }, [activeOrder, step, selectedService, selectedCountry, selectedOperator]);
+
   // ── Code de réduction ───────────────────────────────────────────────────────
   const [discountInput, setDiscountInput] = useState("");
   const [discountApplied, setDiscountApplied] = useState<{
@@ -253,11 +293,12 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     mutation: {
       onSuccess: () => {
         setActiveOrder(null);
+        clearSavedOrder();
         goTo("service", false);
         refetchBalance();
         toast({ title: t("buy_refunded"), description: t("buy_refunded_desc") });
       },
-      onError: () => { setActiveOrder(null); goTo("service", false); },
+      onError: () => { setActiveOrder(null); clearSavedOrder(); goTo("service", false); },
     },
   });
 
@@ -277,9 +318,16 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     if ((smsData.order.status === "RECEIVED" || smsData.order.status === "FINISHED") && smsData.order.smsCode) {
       toast({ title: t("buy_sms_toast"), description: `${t("buy_sms_code_toast")} ${smsData.order.smsCode}` });
     } else if (["TIMEOUT", "BANNED", "CANCELED"].includes(smsData.order.status)) {
-      toast({ variant: "destructive", title: t("buy_expired_toast"), description: t("buy_expired_desc") });
+      const wasAutocanceled = (smsData as any).autocanceled;
+      clearSavedOrder();
+      toast({
+        variant: "destructive",
+        title: wasAutocanceled ? t("buy_autocanceled_title") : t("buy_expired_toast"),
+        description: wasAutocanceled ? t("buy_autocanceled_desc") : t("buy_expired_desc"),
+      });
+      refetchBalance();
     }
-  }, [smsData, toast, t]);
+  }, [smsData, toast, t, clearSavedOrder, refetchBalance]);
 
   const handleGetNumber = useCallback(() => {
     if (!selectedService || !selectedCountry) return;
@@ -740,7 +788,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
           <div className="max-w-lg mx-auto">
             <StepIndicator current="active" />
             <button
-              onClick={() => { setActiveOrder(null); goTo("service", false); setBuyCount(0); }}
+              onClick={() => { setActiveOrder(null); clearSavedOrder(); goTo("service", false); setBuyCount(0); }}
               className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> {t("buy_buy_another")}
@@ -756,7 +804,9 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                   isPending ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" :
                   isSuccess ? "bg-green-500/10 text-green-400 border-green-500/30" :
                   "bg-red-500/10 text-red-400 border-red-500/30"
-                }`}>{activeOrder.status}</span>
+                }`}>
+                  {isPending ? t("buy_status_waiting") : isSuccess ? t("buy_status_received") : t("buy_status_failed")}
+                </span>
               </div>
               <div className="px-6 py-4 border-b border-gray-100">
                 <p className="text-xs text-gray-400 mb-2">{t("buy_virtual_num_label")}</p>
@@ -785,7 +835,10 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                     <CountdownRing
                       createdAt={activeOrder.createdAt}
                       onExpired={() => {
-                        toast({ title: t("buy_time_expired_title"), description: t("buy_time_expired_desc"), variant: "destructive" });
+                        if (!cancelMutation.isPending) {
+                          cancelMutation.mutate(activeOrder.id);
+                          toast({ title: t("buy_autocanceled_title"), description: t("buy_autocanceled_desc"), variant: "destructive" });
+                        }
                       }}
                     />
                     <div className="flex flex-col sm:flex-row gap-2 w-full mt-1">
@@ -831,7 +884,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                     <AlertCircle className="w-16 h-16 text-red-400 mb-4" />
                     <p className="font-bold text-white text-xl mb-2">{t("buy_number_expired")}</p>
                     <p className="text-sm text-muted-foreground mb-6">{t("buy_try_another")}</p>
-                    <Button className="bg-primary text-white hover:bg-primary/90" onClick={() => { setActiveOrder(null); goTo("service", false); setBuyCount(0); }}>
+                    <Button className="bg-primary text-white hover:bg-primary/90" onClick={() => { setActiveOrder(null); clearSavedOrder(); goTo("service", false); setBuyCount(0); }}>
                       {t("buy_restart")}
                     </Button>
                   </div>

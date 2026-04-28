@@ -156,6 +156,26 @@ router.get("/v1/check/:orderId", requireAuth, async (req: AuthRequest, res): Pro
   let updatedOrder = dbOrder;
 
   if (dbOrder.status === "PENDING" || dbOrder.status === "RECEIVED") {
+    // Auto-cancel if >6 minutes old with no code received
+    const SIX_MIN_MS = 6 * 60 * 1000;
+    const orderAge = Date.now() - new Date(dbOrder.createdAt).getTime();
+    if (orderAge > SIX_MIN_MS && !dbOrder.smsCode) {
+      try { await cancelOrder(parseInt(dbOrder.externalId, 10)); } catch { /* ignore 5sim error */ }
+      const [canceled] = await db.transaction(async (tx) => {
+        await tx
+          .update(usersTable)
+          .set({ balanceUsd: sql`${usersTable.balanceUsd} + ${dbOrder.priceUsd}` })
+          .where(eq(usersTable.id, dbOrder.userId));
+        return tx
+          .update(ordersTable)
+          .set({ status: "CANCELED" })
+          .where(eq(ordersTable.id, dbOrder.id))
+          .returning();
+      });
+      res.json({ order: formatOrder(canceled), autocanceled: true });
+      return;
+    }
+
     try {
       const fiveSimOrder = await checkOrder(parseInt(dbOrder.externalId, 10));
       const newStatus = mapFiveSimStatus(fiveSimOrder.status);
