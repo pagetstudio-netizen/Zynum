@@ -7,6 +7,32 @@ import { notifyAffiliateWithdrawal } from "../lib/telegram.js";
 
 const router: IRouter = Router();
 
+function generateReferralCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "ZYN";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+async function ensureReferralCode(userId: number): Promise<string> {
+  // Try to generate a unique code and save it
+  let code = generateReferralCode();
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const [clash] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.referralCode, code))
+      .limit(1);
+    if (!clash) break;
+    code = generateReferralCode();
+  }
+  await db
+    .update(usersTable)
+    .set({ referralCode: code })
+    .where(eq(usersTable.id, userId));
+  return code;
+}
+
 // ─── GET /v1/affiliate/stats ──────────────────────────────────────────────────
 router.get("/v1/affiliate/stats", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const userId = req.userId!;
@@ -20,6 +46,12 @@ router.get("/v1/affiliate/stats", requireAuth, async (req: AuthRequest, res): Pr
   if (!user) {
     res.status(404).json({ error: "Not found" });
     return;
+  }
+
+  // Auto-generate referral code for existing users who don't have one yet
+  let referralCode = user.referralCode;
+  if (!referralCode) {
+    referralCode = await ensureReferralCode(userId);
   }
 
   const [{ filleulCount }] = await db
@@ -38,7 +70,7 @@ router.get("/v1/affiliate/stats", requireAuth, async (req: AuthRequest, res): Pr
     .where(sql`${affiliateWithdrawalsTable.userId} = ${userId} AND ${affiliateWithdrawalsTable.status} = 'pending'`);
 
   res.json({
-    referralCode: user.referralCode,
+    referralCode,
     affiliateBalance: user.affiliateBalance ?? 0,
     filleulCount: Number(filleulCount),
     totalEarned: Number(totalEarned ?? 0),
