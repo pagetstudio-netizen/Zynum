@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, MessageSquare, Clock, Send, CheckCircle } from "lucide-react";
+import { Mail, Clock, Send, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
+import { usePublicSettings, openTelegramSupport } from "@/hooks/use-public-settings";
 
 const API = "/api";
 
 export default function Contact() {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { settings } = usePublicSettings();
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
@@ -37,10 +39,16 @@ export default function Contact() {
     }
   };
 
+  const tgHandle = settings.support_telegram ?? t("contact_telegram_val");
+
   const INFO = [
-    { icon: <Mail className="w-6 h-6 text-primary" />, title: t("contact_email_title"), val: t("contact_email_val"), desc: t("contact_email_desc") },
-    { icon: <MessageSquare className="w-6 h-6 text-green-500" />, title: t("contact_telegram_title"), val: t("contact_telegram_val"), desc: t("contact_telegram_desc") },
-    { icon: <Clock className="w-6 h-6 text-yellow-500" />, title: t("contact_avail_title"), val: t("contact_avail_val"), desc: t("contact_avail_desc") },
+    { icon: <Mail className="w-6 h-6 text-primary" />, title: t("contact_email_title"), val: t("contact_email_val"), desc: t("contact_email_desc"), onClick: undefined as (() => void) | undefined },
+    { icon: (
+        <svg viewBox="0 0 24 24" className="w-6 h-6 fill-[#26A5E4]" aria-hidden="true">
+          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+        </svg>
+      ), title: t("contact_telegram_title"), val: tgHandle.startsWith("http") ? t("contact_telegram_title") : tgHandle, desc: t("contact_telegram_desc"), onClick: () => openTelegramSupport(tgHandle) },
+    { icon: <Clock className="w-6 h-6 text-yellow-500" />, title: t("contact_avail_title"), val: t("contact_avail_val"), desc: t("contact_avail_desc"), onClick: undefined },
   ];
 
   return (
@@ -50,7 +58,20 @@ export default function Contact() {
         <div className="container max-w-3xl mx-auto px-4 relative z-10 pt-12">
           <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-4">{t("contact_badge")}</p>
           <h1 className="text-4xl md:text-5xl font-display font-extrabold text-gray-900 mb-5">{t("contact_title")}</h1>
-          <p className="text-lg text-gray-500">{t("contact_sub")}</p>
+          <p className="text-lg text-gray-500 mb-8">{t("contact_sub")}</p>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <button
+              onClick={() => openTelegramSupport(tgHandle)}
+              className="inline-flex items-center gap-3 bg-[#26A5E4] hover:bg-[#1a8fc7] text-white font-bold px-7 py-4 rounded-2xl shadow-lg shadow-[#26A5E4]/30 transition-all hover:scale-105 active:scale-95 text-base"
+            >
+              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current shrink-0" aria-hidden="true">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              </svg>
+              <span>{t("contact_telegram_cta")}</span>
+              <span className="ml-1 bg-white/20 text-white text-xs font-semibold px-2 py-0.5 rounded-full">{t("contact_telegram_recommended")}</span>
+            </button>
+            <p className="text-sm text-gray-400 mt-3">{t("contact_telegram_cta_desc")}</p>
+          </motion.div>
         </div>
       </section>
 
@@ -58,15 +79,35 @@ export default function Contact() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="space-y-4">
             {INFO.map((item) => (
-              <div key={item.title} className="rounded-2xl border border-gray-200 bg-white p-5 flex gap-4 shadow-sm">
-                <div className="w-11 h-11 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+              <div
+                key={item.title}
+                onClick={item.onClick}
+                className={`rounded-2xl border p-5 flex gap-4 shadow-sm transition-all ${
+                  item.onClick
+                    ? "border-[#26A5E4]/30 bg-[#26A5E4]/5 cursor-pointer hover:bg-[#26A5E4]/10 hover:border-[#26A5E4]/50 hover:shadow-md hover:shadow-[#26A5E4]/10"
+                    : "border-gray-200 bg-white"
+                }`}
+              >
+                <div className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 ${
+                  item.onClick ? "bg-[#26A5E4]/10 border-[#26A5E4]/20" : "bg-gray-100 border-gray-200"
+                }`}>
                   {item.icon}
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">{item.title}</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-xs text-gray-400">{item.title}</p>
+                    {item.onClick && (
+                      <span className="text-[10px] font-bold text-[#26A5E4] bg-[#26A5E4]/10 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                        {t("contact_telegram_recommended")}
+                      </span>
+                    )}
+                  </div>
                   <p className="font-bold text-gray-900 text-sm">{item.val}</p>
                   <p className="text-xs text-gray-400">{item.desc}</p>
                 </div>
+                {item.onClick && (
+                  <span className="self-center text-[#26A5E4] text-lg font-bold shrink-0">→</span>
+                )}
               </div>
             ))}
             <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
