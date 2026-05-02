@@ -33,7 +33,8 @@ interface OmniOperatorDef {
   needsOtp: boolean;
   needsReturnUrl: boolean;
   otpHint?: string;
-  validationHint?: string; // Instructions push (sans saisie de code)
+  validationHint?: string;
+  paxityOperatorId?: string; // If set, this operator is routed through Paxity
 }
 
 interface OmniCountryDef {
@@ -44,6 +45,7 @@ interface OmniCountryDef {
   currency: string;
   currencySymbol: string;
   operators: OmniOperatorDef[];
+  usePaxity?: boolean; // All operators in this country go through Paxity
 }
 
 const OM_LOGO    = imgOrangeMoney;
@@ -109,9 +111,10 @@ const OMNIPAY_COUNTRIES: OmniCountryDef[] = [
   },
   {
     code: "TG", name: "Togo", flag: "🇹🇬", prefix: "228", currency: "XOF", currencySymbol: "FCFA",
+    usePaxity: true,
     operators: [
-      { id: "MOOV_TG",    label: "Moov Money", logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
-      { id: "TOGOCEL_TG", label: "T-Money",    logo: TM_LOGO,   needsOtp: false, needsReturnUrl: false },
+      { id: "MOOV_TG",    label: "Moov Money", logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false, paxityOperatorId: "MOOVTG"   },
+      { id: "TOGOCEL_TG", label: "T-Money",    logo: TM_LOGO,   needsOtp: false, needsReturnUrl: false, paxityOperatorId: "TMONEYTG" },
     ],
   },
   {
@@ -259,11 +262,17 @@ export function OmnipayModal({
   useEffect(() => { if (open) { reset(); setView("form"); } }, [open]);
   useEffect(() => () => stopPolling(), [stopPolling]);
 
+  // Which gateway is active for the current transaction
+  const gatewayRef = useRef<"omnipay" | "paxity">("omnipay");
+
   const pollStatus = useCallback(async (reference: string) => {
     pollCount.current += 1;
     if (pollCount.current > 120) { stopPolling(); return; }
     try {
-      const res  = await fetch(`${apiBase}/api/v1/payments/omnipay/confirm`, {
+      const endpoint = gatewayRef.current === "paxity"
+        ? `${apiBase}/api/v1/payments/paxity/confirm`
+        : `${apiBase}/api/v1/payments/omnipay/confirm`;
+      const res  = await fetch(endpoint, {
         method:      "POST",
         headers:     { "Content-Type": "application/json" },
         credentials: "include",
@@ -305,42 +314,82 @@ export function OmnipayModal({
     setState("loading");
     setErrorMsg("");
 
+    // Route via Paxity if the country is flagged usePaxity
+    const usePaxity = !!(country.usePaxity && operator.paxityOperatorId);
+    gatewayRef.current = usePaxity ? "paxity" : "omnipay";
+
     try {
-      const body: Record<string, unknown> = {
-        amount:     Math.round(amountXof),
-        userId:     String(userId),
-        phone:      phone.replace(/\D/g, ""),
-        operatorId: operator.id,
-        firstName:  userFirstName ?? "ZyNum",
-        lastName:   userLastName  ?? `User${userId}`,
-      };
-      if (operator.needsOtp) body.otp = otp.trim();
+      if (usePaxity) {
+        // ── Paxity flow ──────────────────────────────────────────────
+        const res  = await fetch(`${apiBase}/api/v1/payments/paxity/initiate`, {
+          method:      "POST",
+          headers:     { "Content-Type": "application/json" },
+          credentials: "include",
+          body:        JSON.stringify({
+            method:   "mobile",
+            amount:   Math.round(amountXof),
+            currency: country.currency,
+            userId:   String(userId),
+            phone:    phone.replace(/\D/g, ""),
+            operator: operator.paxityOperatorId,
+          }),
+        });
+        const json = (await res.json()) as Record<string, unknown>;
+        if (!res.ok) {
+          setState("error");
+          setErrorMsg(String((json as Record<string, unknown>)?.message ?? (json as Record<string, unknown>)?.error ?? "Paiement refusé."));
+          return;
+        }
+        const tx   = ((json as Record<string, unknown>)?.data ?? json) as Record<string, unknown>;
+        const txId = String(tx?.transactionId ?? tx?.reference ?? "");
+        setTxReference(txId);
+        const link = String(tx?.link ?? tx?.payment_url ?? "");
+        if (link) {
+          setPaymentUrl(link);
+          setState("wave");
+        } else {
+          setState("push");
+        }
+        if (txId) startPolling(txId);
 
-      const res  = await fetch(`${apiBase}/api/v1/payments/omnipay/initiate`, {
-        method:      "POST",
-        headers:     { "Content-Type": "application/json" },
-        credentials: "include",
-        body:        JSON.stringify(body),
-      });
-      const json = (await res.json()) as Record<string, unknown>;
-
-      if (!res.ok || String(json.success) !== "1") {
-        setState("error");
-        const msg = String(json.message ?? json.error ?? "Paiement refusé. Vérifiez vos informations.");
-        setErrorMsg(msg);
-        return;
-      }
-
-      const reference = String(json.reference ?? "");
-      setTxReference(reference);
-
-      if (json.payment_url) {
-        setPaymentUrl(String(json.payment_url));
-        setState("wave");
-        if (reference) startPolling(reference);
       } else {
-        setState("push");
-        if (reference) startPolling(reference);
+        // ── OmniPay flow ─────────────────────────────────────────────
+        const body: Record<string, unknown> = {
+          amount:     Math.round(amountXof),
+          userId:     String(userId),
+          phone:      phone.replace(/\D/g, ""),
+          operatorId: operator.id,
+          firstName:  userFirstName ?? "ZyNum",
+          lastName:   userLastName  ?? `User${userId}`,
+        };
+        if (operator.needsOtp) body.otp = otp.trim();
+
+        const res  = await fetch(`${apiBase}/api/v1/payments/omnipay/initiate`, {
+          method:      "POST",
+          headers:     { "Content-Type": "application/json" },
+          credentials: "include",
+          body:        JSON.stringify(body),
+        });
+        const json = (await res.json()) as Record<string, unknown>;
+
+        if (!res.ok || String(json.success) !== "1") {
+          setState("error");
+          const msg = String(json.message ?? json.error ?? "Paiement refusé. Vérifiez vos informations.");
+          setErrorMsg(msg);
+          return;
+        }
+
+        const reference = String(json.reference ?? "");
+        setTxReference(reference);
+
+        if (json.payment_url) {
+          setPaymentUrl(String(json.payment_url));
+          setState("wave");
+          if (reference) startPolling(reference);
+        } else {
+          setState("push");
+          if (reference) startPolling(reference);
+        }
       }
 
     } catch {
