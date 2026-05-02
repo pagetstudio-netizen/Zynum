@@ -10,7 +10,7 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useGetBalance, useGetCurrentUser, getGetBalanceQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { PaxityModal } from "@/components/paxity-modal";
+import { OmnipayModal } from "@/components/omnipay-modal";
 import iconMobile from "@assets/icons8-argent-mobile-53_1774828244252.png";
 import iconCrypto from "@assets/cryptocurrency-3d-illustration-png_1774828244226.png";
 import iconCard   from "@assets/9242877_1774828244157.png";
@@ -30,22 +30,20 @@ export default function Recharge() {
   const [selectedAmount,   setSelectedAmount]   = useState<number | null>(20);
   const [customAmount,     setCustomAmount]     = useState("");
   const [selectedMethod,   setSelectedMethod]   = useState<string | null>("mobile");
-  const [paxityOpen,       setPaxityOpen]       = useState(false);
-  const [modalTab,         setModalTab]         = useState<"mobile" | "card">("mobile");
+  const [omnipayOpen,      setOmnipayOpen]      = useState(false);
 
   const METHODS: {
     id: string; label: string; sub: string; icon: React.ReactNode;
-    color: string; bg: string; available: boolean; paxityTab?: "mobile" | "card"; soon?: boolean;
+    color: string; bg: string; available: boolean; soon?: boolean;
   }[] = [
     {
       id:        "mobile",
       icon:      <img src={iconMobile} alt="Mobile Money" className="w-8 h-8 object-contain" />,
       label:     "Mobile Money",
-      sub:       "Wave, Orange Money, MTN, Moov, M-Pesa… · 11 pays",
+      sub:       "Wave, Orange Money, MTN, Moov… · 10 pays",
       color:     "text-emerald-400",
       bg:        "bg-emerald-400/10 border-emerald-400/20",
       available: true,
-      paxityTab: "mobile",
     },
     {
       id:        "card",
@@ -100,13 +98,7 @@ export default function Recharge() {
       return;
     }
     if (selectedMethod === "mobile") {
-      setModalTab("mobile");
-      setPaxityOpen(true);
-      return;
-    }
-    if (selectedMethod === "card") {
-      setModalTab("card");
-      setPaxityOpen(true);
+      setOmnipayOpen(true);
       return;
     }
     toast({ title: t("recharge_soon_toast_title"), description: t("recharge_soon_toast_desc") });
@@ -279,13 +271,14 @@ export default function Recharge() {
       </div>
 
       {user && (
-        <PaxityModal
-          open={paxityOpen}
-          onClose={() => setPaxityOpen(false)}
+        <OmnipayModal
+          open={omnipayOpen}
+          onClose={() => setOmnipayOpen(false)}
           amountXof={finalAmountXof}
           userId={user.id}
           onSuccess={handlePaymentSuccess}
-          initialTab={modalTab}
+          userFirstName={user.name?.split(" ")[0] ?? "ZyNum"}
+          userLastName={user.name?.split(" ").slice(1).join(" ") || `User${user.id}`}
         />
       )}
 
