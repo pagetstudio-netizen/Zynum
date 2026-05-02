@@ -173,6 +173,33 @@ export async function notifyAffiliateWithdrawal(opts: {
   await sendMessage(chatId, text).catch(() => {});
 }
 
+export async function notifyContact(opts: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<void> {
+  const chatId = await getChatId();
+  if (!chatId) return;
+  const now  = fmtDate(new Date());
+  const preview = opts.message.length > 200 ? opts.message.slice(0, 200) + "…" : opts.message;
+  const text = [
+    `✉️ <b>NOUVEAU MESSAGE DE CONTACT</b>`,
+    ``,
+    `👤 Nom: <b>${opts.name}</b>`,
+    `📧 Email: <code>${opts.email}</code>`,
+    `📌 Sujet: <b>${opts.subject}</b>`,
+    ``,
+    `💬 Message:`,
+    preview,
+    ``,
+    `📅 Date: ${now}`,
+    ``,
+    `⚙️ Consultez ce message dans le panneau admin → Contact`,
+  ].join("\n");
+  await sendMessage(chatId, text).catch(() => {});
+}
+
 // ─── Daily report ─────────────────────────────────────────────────────────────
 
 export async function sendDailyReport(): Promise<void> {

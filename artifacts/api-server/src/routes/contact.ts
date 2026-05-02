@@ -3,6 +3,7 @@ import { db, contactMessagesTable, apiWaitlistTable, socialLinksTable } from "@w
 import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
+import { notifyContact } from "../lib/telegram.js";
 
 const router: IRouter = Router();
 const auth = [requireAuth, requireAdmin];
@@ -42,6 +43,9 @@ router.post("/v1/contact", async (req, res): Promise<void> => {
     .values({ name: String(name), email: String(email), subject: String(subject), message: String(message) })
     .returning();
   res.status(201).json({ success: true, id: msg.id });
+
+  // Fire-and-forget Telegram notification
+  notifyContact({ name: String(name), email: String(email), subject: String(subject), message: String(message) }).catch(() => {});
 });
 
 /* ── Public: subscribe to API waitlist ── */
