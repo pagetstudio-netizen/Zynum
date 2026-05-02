@@ -232,7 +232,7 @@ export async function sendBroadcastEmail(opts: {
 }) {
   const hasImage = !!(opts.imageBase64 && opts.imageMimeType);
   const imageBlock = hasImage
-    ? `<div style="text-align:center;margin:0 0 24px;"><img src="cid:broadcast_image" alt="" style="max-width:100%;border-radius:12px;display:block;margin:0 auto;" /></div>`
+    ? `<div style="text-align:center;margin:0 0 24px;"><img src="data:${opts.imageMimeType};base64,${opts.imageBase64}" alt="" style="max-width:100%;border-radius:12px;display:block;margin:0 auto;" /></div>`
     : "";
 
   const body = `
@@ -249,14 +249,5 @@ export async function sendBroadcastEmail(opts: {
     to: [opts.to],
     subject: opts.subject,
     html: htmlLayout(body, opts.message.slice(0, 120)),
-    ...(hasImage && {
-      attachments: [
-        {
-          filename: `image.${opts.imageMimeType!.split("/")[1] ?? "jpg"}`,
-          content: opts.imageBase64!,
-          content_id: "broadcast_image",
-        },
-      ],
-    }),
   });
 }
