@@ -646,7 +646,7 @@ function AdminTransactions() {
                   <option value="moov_money">Moov Money</option>
                   <option value="wave">Wave</option>
                   <option value="mtn_momo">MTN MoMo</option>
-                  <option value="paxity">Paxity</option>
+                  <option value="omnipay">OmniPay</option>
                   <option value="cash">Cash</option>
                   <option value="bank_transfer">Virement bancaire</option>
                   <option value="admin">Admin</option>
@@ -2411,7 +2411,7 @@ function AdminTelegram() {
       <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-2">
         <h3 className="font-bold text-white text-sm">Notifications actives</h3>
         <ul className="space-y-2 text-sm text-gray-300">
-          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Chaque dépôt reçu (OmniPay + Paxity)</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Chaque dépôt reçu (OmniPay)</li>
           <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Chaque achat de numéro virtuel</li>
           <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Rapport quotidien automatique à minuit</li>
           <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Commandes bot : /start, /aide, /stat, /chatid, /ping</li>
