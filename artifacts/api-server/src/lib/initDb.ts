@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { db, usersTable, socialLinksTable, paymentProvidersTable } from "@workspace/db";
+import { db, usersTable, socialLinksTable, paymentProvidersTable, operatorRoutesTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
 function hashPassword(password: string): string {
@@ -318,6 +318,56 @@ async function seedData() {
         target: paymentProvidersTable.slug,
         set: { name: p.name, isActive: p.isActive, isSelected: p.isSelected, config: p.config },
       });
+  }
+
+  // Auto-seed operator routes if table is empty
+  const existing = await db.select({ id: operatorRoutesTable.id }).from(operatorRoutesTable).limit(1);
+  if (existing.length === 0) {
+    const DEFAULT_OPERATORS = [
+      // Côte d'Ivoire
+      { countryCode:"CI", countryName:"Côte d'Ivoire", flag:"🇨🇮", prefix:"225", currency:"XOF", currencySymbol:"FCFA", operatorName:"Orange Money", operatorKey:"ORANGE_CI", aggregator:"omnipay", isActive:true, needsOtp:true,  needsReturnUrl:false, otpHint:"Composez #144*82# sur votre téléphone pour générer votre code OTP, puis saisissez-le ci-dessous.", validationHint:null, paxityOperatorId:null },
+      { countryCode:"CI", countryName:"Côte d'Ivoire", flag:"🇨🇮", prefix:"225", currency:"XOF", currencySymbol:"FCFA", operatorName:"MTN MoMo",     operatorKey:"MTN_CI",    aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"CI", countryName:"Côte d'Ivoire", flag:"🇨🇮", prefix:"225", currency:"XOF", currencySymbol:"FCFA", operatorName:"Moov Money",    operatorKey:"MOOV_CI",   aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"CI", countryName:"Côte d'Ivoire", flag:"🇨🇮", prefix:"225", currency:"XOF", currencySymbol:"FCFA", operatorName:"Wave",           operatorKey:"WAVE_CI",   aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:true,  otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Sénégal
+      { countryCode:"SN", countryName:"Sénégal",        flag:"🇸🇳", prefix:"221", currency:"XOF", currencySymbol:"FCFA", operatorName:"Wave",           operatorKey:"WAVE_SN",   aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:true,  otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"SN", countryName:"Sénégal",        flag:"🇸🇳", prefix:"221", currency:"XOF", currencySymbol:"FCFA", operatorName:"Orange Money",   operatorKey:"ORANGE_SN", aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"SN", countryName:"Sénégal",        flag:"🇸🇳", prefix:"221", currency:"XOF", currencySymbol:"FCFA", operatorName:"Free Money",     operatorKey:"FREE_SN",   aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Burkina Faso
+      { countryCode:"BF", countryName:"Burkina Faso",   flag:"🇧🇫", prefix:"226", currency:"XOF", currencySymbol:"FCFA", operatorName:"Orange Money",   operatorKey:"ORANGE_BF", aggregator:"omnipay", isActive:true, needsOtp:true,  needsReturnUrl:false, otpHint:"Composez *144*4*6*montant# sur votre téléphone pour générer votre code OTP, puis saisissez-le ci-dessous.", validationHint:null, paxityOperatorId:null },
+      { countryCode:"BF", countryName:"Burkina Faso",   flag:"🇧🇫", prefix:"226", currency:"XOF", currencySymbol:"FCFA", operatorName:"Moov Money",     operatorKey:"MOOV_BF",   aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Mali
+      { countryCode:"ML", countryName:"Mali",           flag:"🇲🇱", prefix:"223", currency:"XOF", currencySymbol:"FCFA", operatorName:"Orange Money",   operatorKey:"ORANGE_ML", aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:"Veuillez valider le paiement sur votre téléphone Orange Money.\n\nSi vous ne recevez pas de notification, composez #144# sur votre téléphone, puis accédez au menu Paiement marchand (option 2).\n\nValidez l'opération en entrant votre code secret.", paxityOperatorId:null },
+      { countryCode:"ML", countryName:"Mali",           flag:"🇲🇱", prefix:"223", currency:"XOF", currencySymbol:"FCFA", operatorName:"Moov Money",     operatorKey:"MOOV_ML",   aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Guinée
+      { countryCode:"GN", countryName:"Guinée",         flag:"🇬🇳", prefix:"224", currency:"GNF", currencySymbol:"GNF",  operatorName:"Orange Money",   operatorKey:"ORANGE_GN", aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"GN", countryName:"Guinée",         flag:"🇬🇳", prefix:"224", currency:"GNF", currencySymbol:"GNF",  operatorName:"MTN MoMo",       operatorKey:"MTN_GN",    aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Cameroun
+      { countryCode:"CM", countryName:"Cameroun",       flag:"🇨🇲", prefix:"237", currency:"XAF", currencySymbol:"FCFA", operatorName:"MTN MoMo",       operatorKey:"MTN_CM",    aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"CM", countryName:"Cameroun",       flag:"🇨🇲", prefix:"237", currency:"XAF", currencySymbol:"FCFA", operatorName:"Orange Money",   operatorKey:"ORANGE_CM", aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Bénin
+      { countryCode:"BJ", countryName:"Bénin",          flag:"🇧🇯", prefix:"229", currency:"XOF", currencySymbol:"FCFA", operatorName:"MTN MoMo",       operatorKey:"MTN_BJ",    aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"BJ", countryName:"Bénin",          flag:"🇧🇯", prefix:"229", currency:"XOF", currencySymbol:"FCFA", operatorName:"Moov Money",     operatorKey:"MOOV_BJ",   aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Togo
+      { countryCode:"TG", countryName:"Togo",           flag:"🇹🇬", prefix:"228", currency:"XOF", currencySymbol:"FCFA", operatorName:"Moov Money",     operatorKey:"MOOV_TG",   aggregator:"paxity",  isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:"MOOVTG" },
+      { countryCode:"TG", countryName:"Togo",           flag:"🇹🇬", prefix:"228", currency:"XOF", currencySymbol:"FCFA", operatorName:"T-Money",        operatorKey:"TOGOCEL_TG",aggregator:"paxity",  isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:"TMONEYTG" },
+      // Ghana
+      { countryCode:"GH", countryName:"Ghana",          flag:"🇬🇭", prefix:"233", currency:"GHS", currencySymbol:"GHS",  operatorName:"MTN MoMo",       operatorKey:"MTN_GH",    aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"GH", countryName:"Ghana",          flag:"🇬🇭", prefix:"233", currency:"GHS", currencySymbol:"GHS",  operatorName:"AirtelTigo",     operatorKey:"AIRTEL_GH", aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Niger
+      { countryCode:"NE", countryName:"Niger",          flag:"🇳🇪", prefix:"227", currency:"XOF", currencySymbol:"FCFA", operatorName:"Moov Money",     operatorKey:"MOOV_NE",   aggregator:"omnipay", isActive:true, needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // RD Congo
+      { countryCode:"COD", countryName:"RD Congo",      flag:"🇨🇩", prefix:"243", currency:"CDF", currencySymbol:"FC",   operatorName:"Vodacom",        operatorKey:"VODACOM_CD",aggregator:"sendavapay",isActive:true, needsOtp:false,needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"COD", countryName:"RD Congo",      flag:"🇨🇩", prefix:"243", currency:"CDF", currencySymbol:"FC",   operatorName:"Airtel",         operatorKey:"AIRTEL_CD", aggregator:"sendavapay",isActive:true, needsOtp:false,needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"COD", countryName:"RD Congo",      flag:"🇨🇩", prefix:"243", currency:"CDF", currencySymbol:"FC",   operatorName:"Orange Money",   operatorKey:"ORANGE_CD", aggregator:"sendavapay",isActive:true, needsOtp:false,needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      // Congo Brazzaville
+      { countryCode:"COG", countryName:"Congo Brazzaville", flag:"🇨🇬", prefix:"242", currency:"XAF", currencySymbol:"FCFA", operatorName:"MTN",      operatorKey:"MTN_CG",    aggregator:"sendavapay",isActive:true, needsOtp:false,needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+      { countryCode:"COG", countryName:"Congo Brazzaville", flag:"🇨🇬", prefix:"242", currency:"XAF", currencySymbol:"FCFA", operatorName:"Airtel",   operatorKey:"AIRTEL_CG", aggregator:"sendavapay",isActive:true, needsOtp:false,needsReturnUrl:false, otpHint:null, validationHint:null, paxityOperatorId:null },
+    ];
+    for (const op of DEFAULT_OPERATORS) {
+      await db.insert(operatorRoutesTable).values(op).onConflictDoNothing();
+    }
+    console.log(`Operator routes seeded: ${DEFAULT_OPERATORS.length} operators`);
   }
 }
 
