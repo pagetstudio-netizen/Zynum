@@ -228,6 +228,31 @@ async function ensureSchema() {
       "updated_at" timestamp with time zone DEFAULT now() NOT NULL
     )
   `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "operator_routes" (
+      "id" serial PRIMARY KEY NOT NULL,
+      "country_code" text NOT NULL,
+      "country_name" text NOT NULL,
+      "flag" text NOT NULL DEFAULT '🌍',
+      "prefix" text NOT NULL,
+      "currency" text NOT NULL DEFAULT 'XOF',
+      "currency_symbol" text NOT NULL DEFAULT 'FCFA',
+      "operator_name" text NOT NULL,
+      "operator_key" text NOT NULL,
+      "aggregator" text NOT NULL DEFAULT 'omnipay',
+      "is_active" boolean NOT NULL DEFAULT true,
+      "needs_otp" boolean NOT NULL DEFAULT false,
+      "needs_return_url" boolean NOT NULL DEFAULT false,
+      "ussd_code" text,
+      "otp_hint" text,
+      "validation_hint" text,
+      "paxity_operator_id" text,
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+      "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+      CONSTRAINT "operator_routes_operator_key_unique" UNIQUE("operator_key")
+    )
+  `);
 }
 
 async function seedData() {

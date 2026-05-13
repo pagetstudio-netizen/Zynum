@@ -14,3 +14,4 @@ export * from "./discount_codes";
 export * from "./email_codes";
 export * from "./affiliate_commissions";
 export * from "./affiliate_withdrawals";
+export * from "./operator_routes";

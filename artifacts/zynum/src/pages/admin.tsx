@@ -1339,6 +1339,281 @@ const OMNIPAY_OPERATORS_LIST = [
   { id: "MOOV_NE",   label: "Moov NE" },
 ];
 
+// ─── Admin: Opérateurs par Agrégateur ────────────────────────────────────────
+const AGGREGATORS = [
+  { id: "omnipay",    label: "OmniPay",     color: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+  { id: "paxity",     label: "Paxity",      color: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
+  { id: "sendavapay", label: "SendavaPay",  color: "bg-green-500/10 text-green-400 border-green-500/30" },
+];
+
+function AdminOperatorRoutes() {
+  const { toast } = useToast();
+  const { data, loading, refetch } = useAdminFetch<any>("/v1/admin/operator-routes", []);
+  const [editOp, setEditOp]       = useState<any | null>(null);
+  const [showAdd, setShowAdd]     = useState(false);
+  const [seeding, setSeeding]     = useState(false);
+  const [editForm, setEditForm]   = useState<any>({});
+  const [addForm, setAddForm]     = useState({
+    countryCode:"", countryName:"", flag:"🌍", prefix:"", currency:"XOF", currencySymbol:"FCFA",
+    operatorName:"", operatorKey:"", aggregator:"omnipay",
+    isActive:true, needsOtp:false, needsReturnUrl:false,
+    otpHint:"", paxityOperatorId:"",
+  });
+
+  const operators: any[] = data?.operators ?? [];
+
+  // Group by country
+  const byCountry = operators.reduce((acc: any, op: any) => {
+    if (!acc[op.countryCode]) acc[op.countryCode] = { code: op.countryCode, name: op.countryName, flag: op.flag, ops: [] };
+    acc[op.countryCode].ops.push(op);
+    return acc;
+  }, {} as Record<string, any>);
+  const countries = Object.values(byCountry) as any[];
+
+  const aggStyle = (agg: string) => AGGREGATORS.find(a => a.id === agg)?.color ?? "bg-white/5 text-muted-foreground border-white/10";
+  const aggLabel = (agg: string) => AGGREGATORS.find(a => a.id === agg)?.label ?? agg;
+
+  const seed = async () => {
+    setSeeding(true);
+    const r = await adminPost("/v1/admin/operator-routes/seed", {});
+    setSeeding(false);
+    toast({ title: `${r.inserted ?? 0} opérateurs initialisés` });
+    refetch();
+  };
+
+  const openEdit = (op: any) => {
+    setEditOp(op);
+    setEditForm({
+      aggregator: op.aggregator,
+      isActive: op.isActive,
+      needsOtp: op.needsOtp,
+      needsReturnUrl: op.needsReturnUrl,
+      otpHint: op.otpHint ?? "",
+      paxityOperatorId: op.paxityOperatorId ?? "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editOp) return;
+    await adminPatch(`/v1/admin/operator-routes/${editOp.id}`, {
+      ...editForm,
+      otpHint: editForm.otpHint || null,
+      paxityOperatorId: editForm.paxityOperatorId || null,
+    });
+    toast({ title: "Opérateur mis à jour" });
+    setEditOp(null);
+    refetch();
+  };
+
+  const remove = async (id: number) => {
+    await adminDelete(`/v1/admin/operator-routes/${id}`);
+    toast({ title: "Opérateur supprimé" });
+    refetch();
+  };
+
+  const bulkToggle = async (countryCode: string, isActive: boolean) => {
+    await adminPost("/v1/admin/operator-routes/bulk", { countryCode, isActive });
+    toast({ title: isActive ? "Pays activé" : "Pays désactivé" });
+    refetch();
+  };
+
+  const toggleActive = async (op: any) => {
+    await adminPatch(`/v1/admin/operator-routes/${op.id}`, { isActive: !op.isActive });
+    refetch();
+  };
+
+  const addOperator = async () => {
+    if (!addForm.countryCode || !addForm.operatorName || !addForm.operatorKey) {
+      toast({ title: "Remplissez pays, nom et clé de l'opérateur", variant: "destructive" });
+      return;
+    }
+    const r = await adminPost("/v1/admin/operator-routes", {
+      ...addForm,
+      otpHint: addForm.otpHint || null,
+      paxityOperatorId: addForm.paxityOperatorId || null,
+    });
+    if (r.error) { toast({ title: r.error, variant: "destructive" }); return; }
+    toast({ title: "Opérateur ajouté" });
+    setShowAdd(false);
+    refetch();
+  };
+
+  const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm";
+
+  return (
+    <div className="space-y-6">
+      {/* Header controls */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={seed} disabled={seeding} className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 h-8 px-3 text-xs">
+          {seeding ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />Initialisation…</> : "Initialiser les défauts"}
+        </Button>
+        <Button onClick={() => setShowAdd(true)} className="bg-primary hover:bg-primary/90 text-white h-8 px-3 text-xs">
+          <Plus className="w-3.5 h-3.5 mr-1" /> Ajouter un opérateur
+        </Button>
+        <div className="flex gap-2 ml-auto">
+          {AGGREGATORS.map(a => (
+            <span key={a.id} className={`text-xs px-2 py-1 rounded-lg border font-medium ${a.color}`}>{a.label}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Add form */}
+      {showAdd && (
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 space-y-4">
+          <h3 className="font-bold text-white text-sm">Nouvel opérateur</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div><label className="text-xs text-muted-foreground block mb-1">Code pays</label>
+              <input value={addForm.countryCode} onChange={e => setAddForm({...addForm, countryCode: e.target.value.toUpperCase()})} placeholder="CI" className={inp} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Nom pays</label>
+              <input value={addForm.countryName} onChange={e => setAddForm({...addForm, countryName: e.target.value})} placeholder="Côte d'Ivoire" className={inp} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Drapeau</label>
+              <input value={addForm.flag} onChange={e => setAddForm({...addForm, flag: e.target.value})} placeholder="🇨🇮" className={inp} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Préfixe</label>
+              <input value={addForm.prefix} onChange={e => setAddForm({...addForm, prefix: e.target.value})} placeholder="225" className={inp} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Devise</label>
+              <input value={addForm.currency} onChange={e => setAddForm({...addForm, currency: e.target.value.toUpperCase()})} placeholder="XOF" className={inp} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Symbole devise</label>
+              <input value={addForm.currencySymbol} onChange={e => setAddForm({...addForm, currencySymbol: e.target.value})} placeholder="FCFA" className={inp} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Nom opérateur</label>
+              <input value={addForm.operatorName} onChange={e => setAddForm({...addForm, operatorName: e.target.value})} placeholder="Orange Money" className={inp} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Clé unique</label>
+              <input value={addForm.operatorKey} onChange={e => setAddForm({...addForm, operatorKey: e.target.value.toUpperCase().replace(/\s+/g,"_")})} placeholder="ORANGE_CI" className={`${inp} font-mono`} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Agrégateur</label>
+              <select value={addForm.aggregator} onChange={e => setAddForm({...addForm, aggregator: e.target.value})} className={inp}>
+                {AGGREGATORS.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+              </select></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">ID Paxity (si Paxity)</label>
+              <input value={addForm.paxityOperatorId} onChange={e => setAddForm({...addForm, paxityOperatorId: e.target.value})} placeholder="MOOVTG" className={`${inp} font-mono`} /></div>
+          </div>
+          <div className="flex gap-4 flex-wrap">
+            <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+              <input type="checkbox" checked={addForm.isActive} onChange={e => setAddForm({...addForm, isActive: e.target.checked})} className="w-4 h-4 rounded accent-primary" />
+              Actif
+            </label>
+            <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+              <input type="checkbox" checked={addForm.needsOtp} onChange={e => setAddForm({...addForm, needsOtp: e.target.checked})} className="w-4 h-4 rounded accent-primary" />
+              OTP requis
+            </label>
+            <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+              <input type="checkbox" checked={addForm.needsReturnUrl} onChange={e => setAddForm({...addForm, needsReturnUrl: e.target.checked})} className="w-4 h-4 rounded accent-primary" />
+              Redirect Wave
+            </label>
+          </div>
+          <div><label className="text-xs text-muted-foreground block mb-1">Instruction OTP (optionnel)</label>
+            <input value={addForm.otpHint} onChange={e => setAddForm({...addForm, otpHint: e.target.value})} placeholder="Composez #144*82# pour générer votre OTP..." className={inp} /></div>
+          <div className="flex gap-3">
+            <Button onClick={addOperator} className="bg-primary hover:bg-primary/90 text-white">Ajouter</Button>
+            <Button onClick={() => setShowAdd(false)} variant="outline" className="border-white/10 text-white hover:bg-white/5">Annuler</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit modal */}
+      {editOp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:"rgba(0,0,0,0.7)"}}>
+          <div className="w-full max-w-md bg-card border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-white">{editOp.flag} {editOp.operatorName} — {editOp.countryName}</h3>
+              <button onClick={() => setEditOp(null)} className="p-1.5 rounded-lg text-muted-foreground hover:bg-white/10"><X className="w-4 h-4" /></button>
+            </div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Agrégateur</label>
+              <select value={editForm.aggregator} onChange={e => setEditForm({...editForm, aggregator: e.target.value})} className={inp}>
+                {AGGREGATORS.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+              </select>
+            </div>
+            {editForm.aggregator === "paxity" && (
+              <div><label className="text-xs text-muted-foreground block mb-1">ID Paxity</label>
+                <input value={editForm.paxityOperatorId} onChange={e => setEditForm({...editForm, paxityOperatorId: e.target.value})} placeholder="MOOVTG" className={`${inp} font-mono`} /></div>
+            )}
+            <div><label className="text-xs text-muted-foreground block mb-1">Instruction OTP</label>
+              <input value={editForm.otpHint} onChange={e => setEditForm({...editForm, otpHint: e.target.value})} placeholder="Ex: Composez #144*82# sur votre téléphone…" className={inp} /></div>
+            <div className="flex gap-4 flex-wrap">
+              <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                <input type="checkbox" checked={editForm.isActive} onChange={e => setEditForm({...editForm, isActive: e.target.checked})} className="w-4 h-4 rounded accent-primary" />
+                Actif
+              </label>
+              <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                <input type="checkbox" checked={editForm.needsOtp} onChange={e => setEditForm({...editForm, needsOtp: e.target.checked})} className="w-4 h-4 rounded accent-primary" />
+                OTP requis
+              </label>
+              <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                <input type="checkbox" checked={editForm.needsReturnUrl} onChange={e => setEditForm({...editForm, needsReturnUrl: e.target.checked})} className="w-4 h-4 rounded accent-primary" />
+                Redirect Wave
+              </label>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={saveEdit} className="bg-primary hover:bg-primary/90 text-white flex-1">Enregistrer</Button>
+              <Button onClick={() => setEditOp(null)} variant="outline" className="border-white/10 text-white hover:bg-white/5">Annuler</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Operators by country */}
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+      ) : countries.length === 0 ? (
+        <div className="text-center py-16 space-y-3">
+          <Globe2 className="w-10 h-10 text-muted-foreground mx-auto" />
+          <p className="text-muted-foreground text-sm">Aucun opérateur configuré.</p>
+          <p className="text-muted-foreground text-xs">Cliquez sur "Initialiser les défauts" pour charger la liste par défaut.</p>
+        </div>
+      ) : (
+        countries.sort((a: any, b: any) => a.name.localeCompare(b.name, "fr")).map((country: any) => (
+          <div key={country.code} className="rounded-2xl border border-white/10 bg-card/40 overflow-hidden">
+            {/* Country header */}
+            <div className="px-5 py-3 border-b border-white/10 flex items-center gap-3">
+              <span className="text-2xl">{country.flag}</span>
+              <div className="flex-1">
+                <p className="text-white font-semibold text-sm">{country.name}</p>
+                <p className="text-xs text-muted-foreground">{country.ops.length} opérateur{country.ops.length !== 1 ? "s" : ""}</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => bulkToggle(country.code, true)} className="text-xs px-2 py-1 rounded-lg bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 transition-colors">
+                  Tout activer
+                </button>
+                <button onClick={() => bulkToggle(country.code, false)} className="text-xs px-2 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors">
+                  Tout désactiver
+                </button>
+              </div>
+            </div>
+
+            {/* Operators list */}
+            <div className="divide-y divide-white/5">
+              {country.ops.map((op: any) => (
+                <div key={op.id} className="px-5 py-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">{op.operatorName}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{op.operatorKey}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-xs px-2 py-0.5 rounded-lg border font-medium ${aggStyle(op.aggregator)}`}>{aggLabel(op.aggregator)}</span>
+                    <button
+                      onClick={() => toggleActive(op)}
+                      className={`text-xs px-2 py-0.5 rounded-lg border font-medium transition-colors ${op.isActive ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-white/5 text-muted-foreground border-white/10"}`}
+                    >
+                      {op.isActive ? "Actif" : "Inactif"}
+                    </button>
+                    {op.needsOtp && <span className="text-xs px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-400 border border-orange-500/20">OTP</span>}
+                  </div>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button onClick={() => openEdit(op)} className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors">
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => remove(op.id)} className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
 function AdminOmniPay() {
   const { toast } = useToast();
   const [balance, setBalance]           = useState<any>(null);
@@ -2521,7 +2796,7 @@ function AdminAffiliations() {
   );
 }
 
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate";
+type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "operators" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
@@ -2535,6 +2810,7 @@ const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "email",        label: "Email Broadcast", icon: <Mail className="w-4 h-4" /> },
   { id: "settings",     label: "Paramètres",      icon: <Settings className="w-4 h-4" /> },
   { id: "payments",     label: "Paiements",       icon: <Wallet className="w-4 h-4" /> },
+  { id: "operators",    label: "Opérateurs",      icon: <Globe2 className="w-4 h-4" /> },
   { id: "faq",          label: "Centre d'aide",   icon: <HelpCircle className="w-4 h-4" /> },
   { id: "social",       label: "Réseaux sociaux", icon: <Share2 className="w-4 h-4" /> },
   { id: "countries",    label: "Pays",            icon: <Globe2 className="w-4 h-4" /> },
@@ -2595,6 +2871,7 @@ export default function AdminPanel() {
           {activeTab === "email"        && <AdminEmailBroadcast />}
           {activeTab === "settings"     && <AdminSettings />}
           {activeTab === "payments"     && <AdminPayments />}
+          {activeTab === "operators"    && <AdminOperatorRoutes />}
           {activeTab === "faq"          && <AdminFaq />}
           {activeTab === "social"       && <AdminSocialLinks />}
           {activeTab === "countries"    && <AdminCountries />}

@@ -24,131 +24,144 @@ export interface OmnipayModalProps {
 }
 
 type View      = "form" | "country-picker";
-type PayState  = "idle" | "loading" | "wave" | "push" | "success" | "error";
+type PayState  = "idle" | "loading" | "wave" | "push" | "otp" | "success" | "error";
+type Gateway   = "omnipay" | "paxity" | "sendavapay";
 
-interface OmniOperatorDef {
-  id: string;
-  label: string;
-  logo: string;
-  needsOtp: boolean;
-  needsReturnUrl: boolean;
-  otpHint?: string;
-  validationHint?: string;
-  paxityOperatorId?: string; // If set, this operator is routed through Paxity
+// Logo resolution from operator name
+const LOGO_MAP: Record<string, string> = {
+  "orange": imgOrangeMoney,
+  "mtn":    imgMTN,
+  "wave":   imgWave,
+  "moov":   imgMoov,
+  "airtel": imgAirtel,
+  "tmoney": imgTMoney,
+  "togocel":imgTMoney,
+  "vodacom":imgMTN,
+  "free":   "https://upload.wikimedia.org/wikipedia/fr/thumb/8/8d/Free_logo.svg/120px-Free_logo.svg.png",
+};
+
+function resolveLogoUrl(operatorName: string): string {
+  const key = operatorName.toLowerCase().split(/[\s_-]/)[0];
+  return LOGO_MAP[key] ?? imgMTN;
 }
 
-interface OmniCountryDef {
-  code: string;
-  name: string;
-  flag: string;
-  prefix: string;
-  currency: string;
+export interface DynOperator {
+  id:               string;
+  label:            string;
+  logo:             string;
+  aggregator:       Gateway;
+  needsOtp:         boolean;
+  needsReturnUrl:   boolean;
+  otpHint?:         string;
+  validationHint?:  string;
+  paxityOperatorId?: string;
+}
+
+export interface DynCountry {
+  code:           string;
+  name:           string;
+  flag:           string;
+  prefix:         string;
+  currency:       string;
   currencySymbol: string;
-  operators: OmniOperatorDef[];
-  usePaxity?: boolean; // All operators in this country go through Paxity
+  operators:      DynOperator[];
 }
 
-const OM_LOGO    = imgOrangeMoney;
-const MTN_LOGO   = imgMTN;
-const WAVE_LOGO  = imgWave;
-const MOOV_LOGO  = imgMoov;
-const AT_LOGO    = imgAirtel;
-const TM_LOGO    = imgTMoney;
-const FREE_LOGO  = "https://upload.wikimedia.org/wikipedia/fr/thumb/8/8d/Free_logo.svg/120px-Free_logo.svg.png";
+// Fallback hardcoded list (used if API is unreachable)
+const FALLBACK_COUNTRIES: DynCountry[] = [
+  {
+    code:"CI", name:"Côte d'Ivoire", flag:"🇨🇮", prefix:"225", currency:"XOF", currencySymbol:"FCFA",
+    operators:[
+      { id:"ORANGE_CI", label:"Orange Money", logo:imgOrangeMoney, aggregator:"omnipay", needsOtp:true,  needsReturnUrl:false, otpHint:"Composez #144*82# sur votre téléphone pour générer votre code OTP, puis saisissez-le ci-dessous." },
+      { id:"MTN_CI",    label:"MTN MoMo",     logo:imgMTN,         aggregator:"omnipay", needsOtp:false, needsReturnUrl:false },
+      { id:"MOOV_CI",   label:"Moov Money",   logo:imgMoov,        aggregator:"omnipay", needsOtp:false, needsReturnUrl:false },
+      { id:"WAVE_CI",   label:"Wave",          logo:imgWave,        aggregator:"omnipay", needsOtp:false, needsReturnUrl:true  },
+    ],
+  },
+  {
+    code:"SN", name:"Sénégal", flag:"🇸🇳", prefix:"221", currency:"XOF", currencySymbol:"FCFA",
+    operators:[
+      { id:"WAVE_SN",   label:"Wave",          logo:imgWave,        aggregator:"omnipay", needsOtp:false, needsReturnUrl:true },
+      { id:"ORANGE_SN", label:"Orange Money",  logo:imgOrangeMoney, aggregator:"omnipay", needsOtp:false, needsReturnUrl:false },
+    ],
+  },
+  {
+    code:"BF", name:"Burkina Faso", flag:"🇧🇫", prefix:"226", currency:"XOF", currencySymbol:"FCFA",
+    operators:[
+      { id:"ORANGE_BF", label:"Orange Money", logo:imgOrangeMoney, aggregator:"omnipay", needsOtp:true,  needsReturnUrl:false, otpHint:"Composez *144*4*6*montant# sur votre téléphone pour générer votre code OTP, puis saisissez-le ci-dessous." },
+      { id:"MOOV_BF",   label:"Moov Money",   logo:imgMoov,        aggregator:"omnipay", needsOtp:false, needsReturnUrl:false },
+    ],
+  },
+  {
+    code:"BJ", name:"Bénin", flag:"🇧🇯", prefix:"229", currency:"XOF", currencySymbol:"FCFA",
+    operators:[
+      { id:"MTN_BJ",  label:"MTN MoMo",   logo:imgMTN,  aggregator:"omnipay", needsOtp:false, needsReturnUrl:false },
+      { id:"MOOV_BJ", label:"Moov Money", logo:imgMoov, aggregator:"omnipay", needsOtp:false, needsReturnUrl:false },
+    ],
+  },
+  {
+    code:"TG", name:"Togo", flag:"🇹🇬", prefix:"228", currency:"XOF", currencySymbol:"FCFA",
+    operators:[
+      { id:"MOOV_TG",    label:"Moov Money", logo:imgMoov,    aggregator:"paxity", needsOtp:false, needsReturnUrl:false, paxityOperatorId:"MOOVTG" },
+      { id:"TOGOCEL_TG", label:"T-Money",    logo:imgTMoney,  aggregator:"paxity", needsOtp:false, needsReturnUrl:false, paxityOperatorId:"TMONEYTG" },
+    ],
+  },
+  {
+    code:"CM", name:"Cameroun", flag:"🇨🇲", prefix:"237", currency:"XAF", currencySymbol:"FCFA",
+    operators:[
+      { id:"MTN_CM",    label:"MTN MoMo",     logo:imgMTN,         aggregator:"omnipay", needsOtp:false, needsReturnUrl:false },
+      { id:"ORANGE_CM", label:"Orange Money", logo:imgOrangeMoney, aggregator:"omnipay", needsOtp:false, needsReturnUrl:false },
+    ],
+  },
+];
 
-const OMNIPAY_COUNTRIES: OmniCountryDef[] = [
-  {
-    code: "CI", name: "Côte d'Ivoire", flag: "🇨🇮", prefix: "225", currency: "XOF", currencySymbol: "FCFA",
-    operators: [
-      { id: "ORANGE_CI", label: "Orange Money", logo: OM_LOGO,   needsOtp: true,  needsReturnUrl: false, otpHint: "Composez #144*82# sur votre téléphone pour générer votre code OTP, puis saisissez-le ci-dessous." },
-      { id: "MTN_CI",    label: "MTN MoMo",     logo: MTN_LOGO,  needsOtp: false, needsReturnUrl: false },
-      { id: "MOOV_CI",   label: "Moov Money",   logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
-      { id: "WAVE_CI",   label: "Wave",          logo: WAVE_LOGO, needsOtp: false, needsReturnUrl: true  },
-    ],
-  },
-  {
-    code: "SN", name: "Sénégal", flag: "🇸🇳", prefix: "221", currency: "XOF", currencySymbol: "FCFA",
-    operators: [
-      { id: "WAVE_SN",   label: "Wave",          logo: WAVE_LOGO, needsOtp: false, needsReturnUrl: true  },
-      { id: "ORANGE_SN", label: "Orange Money",  logo: OM_LOGO,   needsOtp: false, needsReturnUrl: false },
-      { id: "FREE_SN",   label: "Free Money",    logo: FREE_LOGO, needsOtp: false, needsReturnUrl: false },
-    ],
-  },
-  {
-    code: "BF", name: "Burkina Faso", flag: "🇧🇫", prefix: "226", currency: "XOF", currencySymbol: "FCFA",
-    operators: [
-      { id: "ORANGE_BF", label: "Orange Money", logo: OM_LOGO,   needsOtp: true,  needsReturnUrl: false, otpHint: "Composez *144*4*6*montant# sur votre téléphone pour générer votre code OTP, puis saisissez-le ci-dessous." },
-      { id: "MOOV_BF",   label: "Moov Money",   logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
-    ],
-  },
-  {
-    code: "ML", name: "Mali", flag: "🇲🇱", prefix: "223", currency: "XOF", currencySymbol: "FCFA",
-    operators: [
-      { id: "ORANGE_ML", label: "Orange Money", logo: OM_LOGO,   needsOtp: false, needsReturnUrl: false, validationHint: "Veuillez valider le paiement sur votre téléphone Orange Money.\n\nSi vous ne recevez pas de notification, composez #144# sur votre téléphone, puis accédez au menu Paiement marchand (option 2).\n\nValidez l'opération en entrant votre code secret." },
-      { id: "MOOV_ML",   label: "Moov Money",   logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
-    ],
-  },
-  {
-    code: "GN", name: "Guinée", flag: "🇬🇳", prefix: "224", currency: "GNF", currencySymbol: "GNF",
-    operators: [
-      { id: "ORANGE_GN", label: "Orange Money", logo: OM_LOGO,  needsOtp: false, needsReturnUrl: false },
-      { id: "MTN_GN",    label: "MTN MoMo",     logo: MTN_LOGO, needsOtp: false, needsReturnUrl: false },
-    ],
-  },
-  {
-    code: "CM", name: "Cameroun", flag: "🇨🇲", prefix: "237", currency: "XAF", currencySymbol: "FCFA",
-    operators: [
-      { id: "MTN_CM",    label: "MTN MoMo",     logo: MTN_LOGO, needsOtp: false, needsReturnUrl: false },
-      { id: "ORANGE_CM", label: "Orange Money", logo: OM_LOGO,  needsOtp: false, needsReturnUrl: false },
-    ],
-  },
-  {
-    code: "BJ", name: "Bénin", flag: "🇧🇯", prefix: "229", currency: "XOF", currencySymbol: "FCFA",
-    operators: [
-      { id: "MTN_BJ",  label: "MTN MoMo",   logo: MTN_LOGO,  needsOtp: false, needsReturnUrl: false },
-      { id: "MOOV_BJ", label: "Moov Money", logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
-    ],
-  },
-  {
-    code: "TG", name: "Togo", flag: "🇹🇬", prefix: "228", currency: "XOF", currencySymbol: "FCFA",
-    usePaxity: true,
-    operators: [
-      { id: "MOOV_TG",    label: "Moov Money", logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false, paxityOperatorId: "MOOVTG"   },
-      { id: "TOGOCEL_TG", label: "T-Money",    logo: TM_LOGO,   needsOtp: false, needsReturnUrl: false, paxityOperatorId: "TMONEYTG" },
-    ],
-  },
-  {
-    code: "GH", name: "Ghana", flag: "🇬🇭", prefix: "233", currency: "GHS", currencySymbol: "GHS",
-    operators: [
-      { id: "MTN_GH",    label: "MTN MoMo",    logo: MTN_LOGO, needsOtp: false, needsReturnUrl: false },
-      { id: "AIRTEL_GH", label: "AirtelTigo",  logo: AT_LOGO,  needsOtp: false, needsReturnUrl: false },
-    ],
-  },
-  {
-    code: "NE", name: "Niger", flag: "🇳🇪", prefix: "227", currency: "XOF", currencySymbol: "FCFA",
-    operators: [
-      { id: "MOOV_NE", label: "Moov Money", logo: MOOV_LOGO, needsOtp: false, needsReturnUrl: false },
-    ],
-  },
-].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+function buildDynCountries(rows: any[]): DynCountry[] {
+  const map: Record<string, DynCountry> = {};
+  for (const r of rows) {
+    if (!map[r.countryCode]) {
+      map[r.countryCode] = {
+        code:           r.countryCode,
+        name:           r.countryName,
+        flag:           r.flag,
+        prefix:         r.prefix,
+        currency:       r.currency,
+        currencySymbol: r.currencySymbol,
+        operators:      [],
+      };
+    }
+    map[r.countryCode].operators.push({
+      id:               r.operatorKey,
+      label:            r.operatorName,
+      logo:             resolveLogoUrl(r.operatorName),
+      aggregator:       r.aggregator as Gateway,
+      needsOtp:         r.needsOtp,
+      needsReturnUrl:   r.needsReturnUrl,
+      otpHint:          r.otpHint  ?? undefined,
+      validationHint:   r.validationHint ?? undefined,
+      paxityOperatorId: r.paxityOperatorId ?? undefined,
+    });
+  }
+  return Object.values(map).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+}
 
 /* ── Country Picker ─────────────────────────────────────────────── */
 function CountryPicker({
   current,
+  countries,
   onSelect,
   onBack,
-}: { current: OmniCountryDef; onSelect: (c: OmniCountryDef) => void; onBack: () => void }) {
+}: { current: DynCountry; countries: DynCountry[]; onSelect: (c: DynCountry) => void; onBack: () => void }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 120); }, []);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    if (!q) return OMNIPAY_COUNTRIES;
-    return OMNIPAY_COUNTRIES.filter(c =>
+    if (!q) return countries;
+    return countries.filter(c =>
       c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
     );
-  }, [query]);
+  }, [query, countries]);
 
   return (
     <motion.div
@@ -219,21 +232,52 @@ export function OmnipayModal({
   open, onClose, amountXof, userId, onSuccess,
   userFirstName, userLastName,
 }: OmnipayModalProps) {
-  const [view, setView]     = useState<View>("form");
-  const [state, setState]   = useState<PayState>("idle");
+  const [view, setView]         = useState<View>("form");
+  const [state, setState]       = useState<PayState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [paymentUrl, setPaymentUrl] = useState("");
   const [txReference, setTxReference] = useState("");
+  const [otpValue, setOtpValue] = useState("");
 
-  const defaultCountry = OMNIPAY_COUNTRIES.find(c => c.code === "CI")!;
-  const [country, setCountry]   = useState<OmniCountryDef>(defaultCountry);
-  const [operator, setOperator] = useState<OmniOperatorDef>(defaultCountry.operators[0]);
-  const [phone, setPhone]       = useState("");
-  const [otp, setOtp]           = useState("");
+  // Dynamic countries from API
+  const [countries, setCountries]   = useState<DynCountry[]>(FALLBACK_COUNTRIES);
+  const [countriesLoaded, setCountriesLoaded] = useState(false);
 
-  const apiBase      = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
-  const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollCount    = useRef(0);
+  const apiBase = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+
+  // Fetch operators from DB
+  useEffect(() => {
+    fetch(`${apiBase}/api/v1/payments/operators`)
+      .then(r => r.json())
+      .then(d => {
+        const list: any[] = d.operators ?? [];
+        if (list.length > 0) {
+          setCountries(buildDynCountries(list));
+        }
+        setCountriesLoaded(true);
+      })
+      .catch(() => setCountriesLoaded(true));
+  }, [apiBase]);
+
+  const defaultCountry = countries.find(c => c.code === "CI") ?? countries[0];
+  const [country, setCountry]   = useState<DynCountry>(defaultCountry);
+  const [operator, setOperator] = useState<DynOperator>(defaultCountry.operators[0]);
+
+  // Sync country/operator when countries list arrives
+  useEffect(() => {
+    if (countriesLoaded && countries.length > 0) {
+      const ci = countries.find(c => c.code === "CI") ?? countries[0];
+      setCountry(ci);
+      setOperator(ci.operators[0]);
+    }
+  }, [countriesLoaded]);
+
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp]     = useState("");
+
+  const pollRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCount = useRef(0);
+  const gatewayRef = useRef<Gateway>("omnipay");
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
@@ -247,11 +291,12 @@ export function OmnipayModal({
     setPaymentUrl("");
     setTxReference("");
     setOtp("");
+    setOtpValue("");
   }
 
   function handleClose() { reset(); setView("form"); onClose(); }
 
-  function selectCountry(c: OmniCountryDef) {
+  function selectCountry(c: DynCountry) {
     setCountry(c);
     setOperator(c.operators[0]);
     setPhone("");
@@ -262,16 +307,15 @@ export function OmnipayModal({
   useEffect(() => { if (open) { reset(); setView("form"); } }, [open]);
   useEffect(() => () => stopPolling(), [stopPolling]);
 
-  // Which gateway is active for the current transaction
-  const gatewayRef = useRef<"omnipay" | "paxity">("omnipay");
-
   const pollStatus = useCallback(async (reference: string) => {
     pollCount.current += 1;
     if (pollCount.current > 120) { stopPolling(); return; }
     try {
-      const endpoint = gatewayRef.current === "paxity"
-        ? `${apiBase}/api/v1/payments/paxity/confirm`
-        : `${apiBase}/api/v1/payments/omnipay/confirm`;
+      const gw = gatewayRef.current;
+      const endpoint =
+        gw === "paxity"     ? `${apiBase}/api/v1/payments/paxity/confirm`     :
+        gw === "sendavapay" ? `${apiBase}/api/v1/payments/sendavapay/confirm`  :
+                              `${apiBase}/api/v1/payments/omnipay/confirm`;
       const res  = await fetch(endpoint, {
         method:      "POST",
         headers:     { "Content-Type": "application/json" },
@@ -299,13 +343,37 @@ export function OmnipayModal({
     pollRef.current = setInterval(() => pollStatus(reference), 2000);
   }
 
+  async function confirmOtp() {
+    if (!otpValue.trim()) return;
+    setState("loading");
+    try {
+      const res = await fetch(`${apiBase}/api/v1/payments/sendavapay/confirm-otp`, {
+        method:      "POST",
+        headers:     { "Content-Type": "application/json" },
+        credentials: "include",
+        body:        JSON.stringify({ reference: txReference, otp: otpValue.trim() }),
+      });
+      const json = (await res.json()) as Record<string, unknown>;
+      if (!res.ok) {
+        setState("error");
+        setErrorMsg(String(json.message ?? json.error ?? "Code OTP invalide."));
+        return;
+      }
+      setState("push");
+      if (txReference) startPolling(txReference);
+    } catch {
+      setState("error");
+      setErrorMsg("Erreur de connexion. Veuillez réessayer.");
+    }
+  }
+
   async function submit() {
     if (!phone.trim()) {
       setState("error");
       setErrorMsg("Veuillez entrer votre numéro de téléphone.");
       return;
     }
-    if (operator.needsOtp && !otp.trim()) {
+    if (operator.needsOtp && operator.aggregator !== "sendavapay" && !otp.trim()) {
       setState("error");
       setErrorMsg("Veuillez entrer votre code OTP Orange Money.");
       return;
@@ -314,12 +382,10 @@ export function OmnipayModal({
     setState("loading");
     setErrorMsg("");
 
-    // Route via Paxity if the country is flagged usePaxity
-    const usePaxity = !!(country.usePaxity && operator.paxityOperatorId);
-    gatewayRef.current = usePaxity ? "paxity" : "omnipay";
+    gatewayRef.current = operator.aggregator;
 
     try {
-      if (usePaxity) {
+      if (operator.aggregator === "paxity") {
         // ── Paxity flow ──────────────────────────────────────────────
         const res  = await fetch(`${apiBase}/api/v1/payments/paxity/initiate`, {
           method:      "POST",
@@ -337,7 +403,7 @@ export function OmnipayModal({
         const json = (await res.json()) as Record<string, unknown>;
         if (!res.ok) {
           setState("error");
-          setErrorMsg(String((json as Record<string, unknown>)?.message ?? (json as Record<string, unknown>)?.error ?? "Paiement refusé."));
+          setErrorMsg(String(json?.message ?? json?.error ?? "Paiement refusé."));
           return;
         }
         const tx   = ((json as Record<string, unknown>)?.data ?? json) as Record<string, unknown>;
@@ -351,6 +417,38 @@ export function OmnipayModal({
           setState("push");
         }
         if (txId) startPolling(txId);
+
+      } else if (operator.aggregator === "sendavapay") {
+        // ── SendavaPay flow ──────────────────────────────────────────
+        const res  = await fetch(`${apiBase}/api/v1/payments/sendavapay/initiate`, {
+          method:      "POST",
+          headers:     { "Content-Type": "application/json" },
+          credentials: "include",
+          body:        JSON.stringify({
+            amount:     Math.round(amountXof),
+            userId:     String(userId),
+            phone:      phone.replace(/\D/g, ""),
+            operatorId: operator.id,
+            firstName:  userFirstName ?? "ZyNum",
+            lastName:   userLastName  ?? `User${userId}`,
+          }),
+        });
+        const json = (await res.json()) as Record<string, unknown>;
+        if (!res.ok || !json.success) {
+          setState("error");
+          setErrorMsg(String(json.message ?? json.error ?? "Paiement refusé."));
+          return;
+        }
+        const reference = String(json.reference ?? "");
+        setTxReference(reference);
+
+        if (json.needsOtp) {
+          // Show OTP input screen
+          setState("otp");
+        } else {
+          setState("push");
+          if (reference) startPolling(reference);
+        }
 
       } else {
         // ── OmniPay flow ─────────────────────────────────────────────
@@ -401,6 +499,9 @@ export function OmnipayModal({
   const isForm = state === "idle" || state === "loading" || state === "error";
   const inputCls = "w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-500/15 transition";
 
+  const aggLabel = operator.aggregator === "sendavapay" ? "SendavaPay"
+    : operator.aggregator === "paxity" ? "Paxity" : "OmniPay";
+
   return (
     <AnimatePresence>
       {open && (
@@ -424,7 +525,12 @@ export function OmnipayModal({
             {/* Country picker slide-over */}
             <AnimatePresence>
               {view === "country-picker" && (
-                <CountryPicker current={country} onSelect={selectCountry} onBack={() => setView("form")} />
+                <CountryPicker
+                  current={country}
+                  countries={countries}
+                  onSelect={selectCountry}
+                  onBack={() => setView("form")}
+                />
               )}
             </AnimatePresence>
 
@@ -456,7 +562,7 @@ export function OmnipayModal({
                   <div className="p-6 space-y-5">
                     <div className="flex flex-col items-center gap-4">
                       <div className="w-20 h-20 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shadow-sm">
-                        <img src={WAVE_LOGO} alt="Wave" className="w-14 h-14 object-contain"
+                        <img src={imgWave} alt="Wave" className="w-14 h-14 object-contain"
                           onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
                       </div>
                       <div className="text-center space-y-1">
@@ -484,6 +590,47 @@ export function OmnipayModal({
                       </div>
                       <p className="text-xs text-gray-400">Détection automatique du paiement…</p>
                     </div>
+                    <Button variant="outline" onClick={handleClose} className="w-full rounded-xl">Annuler</Button>
+                    {txReference && <p className="text-center text-xs text-gray-300">Réf : {txReference}</p>}
+                  </div>
+                )}
+
+                {/* ── OTP screen (SendavaPay Orange flow) ── */}
+                {state === "otp" && (
+                  <div className="p-6 space-y-5">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center">
+                        <KeyRound className="w-8 h-8 text-orange-500" />
+                      </div>
+                      <div className="text-center space-y-1">
+                        <p className="text-gray-900 font-bold text-lg">Code OTP requis</p>
+                        <p className="text-gray-500 text-sm leading-relaxed">
+                          {operator.otpHint ?? "Composez le code USSD sur votre téléphone pour recevoir un OTP par SMS, puis saisissez-le ci-dessous."}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-2">Code OTP reçu par SMS</label>
+                      <div className="relative">
+                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Ex : 123456"
+                          maxLength={8}
+                          value={otpValue}
+                          onChange={e => setOtpValue(e.target.value.replace(/\D/g, ""))}
+                          className={`${inputCls} pl-9 font-mono tracking-widest`}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={confirmOtp}
+                      disabled={!otpValue.trim()}
+                      className="w-full h-12 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold"
+                    >
+                      Confirmer le paiement
+                    </Button>
                     <Button variant="outline" onClick={handleClose} className="w-full rounded-xl">Annuler</Button>
                     {txReference && <p className="text-center text-xs text-gray-300">Réf : {txReference}</p>}
                   </div>
@@ -626,8 +773,8 @@ export function OmnipayModal({
                       <p className="text-[11px] text-gray-400 mt-1.5">Saisissez le numéro sans l'indicatif du pays</p>
                     </div>
 
-                    {/* OTP input — only for operators that need it */}
-                    {operator.needsOtp && (
+                    {/* OTP input — for OmniPay operators that need it pre-submission */}
+                    {operator.needsOtp && operator.aggregator !== "sendavapay" && (
                       <div className="space-y-2">
                         {operator.otpHint && (
                           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-orange-50 border border-orange-200">
@@ -657,7 +804,15 @@ export function OmnipayModal({
                       </div>
                     )}
 
-                    {/* Validation push — operators without OTP code input (ex: Orange Mali) */}
+                    {/* SendavaPay OTP hint (shows USSD code to dial before submitting) */}
+                    {operator.needsOtp && operator.aggregator === "sendavapay" && operator.otpHint && (
+                      <div className="flex items-start gap-2.5 p-3 rounded-xl bg-orange-50 border border-orange-200">
+                        <Info className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-orange-700 leading-relaxed font-medium">{operator.otpHint}</p>
+                      </div>
+                    )}
+
+                    {/* Validation hint (e.g., Orange Mali) */}
                     {!operator.needsOtp && operator.validationHint && (
                       <div className="flex items-start gap-2.5 p-3 rounded-xl bg-orange-50 border border-orange-200">
                         <Info className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
@@ -671,7 +826,7 @@ export function OmnipayModal({
                       </div>
                     )}
 
-                    {/* Wave info */}
+                    {/* Wave redirect info */}
                     {operator.needsReturnUrl && (
                       <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blue-50 border border-blue-100">
                         <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
@@ -703,7 +858,7 @@ export function OmnipayModal({
                     </Button>
 
                     <p className="text-center text-xs text-gray-400 pb-1">
-                      Paiement sécurisé · Powered by <span className="text-gray-700 font-semibold">OmniPay</span>
+                      Paiement sécurisé · Powered by <span className="text-gray-700 font-semibold">{aggLabel}</span>
                     </p>
                   </div>
                 )}
