@@ -1344,6 +1344,7 @@ const AGGREGATORS = [
   { id: "omnipay",    label: "OmniPay",     color: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
   { id: "paxity",     label: "Paxity",      color: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
   { id: "sendavapay", label: "SendavaPay",  color: "bg-green-500/10 text-green-400 border-green-500/30" },
+  { id: "ashtechpay", label: "AshTechPay",  color: "bg-orange-500/10 text-orange-400 border-orange-500/30" },
 ];
 
 function AdminOperatorRoutes() {

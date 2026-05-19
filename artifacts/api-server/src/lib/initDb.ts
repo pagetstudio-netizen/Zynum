@@ -309,6 +309,17 @@ async function seedData() {
       isSelected: true,
       config: JSON.stringify({ currencies: ["XOF","XAF"], apiUrl: "https://transaction.paxity.io/api/v1" }),
     },
+    {
+      category: "mobile_money",
+      name: "AshTechPay – Mobile Money",
+      slug: "ashtechpay",
+      isActive: true,
+      isSelected: true,
+      config: JSON.stringify({
+        countries: ["BJ","BF","CM","CF","CG","CI","GA","GQ","GW","GN","ML","NE","COD","SN","TD","TG"],
+        apiUrl: "https://ashtechpay.top",
+      }),
+    },
   ];
   for (const p of providers) {
     await db
@@ -361,9 +372,9 @@ async function seedData() {
     await db.insert(operatorRoutesTable).values(op).onConflictDoNothing();
   }
 
-  // Migration : désactiver tous les non-ATP et activer tous les ATP
+  // Migration : supprimer les doublons non-ATP et activer tous les ATP
   await db.execute(sql`
-    UPDATE operator_routes SET is_active = false WHERE operator_key NOT LIKE 'ATP_%'
+    DELETE FROM operator_routes WHERE operator_key NOT LIKE 'ATP_%'
   `).catch(() => {});
   await db.execute(sql`
     UPDATE operator_routes SET is_active = true WHERE operator_key LIKE 'ATP_%'

@@ -29,20 +29,32 @@ type Gateway   = "omnipay" | "paxity" | "sendavapay" | "ashtechpay";
 
 // Logo resolution from operator name
 const LOGO_MAP: Record<string, string> = {
-  "orange": imgOrangeMoney,
-  "mtn":    imgMTN,
-  "wave":   imgWave,
-  "moov":   imgMoov,
-  "airtel": imgAirtel,
-  "tmoney": imgTMoney,
-  "togocel":imgTMoney,
-  "vodacom":imgMTN,
-  "free":   "https://upload.wikimedia.org/wikipedia/fr/thumb/8/8d/Free_logo.svg/120px-Free_logo.svg.png",
+  "orange":     imgOrangeMoney,
+  "mtn":        imgMTN,
+  "wave":       imgWave,
+  "moov":       imgMoov,
+  "airtel":     imgAirtel,
+  "tmoney":     imgTMoney,
+  "t-money":    imgTMoney,
+  "togocel":    imgTMoney,
+  "flooz":      imgMoov,
+  "vodacom":    imgMTN,
+  "afrimoney":  imgAirtel,
+  "free":       "https://upload.wikimedia.org/wikipedia/fr/thumb/8/8d/Free_logo.svg/120px-Free_logo.svg.png",
 };
 
 function resolveLogoUrl(operatorName: string): string {
-  const key = operatorName.toLowerCase().split(/[\s_-]/)[0];
-  return LOGO_MAP[key] ?? imgMTN;
+  const lower = operatorName.toLowerCase();
+  // Correspondance exacte d'abord
+  if (LOGO_MAP[lower]) return LOGO_MAP[lower];
+  // Puis par premier mot / segment
+  const key = lower.split(/[\s_]/)[0];
+  if (LOGO_MAP[key]) return LOGO_MAP[key];
+  // Recherche partielle (ex: "T-Money" → clé "t-money")
+  for (const k of Object.keys(LOGO_MAP)) {
+    if (lower.includes(k)) return LOGO_MAP[k];
+  }
+  return imgMTN;
 }
 
 export interface DynOperator {
