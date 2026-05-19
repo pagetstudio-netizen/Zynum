@@ -25,7 +25,7 @@ export interface OmnipayModalProps {
 
 type View      = "form" | "country-picker";
 type PayState  = "idle" | "loading" | "wave" | "push" | "otp" | "success" | "error";
-type Gateway   = "omnipay" | "paxity" | "sendavapay";
+type Gateway   = "omnipay" | "paxity" | "sendavapay" | "ashtechpay";
 
 // Logo resolution from operator name
 const LOGO_MAP: Record<string, string> = {
@@ -233,11 +233,12 @@ export function OmnipayModal({
   userFirstName, userLastName,
 }: OmnipayModalProps) {
   const [view, setView]         = useState<View>("form");
-  const [state, setState]       = useState<PayState>("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [state, setState]           = useState<PayState>("idle");
+  const [errorMsg, setErrorMsg]     = useState("");
   const [paymentUrl, setPaymentUrl] = useState("");
   const [txReference, setTxReference] = useState("");
-  const [otpValue, setOtpValue] = useState("");
+  const [otpValue, setOtpValue]     = useState("");
+  const [otpHintOverride, setOtpHintOverride] = useState<string | null>(null);
 
   // Dynamic countries from API
   const [countries, setCountries]   = useState<DynCountry[]>(FALLBACK_COUNTRIES);
@@ -292,6 +293,7 @@ export function OmnipayModal({
     setTxReference("");
     setOtp("");
     setOtpValue("");
+    setOtpHintOverride(null);
   }
 
   function handleClose() { reset(); setView("form"); onClose(); }
@@ -313,9 +315,10 @@ export function OmnipayModal({
     try {
       const gw = gatewayRef.current;
       const endpoint =
-        gw === "paxity"     ? `${apiBase}/api/v1/payments/paxity/confirm`     :
-        gw === "sendavapay" ? `${apiBase}/api/v1/payments/sendavapay/confirm`  :
-                              `${apiBase}/api/v1/payments/omnipay/confirm`;
+        gw === "paxity"      ? `${apiBase}/api/v1/payments/paxity/confirm`      :
+        gw === "sendavapay"  ? `${apiBase}/api/v1/payments/sendavapay/confirm`  :
+        gw === "ashtechpay"  ? `${apiBase}/api/v1/payments/ashtechpay/confirm`  :
+                               `${apiBase}/api/v1/payments/omnipay/confirm`;
       const res  = await fetch(endpoint, {
         method:      "POST",
         headers:     { "Content-Type": "application/json" },
@@ -347,11 +350,17 @@ export function OmnipayModal({
     if (!otpValue.trim()) return;
     setState("loading");
     try {
-      const res = await fetch(`${apiBase}/api/v1/payments/sendavapay/confirm-otp`, {
+      const gw = gatewayRef.current;
+      const otpEndpoint =
+        gw === "ashtechpay"
+          ? `${apiBase}/api/v1/payments/ashtechpay/confirm-otp`
+          : `${apiBase}/api/v1/payments/sendavapay/confirm-otp`;
+
+      const res = await fetch(otpEndpoint, {
         method:      "POST",
         headers:     { "Content-Type": "application/json" },
         credentials: "include",
-        body:        JSON.stringify({ reference: txReference, otp: otpValue.trim() }),
+        body:        JSON.stringify({ reference: txReference, otp: otpValue.trim(), userId: String(userId) }),
       });
       const json = (await res.json()) as Record<string, unknown>;
       if (!res.ok) {
@@ -373,7 +382,7 @@ export function OmnipayModal({
       setErrorMsg("Veuillez entrer votre numéro de téléphone.");
       return;
     }
-    if (operator.needsOtp && operator.aggregator !== "sendavapay" && !otp.trim()) {
+    if (operator.needsOtp && operator.aggregator !== "sendavapay" && operator.aggregator !== "ashtechpay" && !otp.trim()) {
       setState("error");
       setErrorMsg("Veuillez entrer votre code OTP Orange Money.");
       return;
@@ -417,6 +426,46 @@ export function OmnipayModal({
           setState("push");
         }
         if (txId) startPolling(txId);
+
+      } else if (operator.aggregator === "ashtechpay") {
+        // ── AshTechPay flow ──────────────────────────────────────────
+        const res  = await fetch(`${apiBase}/api/v1/payments/ashtechpay/initiate`, {
+          method:      "POST",
+          headers:     { "Content-Type": "application/json" },
+          credentials: "include",
+          body:        JSON.stringify({
+            amount:     Math.round(amountXof),
+            userId:     String(userId),
+            phone:      phone.replace(/\D/g, ""),
+            operatorId: operator.id,
+          }),
+        });
+        const json = (await res.json()) as Record<string, unknown>;
+
+        if (!res.ok && !json.needsOtp) {
+          setState("error");
+          setErrorMsg(String(json.message ?? json.error ?? "Paiement refusé."));
+          return;
+        }
+
+        const reference = String(json.reference ?? "");
+        setTxReference(reference);
+
+        if (json.needsOtp) {
+          const ussdCode = json.ussdCode ? String(json.ussdCode) : null;
+          const hint = ussdCode
+            ? `Composez ${ussdCode} sur votre téléphone, puis saisissez l'OTP reçu ci-dessous.`
+            : "Vous allez recevoir un OTP par SMS. Saisissez-le ci-dessous.";
+          setOtpHintOverride(hint);
+          setState("otp");
+        } else if (json.waveUrl) {
+          setPaymentUrl(String(json.waveUrl));
+          setState("wave");
+          if (reference) startPolling(reference);
+        } else {
+          setState("push");
+          if (reference) startPolling(reference);
+        }
 
       } else if (operator.aggregator === "sendavapay") {
         // ── SendavaPay flow ──────────────────────────────────────────
@@ -500,7 +549,9 @@ export function OmnipayModal({
   const inputCls = "w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-500/15 transition";
 
   const aggLabel = operator.aggregator === "sendavapay" ? "SendavaPay"
-    : operator.aggregator === "paxity" ? "Paxity" : "OmniPay";
+    : operator.aggregator === "paxity"     ? "Paxity"
+    : operator.aggregator === "ashtechpay" ? "AshTechPay"
+    : "OmniPay";
 
   return (
     <AnimatePresence>
@@ -605,7 +656,7 @@ export function OmnipayModal({
                       <div className="text-center space-y-1">
                         <p className="text-gray-900 font-bold text-lg">Code OTP requis</p>
                         <p className="text-gray-500 text-sm leading-relaxed">
-                          {operator.otpHint ?? "Composez le code USSD sur votre téléphone pour recevoir un OTP par SMS, puis saisissez-le ci-dessous."}
+                          {otpHintOverride ?? operator.otpHint ?? "Composez le code USSD sur votre téléphone pour recevoir un OTP par SMS, puis saisissez-le ci-dessous."}
                         </p>
                       </div>
                     </div>
