@@ -124,6 +124,29 @@ router.get("/v1/admin/operator-routes", ...auth, async (_req: Request, res: Resp
   }
 });
 
+// ─── Admin: basculer tous les opérateurs vers AshTechPay ─────────────────────
+router.post("/v1/admin/operator-routes/migrate-to-ashtechpay", ...auth, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    await db
+      .update(operatorRoutesTable)
+      .set({ isActive: false })
+      .where(sql`${operatorRoutesTable.operatorKey} NOT LIKE 'ATP_%'`);
+
+    await db
+      .update(operatorRoutesTable)
+      .set({ isActive: true })
+      .where(sql`${operatorRoutesTable.operatorKey} LIKE 'ATP_%'`);
+
+    const rows = await db.select().from(operatorRoutesTable).orderBy(asc(operatorRoutesTable.countryName));
+    const active   = rows.filter(r => r.isActive).length;
+    const inactive = rows.filter(r => !r.isActive).length;
+    res.json({ success: true, active, inactive, total: rows.length });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    res.status(500).json({ error: message });
+  }
+});
+
 // ─── Admin: seed defaults ─────────────────────────────────────────────────────
 router.post("/v1/admin/operator-routes/seed", ...auth, async (_req: Request, res: Response): Promise<void> => {
   try {
