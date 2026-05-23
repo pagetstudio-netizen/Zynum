@@ -63,7 +63,7 @@ const DEFAULT_OPERATORS = [
   // ── Tchad (NOUVEAU) ──────────────────────────────────────────────────────
   { countryCode:"TD", countryName:"Tchad",              flag:"🇹🇩", prefix:"235", currency:"XAF", currencySymbol:"FCFA", operatorName:"Airtel Money",    operatorKey:"ATP_AIRTEL_TD",    aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, paxityOperatorId:null },
   { countryCode:"TD", countryName:"Tchad",              flag:"🇹🇩", prefix:"235", currency:"XAF", currencySymbol:"FCFA", operatorName:"Moov Money",      operatorKey:"ATP_MOOV_TD",      aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, paxityOperatorId:null },
-  // ── Niger — Airtel (NOUVEAU, Moov déjà via OmniPay) ──────────────────────
+  // ── Niger — Airtel uniquement (Moov Money non supporté par AshTechPay) ──────
   { countryCode:"NE", countryName:"Niger",              flag:"🇳🇪", prefix:"227", currency:"XOF", currencySymbol:"FCFA", operatorName:"Airtel Money",    operatorKey:"ATP_AIRTEL_NE",    aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, paxityOperatorId:null },
   // ── RD Congo — Afrimoney (NOUVEAU, autres via SendavaPay) ────────────────
   { countryCode:"COD", countryName:"RD Congo",          flag:"🇨🇩", prefix:"243", currency:"CDF", currencySymbol:"FC",   operatorName:"Afrimoney",       operatorKey:"ATP_AFRIMONEY_CD", aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, paxityOperatorId:null },

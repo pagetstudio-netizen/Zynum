@@ -341,6 +341,7 @@ async function seedData() {
     { countryCode:"TD",  countryName:"Tchad",              flag:"🇹🇩", prefix:"235", currency:"XAF", currencySymbol:"FCFA", operatorName:"Airtel Money",      operatorKey:"ATP_AIRTEL_TD",    aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null },
     { countryCode:"TD",  countryName:"Tchad",              flag:"🇹🇩", prefix:"235", currency:"XAF", currencySymbol:"FCFA", operatorName:"Moov Money",        operatorKey:"ATP_MOOV_TD",      aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null },
     { countryCode:"NE",  countryName:"Niger",              flag:"🇳🇪", prefix:"227", currency:"XOF", currencySymbol:"FCFA", operatorName:"Airtel Money",      operatorKey:"ATP_AIRTEL_NE",    aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null },
+    // Niger Moov Money non listé dans la doc AshTechPay — retiré intentionnellement
     { countryCode:"COD", countryName:"RD Congo",           flag:"🇨🇩", prefix:"243", currency:"CDF", currencySymbol:"FC",   operatorName:"Afrimoney",         operatorKey:"ATP_AFRIMONEY_CD", aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null },
     { countryCode:"BJ",  countryName:"Bénin",              flag:"🇧🇯", prefix:"229", currency:"XOF", currencySymbol:"FCFA", operatorName:"Moov Money",        operatorKey:"ATP_MOOV_BJ",      aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null },
     { countryCode:"BJ",  countryName:"Bénin",              flag:"🇧🇯", prefix:"229", currency:"XOF", currencySymbol:"FCFA", operatorName:"MTN Mobile Money",  operatorKey:"ATP_MTN_BJ",       aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null },
@@ -372,9 +373,12 @@ async function seedData() {
     await db.insert(operatorRoutesTable).values(op).onConflictDoNothing();
   }
 
-  // Migration : supprimer les doublons non-ATP et activer tous les ATP
+  // Migration : supprimer les doublons non-ATP, activer tous les ATP, supprimer opérateurs retirés
   await db.execute(sql`
     DELETE FROM operator_routes WHERE operator_key NOT LIKE 'ATP_%'
+  `).catch(() => {});
+  await db.execute(sql`
+    DELETE FROM operator_routes WHERE operator_key = 'ATP_MOOV_NE'
   `).catch(() => {});
   await db.execute(sql`
     UPDATE operator_routes SET is_active = true WHERE operator_key LIKE 'ATP_%'

@@ -1382,6 +1382,16 @@ function AdminOperatorRoutes() {
     refetch();
   };
 
+  const [syncing, setSyncing] = useState(false);
+  const syncAtp = async () => {
+    setSyncing(true);
+    const r = await adminPost("/v1/admin/ashtechpay/sync-countries", {});
+    setSyncing(false);
+    if (r.error) { toast({ title: r.error, variant: "destructive" }); return; }
+    toast({ title: `Sync AshTechPay : ${r.countries} pays, ${r.inserted} opérateurs mis à jour` });
+    refetch();
+  };
+
   const openEdit = (op: any) => {
     setEditOp(op);
     setEditForm({
@@ -1447,6 +1457,9 @@ function AdminOperatorRoutes() {
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={seed} disabled={seeding} className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 h-8 px-3 text-xs">
           {seeding ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />Initialisation…</> : "Initialiser les défauts"}
+        </Button>
+        <Button onClick={syncAtp} disabled={syncing} className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/30 h-8 px-3 text-xs">
+          {syncing ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />Sync…</> : "↻ Sync AshTechPay"}
         </Button>
         <Button onClick={() => setShowAdd(true)} className="bg-primary hover:bg-primary/90 text-white h-8 px-3 text-xs">
           <Plus className="w-3.5 h-3.5 mr-1" /> Ajouter un opérateur
