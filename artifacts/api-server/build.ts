@@ -1,14 +1,11 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { build as esbuild } from "esbuild";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, cp } from "fs/promises";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// server deps to bundle to reduce openat(2) syscalls
-// which helps cold start times without risking some
-// packages that are not bundle compatible
 const allowlist = [
   "@google/generative-ai",
   "axios",
@@ -67,6 +64,12 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+
+  const frontendDist = path.resolve(__dirname, "../zynum/dist/public");
+  const serverPublic = path.resolve(distDir, "public");
+  console.log("copying frontend build to dist/public...");
+  await cp(frontendDist, serverPublic, { recursive: true });
+  console.log("done.");
 }
 
 buildAll().catch((err) => {
