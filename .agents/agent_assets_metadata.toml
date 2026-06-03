@@ -6,3 +6,15 @@ id = "kjRVMJBHcAcTnuf0mb-5E"
 uri = "file://screenshots/home_desktop.jpg"
 type = "image"
 title = "ZyNum - Page d'accueil (desktop 1440×900)"
+
+[[outputs]]
+id = "Fg59IJab8HN7laaTAMVXx"
+uri = "file://zynum-dist.zip"
+type = "unspecified"
+title = "zynum-dist — dossier dist à uploader sur Plesk"
+
+[[outputs]]
+id = "H_pzqywNuztI5T2bD4dQA"
+uri = "file://zynum-dist.tar.gz"
+type = "unspecified"
+title = "zynum-dist.tar.gz — dossier dist à uploader sur Plesk"
