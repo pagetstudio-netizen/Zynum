@@ -12,8 +12,18 @@ function generateApiKey(): string {
   return `zyn_${crypto.randomBytes(32).toString("hex")}`;
 }
 
+async function safeExecute(query: Parameters<typeof db.execute>[0]) {
+  try {
+    await db.execute(query);
+  } catch (e: any) {
+    const code = e?.cause?.code ?? e?.code;
+    if (["42P07", "42710", "42701"].includes(code)) return;
+    throw e;
+  }
+}
+
 async function ensureSchema() {
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "users" (
       "id" serial PRIMARY KEY NOT NULL,
       "name" text NOT NULL,
@@ -29,7 +39,7 @@ async function ensureSchema() {
       CONSTRAINT "users_api_key_unique" UNIQUE("api_key")
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "sessions" (
       "id" serial PRIMARY KEY NOT NULL,
       "user_id" integer NOT NULL,
@@ -39,7 +49,7 @@ async function ensureSchema() {
       CONSTRAINT "sessions_token_unique" UNIQUE("token")
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "orders" (
       "id" serial PRIMARY KEY NOT NULL,
       "user_id" integer NOT NULL,
@@ -59,7 +69,7 @@ async function ensureSchema() {
       "updated_at" timestamp with time zone DEFAULT now() NOT NULL
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "transactions" (
       "id" serial PRIMARY KEY NOT NULL,
       "user_id" integer NOT NULL,
@@ -74,7 +84,7 @@ async function ensureSchema() {
       "created_at" timestamp with time zone DEFAULT now() NOT NULL
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "admin_settings" (
       "id" serial PRIMARY KEY NOT NULL,
       "key" text NOT NULL,
@@ -83,7 +93,7 @@ async function ensureSchema() {
       CONSTRAINT "admin_settings_key_unique" UNIQUE("key")
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "admin_messages" (
       "id" serial PRIMARY KEY NOT NULL,
       "sender_id" integer NOT NULL,
@@ -109,7 +119,7 @@ async function ensureSchema() {
   ]) {
     await db.execute(sql.raw(col)).catch(() => {});
   }
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "payment_providers" (
       "id" serial PRIMARY KEY NOT NULL,
       "category" text NOT NULL,
@@ -123,7 +133,7 @@ async function ensureSchema() {
       CONSTRAINT "payment_providers_slug_unique" UNIQUE("slug")
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "faq_articles" (
       "id" serial PRIMARY KEY NOT NULL,
       "type" text DEFAULT 'faq' NOT NULL,
@@ -137,7 +147,7 @@ async function ensureSchema() {
       "updated_at" timestamp with time zone DEFAULT now() NOT NULL
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "social_links" (
       "id" serial PRIMARY KEY NOT NULL,
       "platform" text NOT NULL,
@@ -148,7 +158,7 @@ async function ensureSchema() {
       "created_at" timestamp with time zone DEFAULT now() NOT NULL
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "country_overrides" (
       "id" serial PRIMARY KEY NOT NULL,
       "country_slug" text NOT NULL,
@@ -159,7 +169,7 @@ async function ensureSchema() {
       CONSTRAINT "country_overrides_country_slug_unique" UNIQUE("country_slug")
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "contact_messages" (
       "id" serial PRIMARY KEY NOT NULL,
       "name" text NOT NULL,
@@ -170,7 +180,7 @@ async function ensureSchema() {
       "created_at" timestamp with time zone DEFAULT now() NOT NULL
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "api_waitlist" (
       "id" serial PRIMARY KEY NOT NULL,
       "email" text NOT NULL,
@@ -178,7 +188,7 @@ async function ensureSchema() {
       CONSTRAINT "api_waitlist_email_unique" UNIQUE("email")
     )
   `);
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "discount_codes" (
       "id" serial PRIMARY KEY NOT NULL,
       "code" text NOT NULL,
@@ -204,7 +214,7 @@ async function ensureSchema() {
     await db.execute(sql.raw(col)).catch(() => {});
   }
 
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "affiliate_commissions" (
       "id" serial PRIMARY KEY NOT NULL,
       "user_id" integer NOT NULL,
@@ -215,7 +225,7 @@ async function ensureSchema() {
     )
   `);
 
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "affiliate_withdrawals" (
       "id" serial PRIMARY KEY NOT NULL,
       "user_id" integer NOT NULL,
@@ -229,7 +239,7 @@ async function ensureSchema() {
     )
   `);
 
-  await db.execute(sql`
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "operator_routes" (
       "id" serial PRIMARY KEY NOT NULL,
       "country_code" text NOT NULL,
@@ -374,13 +384,13 @@ async function seedData() {
   }
 
   // Migration : supprimer les doublons non-ATP, activer tous les ATP, supprimer opérateurs retirés
-  await db.execute(sql`
+  await safeExecute(sql`
     DELETE FROM operator_routes WHERE operator_key NOT LIKE 'ATP_%'
   `).catch(() => {});
-  await db.execute(sql`
+  await safeExecute(sql`
     DELETE FROM operator_routes WHERE operator_key = 'ATP_MOOV_NE'
   `).catch(() => {});
-  await db.execute(sql`
+  await safeExecute(sql`
     UPDATE operator_routes SET is_active = true WHERE operator_key LIKE 'ATP_%'
   `).catch(() => {});
 
