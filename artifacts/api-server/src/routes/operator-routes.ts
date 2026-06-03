@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, operatorRoutesTable } from "@workspace/db";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 

@@ -1,11 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import path from "path";
-import { fileURLToPath } from "url";
 import router from "./routes/index.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app: Express = express();
 
@@ -32,7 +28,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", router);
 
 if (process.env.NODE_ENV === "production") {
-  const publicDir = path.join(__dirname, "public");
+  // In esbuild CJS output, __dirname is always available as a real global
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const dir: string = typeof __dirname !== "undefined" ? __dirname : process.cwd();
+  const publicDir = path.join(dir, "public");
   app.use(express.static(publicDir));
   app.get("*", (_req, res) => {
     res.sendFile(path.join(publicDir, "index.html"));
