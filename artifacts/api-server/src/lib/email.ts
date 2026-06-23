@@ -22,6 +22,36 @@ const BASE_STYLE = `
   padding: 0;
 `;
 
+const SOCIAL_BUTTONS = `
+<table cellpadding="0" cellspacing="0" style="margin:16px auto 0;">
+  <tr>
+    <td style="padding:0 4px;">
+      <a href="https://whatsapp.com/channel/0029Vb8MmTnHQbS8sEmxvd3z" style="display:inline-flex;align-items:center;gap:5px;background:#25D366;color:#ffffff;font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;letter-spacing:0.2px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="14" height="14" alt="" style="display:block;border:0;" />
+        WhatsApp
+      </a>
+    </td>
+    <td style="padding:0 4px;">
+      <a href="https://www.facebook.com/profile.php?id=61575544416689" style="display:inline-flex;align-items:center;gap:5px;background:#1877F2;color:#ffffff;font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;letter-spacing:0.2px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" width="14" height="14" alt="" style="display:block;border:0;" />
+        Facebook
+      </a>
+    </td>
+    <td style="padding:0 4px;">
+      <a href="https://youtube.com/@zynumapp" style="display:inline-flex;align-items:center;gap:5px;background:#FF0000;color:#ffffff;font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;letter-spacing:0.2px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" width="14" height="14" alt="" style="display:block;border:0;" />
+        YouTube
+      </a>
+    </td>
+    <td style="padding:0 4px;">
+      <a href="https://discord.gg/vfmKygd9G" style="display:inline-flex;align-items:center;gap:5px;background:#5865F2;color:#ffffff;font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;letter-spacing:0.2px;">
+        <img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg" width="14" height="14" alt="" style="display:block;border:0;" />
+        Discord
+      </a>
+    </td>
+  </tr>
+</table>`;
+
 function htmlLayout(content: string, previewText: string) {
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -67,8 +97,10 @@ function htmlLayout(content: string, previewText: string) {
           <!-- Footer -->
           <tr>
             <td style="background:#f8f9fa;padding:24px 40px;border-top:1px solid #e9ecef;">
-              <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;">
-                © 2025 ZyNum · Tous droits réservés<br/>
+              <p style="margin:0 0 12px;font-size:12px;color:#9ca3af;text-align:center;">Suivez-nous :</p>
+              ${SOCIAL_BUTTONS}
+              <p style="margin:16px 0 0;font-size:11px;color:#d1d5db;text-align:center;line-height:1.6;">
+                © 2025 ZyNum · Tous droits réservés ·
                 <a href="https://zynum.net" style="color:#ef4444;text-decoration:none;">zynum.net</a>
               </p>
             </td>
