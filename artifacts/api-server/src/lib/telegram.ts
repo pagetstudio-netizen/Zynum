@@ -50,6 +50,135 @@ export async function sendMessage(chatId: string, text: string): Promise<boolean
   }
 }
 
+export async function sendMessageWithButtons(
+  chatId: string,
+  text: string,
+  inlineKeyboard: { text: string; callback_data: string }[][]
+): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN ?? "";
+  if (!token || !chatId) return false;
+  try {
+    const res = await fetch(`${TELEGRAM_API()}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id:      chatId,
+        text,
+        parse_mode:   "HTML",
+        reply_markup: { inline_keyboard: inlineKeyboard },
+      }),
+    });
+    const data = await res.json() as { ok: boolean; description?: string };
+    if (!data.ok) console.error("[Telegram] sendMessageWithButtons error:", data.description);
+    return data.ok;
+  } catch (err) {
+    console.error("[Telegram] sendMessageWithButtons fetch error:", err);
+    return false;
+  }
+}
+
+export async function answerCallbackQuery(callbackQueryId: string, text: string): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN ?? "";
+  if (!token) return;
+  try {
+    await fetch(`${TELEGRAM_API()}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackQueryId, text, show_alert: true }),
+    });
+  } catch {}
+}
+
+export async function editMessageText(chatId: string, messageId: number, text: string): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN ?? "";
+  if (!token) return;
+  try {
+    await fetch(`${TELEGRAM_API()}/editMessageText`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, message_id: messageId, text, parse_mode: "HTML" }),
+    });
+  } catch {}
+}
+
+// ─── Debit handler (called from webhook callback_query) ───────────────────────
+
+export async function handleDebitCallback(opts: {
+  callbackQueryId: string;
+  chatId: string;
+  messageId: number;
+  userId: number;
+  amountUsd: number;
+  amountFcfa: number;
+  adminName: string;
+}): Promise<void> {
+  const { callbackQueryId, chatId, messageId, userId, amountUsd, amountFcfa, adminName } = opts;
+
+  try {
+    const [user] = await db
+      .select({ id: usersTable.id, name: usersTable.name, balanceUsd: usersTable.balanceUsd })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+
+    if (!user) {
+      await answerCallbackQuery(callbackQueryId, `❌ Utilisateur #${userId} introuvable.`);
+      return;
+    }
+
+    if (user.balanceUsd < amountUsd) {
+      await answerCallbackQuery(
+        callbackQueryId,
+        `❌ Solde insuffisant. Solde actuel: ${fmtNum(Math.round(user.balanceUsd * 620))} FCFA`
+      );
+      return;
+    }
+
+    await db.update(usersTable)
+      .set({ balanceUsd: sql`${usersTable.balanceUsd} - ${amountUsd}` })
+      .where(eq(usersTable.id, userId));
+
+    await db.insert(transactionsTable).values({
+      userId,
+      type:      "debit",
+      amountUsd: -amountUsd,
+      amountFcfa: -amountFcfa,
+      method:    "admin_telegram",
+      provider:  "admin",
+      status:    "completed",
+      reference: `DEBIT-TG-${Date.now()}`,
+      metadata:  JSON.stringify({ source: "telegram_admin_debit", adminName }),
+    });
+
+    const newBalanceFcfa = Math.round((user.balanceUsd - amountUsd) * 620);
+
+    await answerCallbackQuery(
+      callbackQueryId,
+      `✅ ${fmtNum(amountFcfa)} FCFA débité du compte de ${user.name}. Nouveau solde: ${fmtNum(newBalanceFcfa)} FCFA`
+    );
+
+    const now = fmtDate(new Date());
+    await editMessageText(
+      chatId,
+      messageId,
+      [
+        `💰 <b>DÉPÔT REÇU</b>`,
+        ``,
+        `👤 Utilisateur: <b>${user.name}</b> (#${userId})`,
+        `💵 Montant: <b>${fmtNum(amountFcfa)} XOF</b>`,
+        `📅 Date: ${now}`,
+        ``,
+        `🔴 <b>DÉBITÉ</b> par ${adminName} — Nouveau solde: ${fmtNum(newBalanceFcfa)} FCFA`,
+      ].join("\n")
+    );
+
+    console.log(`[Telegram debit] Débité $${amountUsd.toFixed(4)} (${amountFcfa} FCFA) de l'user #${userId} par ${adminName}`);
+  } catch (err) {
+    console.error("[Telegram debit] Error:", err);
+    await answerCallbackQuery(callbackQueryId, `❌ Erreur lors du débit. Réessayez.`);
+  }
+}
+
 // ─── Bot updates / detect ─────────────────────────────────────────────────────
 
 export async function detectGroupChats(): Promise<{ chatId: string | null; chats: { id: string; type: string; title: string }[] }> {
@@ -116,7 +245,12 @@ export async function notifyDeposit(opts: {
   if (opts.operator) lines.push(`🏦 Opérateur: ${opts.operator}`);
   lines.push(`🔖 Référence: <code>${opts.reference}</code>`);
   lines.push(`📅 Date: ${now}`);
-  await sendMessage(chatId, lines.join("\n")).catch(() => {});
+
+  const callbackData = `debit:${opts.userId}:${opts.amountUsd.toFixed(6)}:${opts.amountFcfa}`;
+
+  await sendMessageWithButtons(chatId, lines.join("\n"), [
+    [{ text: `🔴 Débiter ${fmtNum(opts.amountFcfa)} FCFA`, callback_data: callbackData }],
+  ]).catch(() => {});
 }
 
 export async function notifyPurchase(opts: {

@@ -4,6 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import { notifyDeposit } from "../lib/telegram.js";
+import { tryAcquireRef, releaseRef } from "../lib/paymentLock.js";
 
 const router: IRouter = Router();
 
@@ -306,6 +307,13 @@ router.post("/v1/payments/ashtechpay/confirm", async (req: Request, res: Respons
       return;
     }
 
+    // Anti double-credit: verrou en mémoire
+    if (!tryAcquireRef(String(reference))) {
+      res.json({ credited: true, action: "already_processing" });
+      return;
+    }
+    try {
+
     const [existing] = await db
       .select({ id: transactionsTable.id, status: transactionsTable.status, metadata: transactionsTable.metadata })
       .from(transactionsTable)
@@ -403,6 +411,8 @@ router.post("/v1/payments/ashtechpay/confirm", async (req: Request, res: Respons
       }).catch(() => {});
     }).catch(() => {});
 
+    } finally { releaseRef(String(reference)); }
+
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur";
     console.error("[AshTechPay confirm] Error:", message);
@@ -458,6 +468,13 @@ router.post("/v1/webhooks/ashtechpay", async (req: Request, res: Response): Prom
       console.log("[AshTechPay webhook] Duplicate, ignoring reference:", reference);
       return;
     }
+
+    // Anti double-credit: verrou en mémoire
+    if (!tryAcquireRef(reference)) {
+      console.log("[AshTechPay webhook] Already processing reference:", reference);
+      return;
+    }
+    try {
 
     // amount = montant net crédité (après frais), total_amount = montant brut
     const rawAmount  = Number(body.amount ?? 0);
@@ -520,6 +537,8 @@ router.post("/v1/webhooks/ashtechpay", async (req: Request, res: Response): Prom
         operator:  String(body.operator ?? ""),
       }).catch(() => {});
     }).catch(() => {});
+
+    } finally { releaseRef(reference); }
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur webhook";

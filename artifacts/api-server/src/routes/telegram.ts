@@ -3,16 +3,60 @@ import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import {
   sendMessage, detectGroupChats, saveChatId, getChatId,
-  getBotInfo, sendDailyReport,
+  getBotInfo, sendDailyReport, handleDebitCallback, answerCallbackQuery,
 } from "../lib/telegram.js";
 
 const router: IRouter = Router();
 
-// ─── Webhook (bot commands) ───────────────────────────────────────────────────
+// ─── Webhook (bot commands + callback_query) ──────────────────────────────────
 
 router.post("/v1/telegram/webhook", async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body ?? {};
+
+    // ── Inline button callback (bouton Débiter) ────────────────────────────────
+    const cbq = body.callback_query;
+    if (cbq) {
+      res.json({ ok: true });
+
+      const callbackQueryId = String(cbq.id ?? "");
+      const data            = String(cbq.data ?? "");
+      const chatId          = String(cbq.message?.chat?.id ?? "");
+      const messageId       = Number(cbq.message?.message_id ?? 0);
+      const adminName       = String(
+        cbq.from?.username
+          ? `@${cbq.from.username}`
+          : `${cbq.from?.first_name ?? ""} ${cbq.from?.last_name ?? ""}`.trim() || "Admin"
+      );
+
+      if (data.startsWith("debit:")) {
+        const parts = data.split(":");
+        const userId     = parseInt(parts[1] ?? "0", 10);
+        const amountUsd  = parseFloat(parts[2] ?? "0");
+        const amountFcfa = parseInt(parts[3] ?? "0", 10);
+
+        if (!userId || !amountUsd) {
+          await answerCallbackQuery(callbackQueryId, "❌ Données invalides.");
+          return;
+        }
+
+        await handleDebitCallback({
+          callbackQueryId,
+          chatId,
+          messageId,
+          userId,
+          amountUsd,
+          amountFcfa,
+          adminName,
+        });
+      } else {
+        await answerCallbackQuery(callbackQueryId, "Action inconnue.");
+      }
+
+      return;
+    }
+
+    // ── Message texte ──────────────────────────────────────────────────────────
     const msg  = body.message ?? body.channel_post;
     if (!msg) { res.json({ ok: true }); return; }
 

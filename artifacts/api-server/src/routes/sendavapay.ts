@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import { notifyDeposit } from "../lib/telegram.js";
+import { tryAcquireRef, releaseRef } from "../lib/paymentLock.js";
 
 const router: IRouter = Router();
 
@@ -252,6 +253,13 @@ router.post("/v1/payments/sendavapay/confirm", async (req: Request, res: Respons
       return;
     }
 
+    // Anti double-credit: verrou en mémoire
+    if (!tryAcquireRef(String(reference))) {
+      res.json({ credited: true, action: "already_processing" });
+      return;
+    }
+    try {
+
     // Check if already credited
     const [existing] = await db
       .select({ id: transactionsTable.id, status: transactionsTable.status })
@@ -337,6 +345,8 @@ router.post("/v1/payments/sendavapay/confirm", async (req: Request, res: Respons
       }).catch(() => {});
     }).catch(() => {});
 
+    } finally { releaseRef(String(reference)); }
+
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur";
     console.error("[SendavaPay confirm] Error:", message);
@@ -362,6 +372,13 @@ router.post("/v1/webhooks/sendavapay", async (req: Request, res: Response): Prom
       res.status(400).json({ error: "Missing reference" });
       return;
     }
+
+    // Anti double-credit: verrou en mémoire
+    if (!tryAcquireRef(reference)) {
+      res.json({ received: true, action: "already_processing" });
+      return;
+    }
+    try {
 
     // Duplicate guard
     const [existing] = await db
@@ -438,6 +455,8 @@ router.post("/v1/webhooks/sendavapay", async (req: Request, res: Response): Prom
         operator:  String(body.operator ?? ""),
       }).catch(() => {});
     }).catch(() => {});
+
+    } finally { releaseRef(reference); }
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur webhook";

@@ -2,6 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db, usersTable, transactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { notifyDeposit } from "../lib/telegram.js";
+import { tryAcquireRef, releaseRef } from "../lib/paymentLock.js";
 
 const router: IRouter = Router();
 
@@ -112,6 +113,13 @@ router.post("/v1/payments/paxity/confirm", async (req: Request, res: Response): 
       return;
     }
 
+    // Anti double-credit: verrou en mémoire
+    if (!tryAcquireRef(String(reference))) {
+      res.json({ credited: true, action: "already_processing" });
+      return;
+    }
+    try {
+
     // Check for duplicate (already credited)
     const [existing] = await db
       .select({ id: transactionsTable.id, status: transactionsTable.status })
@@ -181,6 +189,8 @@ router.post("/v1/payments/paxity/confirm", async (req: Request, res: Response): 
         method:    "Paxity",
       }).catch(() => {});
     }).catch(() => {});
+
+    } finally { releaseRef(String(reference)); }
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur";
@@ -351,6 +361,14 @@ router.post("/v1/webhooks/paxity", async (req: Request, res: Response): Promise<
       return;
     }
 
+    // Anti double-credit: verrou en mémoire
+    const lockKey = reference || `pax-${finalIdClient}-${finalAmount}`;
+    if (!tryAcquireRef(lockKey)) {
+      res.json({ received: true, action: "already_processing" });
+      return;
+    }
+    try {
+
     // Normalize any currency to USD for balance
     const XOF_TO_USD: Record<string, number> = {
       XOF: 1 / 620,
@@ -418,6 +436,8 @@ router.post("/v1/webhooks/paxity", async (req: Request, res: Response): Promise<
         method:    "Paxity",
       }).catch(() => {});
     }).catch(() => {});
+
+    } finally { releaseRef(lockKey); }
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur webhook";
