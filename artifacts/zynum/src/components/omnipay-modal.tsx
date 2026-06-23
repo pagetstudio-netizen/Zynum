@@ -504,8 +504,11 @@ export function OmnipayModal({
         setTxReference(reference);
 
         if (json.needsOtp) {
-          // Show OTP input screen
           setState("otp");
+        } else if (json.redirectUrl) {
+          setPaymentUrl(String(json.redirectUrl));
+          setState("wave");
+          if (reference) startPolling(reference);
         } else {
           setState("push");
           if (reference) startPolling(reference);
