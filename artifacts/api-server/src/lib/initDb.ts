@@ -390,6 +390,20 @@ async function seedData() {
   await safeExecute(sql`
     DELETE FROM operator_routes WHERE operator_key = 'ATP_MOOV_NE'
   `).catch(() => {});
+  // Migration : supprimer les anciennes clés dupliquées (anciens noms remplacés par les nouveaux)
+  await safeExecute(sql`
+    DELETE FROM operator_routes WHERE operator_key IN (
+      'ATP_MOOV_MONEY_BJ',
+      'ATP_MTN_MOBILE_MONEY_BJ',
+      'ATP_CELTIS_BJ',
+      'ATP_CORIS_MONEY_BJ',
+      'ATP_MTN_MOBILE_MONEY_CM',
+      'ATP_MTN_MOBILE_MONEY_CI',
+      'ATP_MTN_MOBILE_MONEY_CG',
+      'ATP_MTN_MOBILE_MONEY_GN',
+      'ATP_MTN_MOBILE_MONEY_CD'
+    )
+  `).catch(() => {});
   await safeExecute(sql`
     UPDATE operator_routes SET is_active = true WHERE operator_key LIKE 'ATP_%'
   `).catch(() => {});
