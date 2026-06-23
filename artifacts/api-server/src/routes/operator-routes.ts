@@ -124,6 +124,53 @@ router.get("/v1/admin/operator-routes", ...auth, async (_req: Request, res: Resp
   }
 });
 
+// ─── Admin: dédupliquer la table + ajouter contrainte UNIQUE ─────────────────
+router.post("/v1/admin/operator-routes/deduplicate", ...auth, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    // 1. Compter les doublons
+    const dupsBefore = await db.execute(sql`
+      SELECT operator_key, COUNT(*) as cnt
+      FROM operator_routes
+      GROUP BY operator_key
+      HAVING COUNT(*) > 1
+    `);
+    const dupCount = (dupsBefore as any).rows?.length ?? (dupsBefore as any).length ?? 0;
+
+    // 2. Supprimer les doublons (garder MIN id par operator_key)
+    const deleted = await db.execute(sql`
+      DELETE FROM operator_routes
+      WHERE id NOT IN (
+        SELECT MIN(id) FROM operator_routes GROUP BY operator_key
+      )
+    `);
+    const deletedCount = (deleted as any).rowCount ?? 0;
+
+    // 3. Ajouter la contrainte UNIQUE si absente
+    let constraintAdded = false;
+    try {
+      await db.execute(sql`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint WHERE conname = 'operator_routes_operator_key_unique'
+          ) THEN
+            ALTER TABLE operator_routes ADD CONSTRAINT operator_routes_operator_key_unique UNIQUE (operator_key);
+          END IF;
+        END$$
+      `);
+      constraintAdded = true;
+    } catch (_) { constraintAdded = false; }
+
+    const total = await db.execute(sql`SELECT COUNT(*) as n FROM operator_routes`);
+    const totalCount = (total as any).rows?.[0]?.n ?? (total as any)[0]?.n ?? "?";
+
+    res.json({ success: true, duplicateKeys: dupCount, deletedRows: deletedCount, constraintAdded, totalAfter: totalCount });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    res.status(500).json({ error: message });
+  }
+});
+
 // ─── Admin: basculer tous les opérateurs vers AshTechPay ─────────────────────
 router.post("/v1/admin/operator-routes/migrate-to-ashtechpay", ...auth, async (_req: Request, res: Response): Promise<void> => {
   try {
