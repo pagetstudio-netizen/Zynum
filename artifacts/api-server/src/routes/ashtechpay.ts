@@ -573,6 +573,15 @@ function operatorSlug(name: string): string {
     .replace(/^_|_$/g, "");
 }
 
+// Table inverse : "NomOpérateur::PAYS" → clé canonique ATP_OPERATORS
+// Empêche la route sync de générer des clés différentes (ex: ATP_MOOV_MONEY_BJ vs ATP_MOOV_BJ)
+const ATP_CANONICAL_KEY: Record<string, string> = Object.fromEntries(
+  Object.entries(ATP_OPERATORS).map(([key, info]) => [
+    `${info.operator}::${info.country_code}`,
+    key,
+  ])
+);
+
 router.post("/v1/admin/ashtechpay/sync-countries", requireAuth, requireAdmin, async (_req: Request, res: Response): Promise<void> => {
   try {
     const apiKey = process.env.ASHTECHPAY_API_KEY ?? "";
@@ -598,7 +607,8 @@ router.post("/v1/admin/ashtechpay/sync-countries", requireAuth, requireAdmin, as
       const meta = COUNTRY_META[country.code];
       for (const opName of country.operators) {
         const slug     = operatorSlug(opName);
-        const key      = `ATP_${slug}_${country.code}`;
+        // Utilise la clé canonique si elle existe, sinon génère une clé
+        const key      = ATP_CANONICAL_KEY[`${opName}::${country.code}`] ?? `ATP_${slug}_${country.code}`;
         const needsReturnUrl = opName === "Wave";
         const row = {
           countryCode:    meta?.countryCode ?? country.code,

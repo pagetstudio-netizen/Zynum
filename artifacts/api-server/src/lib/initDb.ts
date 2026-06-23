@@ -431,6 +431,32 @@ async function seedData() {
     UPDATE operator_routes SET is_active = true WHERE operator_key LIKE 'ATP_%'
   `).catch(() => {});
 
+  // ── MIGRATION 6 : supprimer les clés ATP mal générées par l'ancienne route sync ──────────
+  // L'ancienne route créait ATP_MOOV_MONEY_BJ au lieu de ATP_MOOV_BJ, etc.
+  // On garde uniquement les clés canoniques connues.
+  await safeExecute(sql`
+    DELETE FROM operator_routes
+    WHERE operator_key LIKE 'ATP_%'
+    AND operator_key NOT IN (
+      'ATP_MOOV_BJ','ATP_MTN_BJ',
+      'ATP_MOOV_BF','ATP_ORANGE_BF',
+      'ATP_MTN_CM','ATP_ORANGE_CM',
+      'ATP_ORANGE_CF',
+      'ATP_AIRTEL_CG','ATP_MTN_CG',
+      'ATP_MOOV_CI','ATP_MTN_CI','ATP_ORANGE_CI','ATP_WAVE_CI',
+      'ATP_AIRTEL_GA','ATP_MOOV_GA',
+      'ATP_MTN_GN','ATP_ORANGE_GN',
+      'ATP_ORANGE_GQ',
+      'ATP_ORANGE_GW',
+      'ATP_MOOV_ML','ATP_ORANGE_ML',
+      'ATP_AIRTEL_NE',
+      'ATP_AFRIMONEY_CD','ATP_AIRTEL_CD','ATP_ORANGE_CD','ATP_VODACOM_CD',
+      'ATP_FREE_SN','ATP_ORANGE_SN','ATP_WAVE_SN',
+      'ATP_AIRTEL_TD','ATP_MOOV_TD',
+      'ATP_FLOOZ_TG','ATP_TMONEY_TG'
+    )
+  `).catch(() => {});
+
   // Auto-seed operator routes if table is empty
   const existing = await db.select({ id: operatorRoutesTable.id }).from(operatorRoutesTable).limit(1);
   if (existing.length === 0) {
