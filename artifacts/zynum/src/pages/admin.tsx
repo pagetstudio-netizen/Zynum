@@ -871,12 +871,12 @@ function AdminTransactions() {
    SECTION: MESSAGES
 ══════════════════════════════════════════════════════════════════════════════ */
 const POPUP_COLORS = [
-  { value: "blue",   label: "Bleu",    dot: "bg-blue-500" },
-  { value: "green",  label: "Vert",    dot: "bg-green-500" },
-  { value: "red",    label: "Rouge",   dot: "bg-red-500" },
-  { value: "yellow", label: "Jaune",   dot: "bg-yellow-400" },
-  { value: "purple", label: "Violet",  dot: "bg-purple-500" },
-  { value: "orange", label: "Orange",  dot: "bg-orange-500" },
+  { value: "blue",   label: "Bleu",    dot: "bg-blue-500",   bg: "bg-blue-600" },
+  { value: "green",  label: "Vert",    dot: "bg-green-500",  bg: "bg-green-600" },
+  { value: "red",    label: "Rouge",   dot: "bg-red-500",    bg: "bg-red-600" },
+  { value: "yellow", label: "Jaune",   dot: "bg-yellow-400", bg: "bg-yellow-500" },
+  { value: "purple", label: "Violet",  dot: "bg-purple-500", bg: "bg-purple-600" },
+  { value: "orange", label: "Orange",  dot: "bg-orange-500", bg: "bg-orange-500" },
 ];
 
 const emptyForm = { type: "popup", target: "all", subject: "", content: "", color: "blue", linkUrl: "", linkLabel: "", imageUrl: "" };
@@ -987,13 +987,32 @@ function AdminMessages() {
           <input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://exemple.com/image.jpg" className={inp} />
         </div>
 
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-2">
-            {POPUP_COLORS.find((c) => c.value === form.color) && (
-              <span className={`w-3 h-3 rounded-full ${POPUP_COLORS.find((c) => c.value === form.color)!.dot}`} />
-            )}
-            <span className="text-xs text-muted-foreground">Aperçu couleur</span>
-          </div>
+        {/* Live preview */}
+        {(form.content.trim() || form.subject.trim()) && (() => {
+          const colorCfg = POPUP_COLORS.find((c) => c.value === form.color) ?? POPUP_COLORS[0];
+          const text = form.subject.trim()
+            ? `${form.subject.trim()} ${form.content.trim()}`
+            : form.content.trim();
+          return (
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground font-medium">Aperçu :</p>
+              <div className={`${colorCfg.bg} rounded-xl flex items-center gap-3 px-4 py-3`}>
+                <p className="flex-1 text-sm font-medium text-white leading-snug">{text}</p>
+                {form.linkUrl.trim() && (
+                  <span className="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-white border border-white/70 rounded-lg px-3 py-1.5 whitespace-nowrap">
+                    {form.linkLabel.trim() || "En savoir plus"}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </span>
+                )}
+                <span className="shrink-0 p-1 rounded-md text-white/70">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
+        <div className="flex justify-end pt-1">
           <Button onClick={handleCreate} disabled={saving || !form.content.trim()} className="bg-primary hover:bg-primary/90 text-white">
             <Plus className="w-4 h-4 mr-2" /> {saving ? "Création..." : "Créer la notification"}
           </Button>
