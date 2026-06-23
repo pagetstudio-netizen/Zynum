@@ -159,8 +159,10 @@ function htmlLayoutBroadcast(content: string, previewText: string, userName: str
           <!-- Footer -->
           <tr>
             <td style="background:#f8f9fa;padding:24px 40px;border-top:1px solid #e9ecef;">
-              <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;">
-                © 2025 ZyNum · Tous droits réservés<br/>
+              <p style="margin:0 0 12px;font-size:12px;color:#9ca3af;text-align:center;">Suivez-nous :</p>
+              ${SOCIAL_BUTTONS}
+              <p style="margin:16px 0 0;font-size:11px;color:#d1d5db;text-align:center;line-height:1.6;">
+                © 2025 ZyNum · Tous droits réservés ·
                 <a href="https://zynum.net" style="color:#ef4444;text-decoration:none;">zynum.net</a>
                 &nbsp;·&nbsp;
                 <a href="${unsubscribeUrl}" style="color:#9ca3af;text-decoration:underline;">Se désabonner</a>
@@ -348,6 +350,36 @@ export async function sendAffiliateWithdrawalEmail(opts: {
     subject: `[ZyNum Affiliation] Retrait #${opts.withdrawalId} — $${opts.amountUsd.toFixed(2)} — ${opts.userName}`,
     html,
     text:    `Nouvelle demande de retrait affilié\n\nRéférence : #${opts.withdrawalId}\nUtilisateur : ${opts.userName} (${opts.userEmail})\nMontant : $${opts.amountUsd.toFixed(2)}\nNuméro de réception : ${opts.phone}\nPays : ${opts.country}\n\nGérez cette demande sur : https://zynum.net/dashboard\n\n— ZyNum`,
+  });
+}
+
+export async function sendDirectEmail(opts: {
+  to: string;
+  subject: string;
+  message: string;
+}) {
+  const unsubscribeUrl = `https://zynum.net/unsubscribe?email=${encodeURIComponent(opts.to)}`;
+
+  const body = `
+    <h2 style="font-size:22px;font-weight:800;color:#111827;margin:0 0 16px;">${opts.subject}</h2>
+    <div style="font-size:15px;color:#374151;line-height:1.7;white-space:pre-line;">${opts.message}</div>
+    <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0;" />
+    <div style="text-align:center;">${ctaButton("https://zynum.net/dashboard", "Accéder à ZyNum")}</div>
+  `;
+
+  const html = htmlLayoutBroadcast(body, opts.message.slice(0, 120), "", unsubscribeUrl);
+
+  const resend = getResend();
+  await resend.emails.send({
+    from:    getFromEmail(),
+    to:      [opts.to],
+    subject: opts.subject,
+    html,
+    text:    `${opts.subject}\n\n${opts.message}\n\nAccédez à ZyNum : https://zynum.net/dashboard\n\n— ZyNum`,
+    headers: {
+      "List-Unsubscribe":      `<${unsubscribeUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 }
 

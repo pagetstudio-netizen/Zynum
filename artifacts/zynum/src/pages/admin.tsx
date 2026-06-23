@@ -2376,6 +2376,29 @@ function AdminWaitlist() {
 /* ═══════════════════════════════════════════════════════════════════════════
    EMAIL BROADCAST
 ══════════════════════════════════════════════════════════════════════════════ */
+function AdminEmailSection() {
+  const [tab, setTab] = useState<"broadcast" | "direct">("broadcast");
+  return (
+    <div className="space-y-5">
+      <div className="flex gap-2">
+        <button
+          onClick={() => setTab("broadcast")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${tab === "broadcast" ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-white hover:bg-white/5 border border-white/10"}`}
+        >
+          <Send className="w-4 h-4" /> Broadcast (tous les utilisateurs)
+        </button>
+        <button
+          onClick={() => setTab("direct")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${tab === "direct" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-muted-foreground hover:text-white hover:bg-white/5 border border-white/10"}`}
+        >
+          <Mail className="w-4 h-4" /> Email direct (un utilisateur)
+        </button>
+      </div>
+      {tab === "broadcast" ? <AdminEmailBroadcast /> : <AdminEmailDirect />}
+    </div>
+  );
+}
+
 function AdminEmailBroadcast() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -2408,7 +2431,7 @@ function AdminEmailBroadcast() {
   return (
     <div className="space-y-5">
       <div className="p-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/5">
-        <p className="text-sm text-yellow-400 font-medium">⚠️ Cet email sera envoyé à tous les utilisateurs vérifiés actifs. Utilisez avec précaution.</p>
+        <p className="text-sm text-yellow-400 font-medium">⚠️ Cet email sera envoyé à <strong>tous</strong> les utilisateurs vérifiés actifs. Utilisez avec précaution.</p>
       </div>
 
       <div>
@@ -2472,6 +2495,95 @@ function AdminEmailBroadcast() {
         <div className={`p-4 rounded-2xl border text-sm font-medium ${result.failed > 0 ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-400" : "border-green-500/30 bg-green-500/10 text-green-400"}`}>
           ✓ Email envoyé à <strong>{result.sent}</strong> utilisateur(s) sur <strong>{result.total}</strong>.
           {result.failed > 0 && ` (${result.failed} échec(s))`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── AdminEmailDirect ─────────────────────────────────────────────────────────
+function AdminEmailDirect() {
+  const { toast } = useToast();
+  const [to, setTo]           = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent]       = useState(false);
+
+  const handleSend = async () => {
+    if (!to.trim() || !subject.trim() || !message.trim()) return;
+    if (!window.confirm(`Envoyer cet email à ${to} ?`)) return;
+    setLoading(true);
+    setSent(false);
+    try {
+      const data = await adminPost("/v1/admin/send-direct-email", { to: to.trim(), subject, message });
+      if (data.success) {
+        toast({ title: "Email envoyé", description: `Message envoyé à ${to}` });
+        setSent(true);
+        setTo(""); setSubject(""); setMessage("");
+      } else {
+        toast({ title: "Erreur", description: data.message ?? "Échec de l'envoi", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erreur réseau", description: "Impossible d'envoyer l'email", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5">
+        <p className="text-sm text-blue-400 font-medium">✉️ Envoyez un email personnalisé à un utilisateur spécifique par son adresse email.</p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-muted-foreground mb-2">Adresse email du destinataire</label>
+        <input
+          type="email"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          placeholder="utilisateur@exemple.com"
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-muted-foreground mb-2">Sujet</label>
+        <input
+          type="text"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="Ex: Votre compte ZyNum"
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-muted-foreground mb-2">Message</label>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Rédigez votre message ici..."
+          rows={8}
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground resize-none"
+        />
+      </div>
+
+      <Button
+        onClick={handleSend}
+        disabled={loading || !to.trim() || !subject.trim() || !message.trim()}
+        className="bg-blue-600 hover:bg-blue-500 text-white gap-2"
+      >
+        {loading
+          ? <><Loader2 className="w-4 h-4 animate-spin" /> Envoi...</>
+          : <><Send className="w-4 h-4" /> Envoyer à cet utilisateur</>
+        }
+      </Button>
+
+      {sent && (
+        <div className="p-4 rounded-2xl border border-green-500/30 bg-green-500/10 text-sm font-medium text-green-400">
+          ✓ Email envoyé avec succès.
         </div>
       )}
     </div>
@@ -2815,7 +2927,7 @@ export default function AdminPanel() {
           {activeTab === "messages"     && <AdminMessages />}
           {activeTab === "contact"      && <AdminContactMessages />}
           {activeTab === "waitlist"     && <AdminWaitlist />}
-          {activeTab === "email"        && <AdminEmailBroadcast />}
+          {activeTab === "email"        && <AdminEmailSection />}
           {activeTab === "settings"     && <AdminSettings />}
           {activeTab === "payments"     && <AdminPayments />}
           {activeTab === "operators"    && <AdminOperatorRoutes />}

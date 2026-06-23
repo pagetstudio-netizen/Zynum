@@ -6,7 +6,7 @@ import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import { hashPassword } from "../lib/auth.js";
 import { invalidateCommissionCache } from "../lib/commission.js";
-import { sendBroadcastEmail } from "../lib/email.js";
+import { sendBroadcastEmail, sendDirectEmail } from "../lib/email.js";
 
 const router = Router();
 const auth = [requireAuth, requireAdmin];
@@ -582,6 +582,27 @@ router.post("/v1/admin/send-broadcast-email", ...auth, async (req, res): Promise
   }
 
   res.json({ success: true, sent, failed, total: users.length });
+});
+
+/* ─── EMAIL DIRECT (admin → un utilisateur) ────────────────────────── */
+router.post("/v1/admin/send-direct-email", ...auth, async (req, res): Promise<void> => {
+  const { to, subject, message } = req.body;
+  if (!to || !subject || !message) {
+    res.status(400).json({ error: "Validation error", message: "Destinataire, sujet et message requis" });
+    return;
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(to)) {
+    res.status(400).json({ error: "Validation error", message: "Adresse email invalide" });
+    return;
+  }
+  try {
+    await sendDirectEmail({ to, subject, message });
+    res.json({ success: true });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: "Email failed", message: msg });
+  }
 });
 
 /* ─── ADMIN: Réinitialiser les compteurs de statistiques ────────────────── */
