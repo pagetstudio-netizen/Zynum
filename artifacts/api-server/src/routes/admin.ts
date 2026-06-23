@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable, adminMessagesTable, paymentProvidersTable, faqArticlesTable, socialLinksTable, countryOverridesTable, affiliateWithdrawalsTable } from "@workspace/db";
 import { invalidateFiveSimKeyCache } from "../lib/fivesim.js";
-import { eq, desc, count, sum, and, gte, lte, like, or, sql } from "drizzle-orm";
+import { eq, desc, count, sum, and, gte, lte, gt, like, or, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import { hashPassword } from "../lib/auth.js";
@@ -87,8 +87,10 @@ router.get("/v1/admin/users", ...auth, async (req, res): Promise<void> => {
 
   const users = await query.orderBy(desc(usersTable.createdAt)).limit(parseInt(limit)).offset(offset);
   const [{ c }] = await db.select({ c: count() }).from(usersTable);
+  const [{ s: totalBal }] = await db.select({ s: sum(usersTable.balanceUsd) }).from(usersTable);
+  const [{ wbal }] = await db.select({ wbal: count() }).from(usersTable).where(gt(usersTable.balanceUsd, 0));
 
-  res.json({ users, total: c, page: parseInt(page), limit: parseInt(limit) });
+  res.json({ users, total: c, page: parseInt(page), limit: parseInt(limit), totalBalanceUsd: totalBal ?? 0, usersWithBalance: wbal ?? 0 });
 });
 
 router.get("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => {
@@ -142,6 +144,42 @@ router.patch("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void
   }
 
   res.json({ success: true, user: { ...updated, passwordHash: undefined } });
+});
+
+/* Ajustement de solde — crédit ou débit */
+router.post("/v1/admin/users/:id/balance", ...auth, async (req: any, res): Promise<void> => {
+  const userId = parseInt(req.params.id);
+  const { type, amount, note } = req.body;
+
+  if (!["credit", "debit"].includes(type)) { res.status(400).json({ error: "type must be 'credit' or 'debit'" }); return; }
+  const amt = parseFloat(amount);
+  if (!amt || amt <= 0) { res.status(400).json({ error: "amount must be a positive number" }); return; }
+
+  const [user] = await db.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  const current = user.balanceUsd ?? 0;
+  const delta   = type === "credit" ? amt : -amt;
+  const newBal  = current + delta;
+
+  if (newBal < 0) { res.status(400).json({ error: "Le solde ne peut pas devenir négatif" }); return; }
+
+  const [updated] = await db.update(usersTable).set({ balanceUsd: newBal }).where(eq(usersTable.id, userId)).returning({ balanceUsd: usersTable.balanceUsd });
+
+  const FCFA_RATE = 620;
+  await db.insert(transactionsTable).values({
+    userId,
+    type: type === "credit" ? "recharge" : "debit",
+    amountUsd: amt,
+    amountFcfa: amt * FCFA_RATE,
+    method: "admin",
+    provider: "admin_adjustment",
+    status: "completed",
+    reference: `ADM-${Date.now()}`,
+    metadata: JSON.stringify({ adminId: req.userId, note: note ?? (type === "credit" ? "Crédit manuel" : "Débit manuel") }),
+  });
+
+  res.json({ success: true, previousBalance: current, newBalance: updated.balanceUsd, delta });
 });
 
 router.delete("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => {

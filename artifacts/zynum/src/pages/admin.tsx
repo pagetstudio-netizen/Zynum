@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3, Users, ShoppingBag, CreditCard, MessageSquare,
-  Settings, HelpCircle, Share2, Globe2, TrendingUp, Wallet,
-  Zap, Shield, Plus, Trash2, Edit3, Ban, Check, CheckCircle,
+  Settings, HelpCircle, Share2, Globe2, TrendingUp, TrendingDown, Wallet,
+  Zap, Shield, Plus, Minus, Trash2, Edit3, Ban, Check, CheckCircle,
   Search, ChevronLeft, ChevronRight, RefreshCw, Send,
   ToggleLeft, ToggleRight, DollarSign, Percent, Star,
   Package, AlertTriangle, Clock, Database, Bell, Eye, EyeOff, Key, Mail, Loader2,
-  X,
+  X, ArrowUpCircle, ArrowDownCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -278,12 +278,35 @@ function AdminUsers() {
   );
 
   const handleSearch = () => { setSearch(q); setPage(1); };
-  const openEdit = (u: any) => { setEditData({ name: u.name, email: u.email, balanceUsd: u.balanceUsd, isAdmin: u.isAdmin, isBanned: u.isBanned, password: "" }); setShowEdit(true); };
+  const openEdit = (u: any) => {
+    setEditData({
+      name: u.name, email: u.email, currentBalance: u.balanceUsd,
+      balanceAdjType: "credit", balanceAdjAmount: "", balanceNote: "",
+      isAdmin: u.isAdmin, isBanned: u.isBanned, password: "",
+    });
+    setShowEdit(true);
+  };
   const saveEdit = async () => {
-    const payload: any = { name: editData.name, email: editData.email, balanceUsd: parseFloat(editData.balanceUsd), isAdmin: editData.isAdmin, isBanned: editData.isBanned };
+    // 1. Update profile fields
+    const payload: any = { name: editData.name, email: editData.email, isAdmin: editData.isAdmin, isBanned: editData.isBanned };
     if (editData.password) payload.password = editData.password;
     await adminPatch(`/v1/admin/users/${selectedUser.id}`, payload);
-    toast({ title: "Utilisateur mis à jour" });
+
+    // 2. Balance adjustment (only if amount entered)
+    const adjAmt = parseFloat(editData.balanceAdjAmount);
+    if (adjAmt > 0) {
+      const r = await adminPost(`/v1/admin/users/${selectedUser.id}/balance`, {
+        type: editData.balanceAdjType,
+        amount: adjAmt,
+        note: editData.balanceNote || undefined,
+      });
+      if (r.error) { toast({ title: r.error, variant: "destructive" }); return; }
+      const dir = editData.balanceAdjType === "credit" ? "crédité" : "débité";
+      toast({ title: `✓ $${adjAmt.toFixed(2)} ${dir} — nouveau solde : $${n(r.newBalance).toFixed(2)}` });
+    } else {
+      toast({ title: "Utilisateur mis à jour" });
+    }
+
     setShowEdit(false);
     refetch();
     refetchDetail();
@@ -321,18 +344,97 @@ function AdminUsers() {
 
         {showEdit && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-            <div className="bg-card rounded-2xl border border-white/10 p-6 w-full max-w-md space-y-4">
+            <div className="bg-card rounded-2xl border border-white/10 p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
               <h3 className="font-bold text-white text-lg">Modifier l'utilisateur</h3>
+
+              {/* Profil */}
               {["name", "email"].map((f) => (
                 <div key={f}>
-                  <label className="text-xs text-muted-foreground block mb-1 capitalize">{f}</label>
+                  <label className="text-xs text-muted-foreground block mb-1 capitalize">{f === "name" ? "Nom" : "Email"}</label>
                   <input value={editData[f] ?? ""} onChange={(e) => setEditData({ ...editData, [f]: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
                 </div>
               ))}
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1">Solde (USD)</label>
-                <input type="number" step="0.01" value={editData.balanceUsd ?? 0} onChange={(e) => setEditData({ ...editData, balanceUsd: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+
+              {/* ── Solde ──────────────────────────────────── */}
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ajustement du solde</span>
+                  <span className="text-xs font-mono text-white bg-white/10 px-2 py-0.5 rounded-lg">
+                    Solde actuel : <span className="font-bold text-green-400">${n(editData.currentBalance).toFixed(2)}</span>
+                  </span>
+                </div>
+
+                {/* Sélecteur Crédit / Débit */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditData({ ...editData, balanceAdjType: "credit" })}
+                    className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                      editData.balanceAdjType === "credit"
+                        ? "bg-green-500/20 border-green-500/50 text-green-400"
+                        : "bg-white/5 border-white/10 text-muted-foreground hover:text-white"
+                    }`}
+                  >
+                    <ArrowUpCircle className="w-4 h-4" /> Crédit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditData({ ...editData, balanceAdjType: "debit" })}
+                    className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                      editData.balanceAdjType === "debit"
+                        ? "bg-red-500/20 border-red-500/50 text-red-400"
+                        : "bg-white/5 border-white/10 text-muted-foreground hover:text-white"
+                    }`}
+                  >
+                    <ArrowDownCircle className="w-4 h-4" /> Débit
+                  </button>
+                </div>
+
+                {/* Montant */}
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Montant (USD) — laisser vide pour ne pas toucher au solde</label>
+                  <input
+                    type="number" min="0" step="0.01"
+                    value={editData.balanceAdjAmount ?? ""}
+                    onChange={(e) => setEditData({ ...editData, balanceAdjAmount: e.target.value })}
+                    placeholder="0.00"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm"
+                  />
+                </div>
+
+                {/* Note optionnelle */}
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Note (optionnelle)</label>
+                  <input
+                    value={editData.balanceNote ?? ""}
+                    onChange={(e) => setEditData({ ...editData, balanceNote: e.target.value })}
+                    placeholder="ex: remboursement, bonus..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm"
+                  />
+                </div>
+
+                {/* Aperçu du nouveau solde */}
+                {parseFloat(editData.balanceAdjAmount) > 0 && (
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium ${
+                    editData.balanceAdjType === "credit"
+                      ? "bg-green-500/10 border-green-500/30 text-green-300"
+                      : "bg-red-500/10 border-red-500/30 text-red-300"
+                  }`}>
+                    {editData.balanceAdjType === "credit"
+                      ? <TrendingUp className="w-4 h-4 shrink-0" />
+                      : <TrendingDown className="w-4 h-4 shrink-0" />
+                    }
+                    <span>
+                      Nouveau solde :&nbsp;
+                      <strong>
+                        ${(n(editData.currentBalance) + (editData.balanceAdjType === "credit" ? 1 : -1) * parseFloat(editData.balanceAdjAmount)).toFixed(2)}
+                      </strong>
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* Mot de passe */}
               <div>
                 <label className="text-xs text-muted-foreground block mb-1">Nouveau mot de passe (laisser vide = pas de changement)</label>
                 <input type="password" value={editData.password ?? ""} onChange={(e) => setEditData({ ...editData, password: e.target.value })} placeholder="••••••••" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
@@ -2962,11 +3064,270 @@ function AdminAffiliations() {
   );
 }
 
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "operators" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate";
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION: BALANCES
+══════════════════════════════════════════════════════════════════════════════ */
+function AdminBalances() {
+  const { toast } = useToast();
+  const [q, setQ]         = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage]   = useState(1);
+  const { data, loading, refetch } = useAdminFetch<any>(`/v1/admin/users?q=${search}&page=${page}&limit=20&sort=balance`, [search, page]);
+
+  // Modal d'ajustement
+  const [adjUser, setAdjUser]     = useState<any | null>(null);
+  const [adjType, setAdjType]     = useState<"credit" | "debit">("credit");
+  const [adjAmount, setAdjAmount] = useState("");
+  const [adjNote, setAdjNote]     = useState("");
+  const [adjSaving, setAdjSaving] = useState(false);
+
+  const openAdj = (u: any) => { setAdjUser(u); setAdjType("credit"); setAdjAmount(""); setAdjNote(""); };
+  const closeAdj = () => { setAdjUser(null); };
+
+  const applyAdj = async () => {
+    if (!adjUser) return;
+    const amt = parseFloat(adjAmount);
+    if (!amt || amt <= 0) { toast({ title: "Montant invalide", variant: "destructive" }); return; }
+    setAdjSaving(true);
+    try {
+      const r = await adminPost(`/v1/admin/users/${adjUser.id}/balance`, { type: adjType, amount: amt, note: adjNote || undefined });
+      if (r.error) { toast({ title: r.error, variant: "destructive" }); return; }
+      const dir = adjType === "credit" ? "crédité" : "débité";
+      toast({ title: `✓ $${amt.toFixed(2)} ${dir} · nouveau solde : $${n(r.newBalance).toFixed(2)}` });
+      closeAdj();
+      refetch();
+    } finally { setAdjSaving(false); }
+  };
+
+  const users: any[] = data?.users ?? [];
+  const FCFA = 620;
+
+  // Stat totale des soldes (somme sur la page courante — juste indicatif)
+  const pageTotal = users.reduce((s: number, u: any) => s + n(u.balanceUsd), 0);
+
+  return (
+    <div className="space-y-5">
+      {/* Stats rapides */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-green-500/30 bg-green-500/5 p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-green-500/20 flex items-center justify-center shrink-0">
+            <Wallet className="w-4 h-4 text-green-400" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Solde total plateforme (stats)</p>
+            <p className="text-lg font-bold text-green-400">
+              ${n(data?.totalBalanceUsd ?? 0).toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground">{(n(data?.totalBalanceUsd ?? 0) * FCFA).toLocaleString("fr")} FCFA</p>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Utilisateurs avec solde &gt; 0</p>
+            <p className="text-lg font-bold text-white">{data?.usersWithBalance ?? "—"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Recherche */}
+      <div className="flex gap-2">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { setSearch(q); setPage(1); } }}
+          placeholder="Rechercher nom, email..."
+          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-muted-foreground"
+        />
+        <Button onClick={() => { setSearch(q); setPage(1); }} className="bg-primary hover:bg-primary/90 text-white px-3">
+          <Search className="w-4 h-4" />
+        </Button>
+        <button onClick={refetch} className="p-2 rounded-xl border border-white/10 text-muted-foreground hover:text-white hover:bg-white/5">
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Tableau */}
+      {loading
+        ? <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+        : (
+          <div className="rounded-2xl border border-white/10 bg-card/40 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/5">
+                    {["ID", "Utilisateur", "Email", "Solde (USD)", "Solde (FCFA)", "Statut", "Ajuster"].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-xs text-muted-foreground uppercase tracking-wide whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u: any) => (
+                    <tr key={u.id} className="border-b border-white/5 hover:bg-white/[0.025] transition-colors">
+                      <td className="px-4 py-3 text-muted-foreground text-xs">#{u.id}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                            {u.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-white font-medium text-sm">{u.name}</span>
+                          {u.isAdmin && <span className="text-[10px] text-primary font-bold">ADMIN</span>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-sm">{u.email}</td>
+                      <td className="px-4 py-3">
+                        <span className={`font-bold text-sm font-mono ${n(u.balanceUsd) > 0 ? "text-green-400" : "text-muted-foreground"}`}>
+                          ${n(u.balanceUsd).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-sm font-mono">
+                        {(n(u.balanceUsd) * FCFA).toLocaleString("fr")} FCFA
+                      </td>
+                      <td className="px-4 py-3">
+                        {u.isBanned ? <StatusBadge status="BANNED" /> : <StatusBadge status="RECEIVED" />}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => openAdj(u)}
+                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors font-medium"
+                        >
+                          <DollarSign className="w-3.5 h-3.5" /> Ajuster
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {!users.length && (
+                    <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">Aucun utilisateur</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <Pagination page={page} total={data?.total ?? 0} limit={20} onChange={setPage} />
+          </div>
+        )
+      }
+
+      {/* ── Modal ajustement de solde ─────────────────────────────────────── */}
+      {adjUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-card rounded-2xl border border-white/10 p-6 w-full max-w-sm space-y-4">
+            {/* En-tête */}
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-bold text-white text-lg">Ajustement de solde</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">{adjUser.name} · {adjUser.email}</p>
+              </div>
+              <button onClick={closeAdj} className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10"><X className="w-4 h-4" /></button>
+            </div>
+
+            {/* Solde actuel */}
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10">
+              <span className="text-sm text-muted-foreground">Solde actuel</span>
+              <div className="text-right">
+                <p className="font-bold text-green-400 text-lg">${n(adjUser.balanceUsd).toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">{(n(adjUser.balanceUsd) * FCFA).toLocaleString("fr")} FCFA</p>
+              </div>
+            </div>
+
+            {/* Type Crédit / Débit */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAdjType("credit")}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-all ${
+                  adjType === "credit"
+                    ? "bg-green-500/20 border-green-500/50 text-green-400"
+                    : "bg-white/5 border-white/10 text-muted-foreground hover:text-white"
+                }`}
+              >
+                <ArrowUpCircle className="w-4 h-4" /> Crédit
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdjType("debit")}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-all ${
+                  adjType === "debit"
+                    ? "bg-red-500/20 border-red-500/50 text-red-400"
+                    : "bg-white/5 border-white/10 text-muted-foreground hover:text-white"
+                }`}
+              >
+                <ArrowDownCircle className="w-4 h-4" /> Débit
+              </button>
+            </div>
+
+            {/* Montant */}
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Montant (USD)</label>
+              <input
+                type="number" min="0.01" step="0.01" autoFocus
+                value={adjAmount}
+                onChange={(e) => setAdjAmount(e.target.value)}
+                placeholder="0.00"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm"
+              />
+              {adjAmount && parseFloat(adjAmount) > 0 && (
+                <p className="text-xs mt-1.5 font-medium" style={{ color: adjType === "credit" ? "#4ade80" : "#f87171" }}>
+                  ≈ {(parseFloat(adjAmount) * FCFA).toLocaleString("fr")} FCFA
+                </p>
+              )}
+            </div>
+
+            {/* Note */}
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Note (optionnelle)</label>
+              <input
+                value={adjNote}
+                onChange={(e) => setAdjNote(e.target.value)}
+                placeholder="ex: remboursement, bonus, correction..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm"
+              />
+            </div>
+
+            {/* Aperçu nouveau solde */}
+            {parseFloat(adjAmount) > 0 && (
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-semibold ${
+                adjType === "credit" ? "bg-green-500/10 border-green-500/30 text-green-300" : "bg-red-500/10 border-red-500/30 text-red-300"
+              }`}>
+                {adjType === "credit" ? <TrendingUp className="w-4 h-4 shrink-0" /> : <TrendingDown className="w-4 h-4 shrink-0" />}
+                <span>
+                  Nouveau solde : <strong>
+                    ${(n(adjUser.balanceUsd) + (adjType === "credit" ? 1 : -1) * parseFloat(adjAmount)).toFixed(2)}
+                  </strong>
+                </span>
+              </div>
+            )}
+
+            {/* Boutons */}
+            <div className="flex gap-3">
+              <Button
+                onClick={applyAdj}
+                disabled={adjSaving || !parseFloat(adjAmount)}
+                className={`flex-1 text-white ${adjType === "credit" ? "bg-green-600 hover:bg-green-500" : "bg-red-600 hover:bg-red-500"}`}
+              >
+                {adjSaving
+                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Traitement…</>
+                  : adjType === "credit" ? <><ArrowUpCircle className="w-4 h-4 mr-2" />Créditer</> : <><ArrowDownCircle className="w-4 h-4 mr-2" />Débiter</>
+                }
+              </Button>
+              <Button onClick={closeAdj} variant="outline" className="border-white/10 text-white hover:bg-white/5">
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "operators" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate" | "balances";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
   { id: "users",        label: "Utilisateurs",    icon: <Users className="w-4 h-4" /> },
+  { id: "balances",     label: "Soldes",          icon: <Wallet className="w-4 h-4" /> },
   { id: "orders",       label: "Commandes",       icon: <ShoppingBag className="w-4 h-4" /> },
   { id: "transactions", label: "Transactions",    icon: <CreditCard className="w-4 h-4" /> },
   { id: "promos",       label: "Codes Promo",     icon: <Percent className="w-4 h-4" /> },
@@ -3028,6 +3389,7 @@ export default function AdminPanel() {
         <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
           {activeTab === "stats"        && <AdminStats />}
           {activeTab === "users"        && <AdminUsers />}
+          {activeTab === "balances"     && <AdminBalances />}
           {activeTab === "orders"       && <AdminOrders />}
           {activeTab === "transactions" && <AdminTransactions />}
           {activeTab === "promos"       && <AdminDiscountCodes />}
