@@ -1,5 +1,5 @@
 import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable } from "@workspace/db";
-import { eq, and, gte, sum, count, sql } from "drizzle-orm";
+import { eq, and, gte, lt, sum, count, sql } from "drizzle-orm";
 
 const TELEGRAM_API = () => `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN ?? ""}`;
 
@@ -339,8 +339,11 @@ export async function notifyContact(opts: {
 export async function sendDailyReport(): Promise<void> {
   const chatId = await getChatId();
   if (!chatId) return;
-  const now   = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const now      = new Date();
+  // Le rapport s'exécute à minuit : on bilan la journée qui vient de se terminer (hier)
+  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());       // aujourd'hui 00:00
+  const dayEnd   = dayStart;                                                          // = minuit = fin de hier
+  const yesterday = new Date(dayStart.getTime() - 24 * 60 * 60 * 1000);             // hier 00:00
 
   try {
     const [usersRow] = await db.select({ total: count() }).from(usersTable);
@@ -349,14 +352,22 @@ export async function sendDailyReport(): Promise<void> {
     const [depRow] = await db
       .select({ totalFcfa: sum(transactionsTable.amountFcfa), totalCount: count() })
       .from(transactionsTable)
-      .where(and(eq(transactionsTable.type, "recharge"), eq(transactionsTable.status, "completed"), gte(transactionsTable.createdAt, today)));
+      .where(and(
+        eq(transactionsTable.type, "recharge"),
+        eq(transactionsTable.status, "completed"),
+        gte(transactionsTable.createdAt, yesterday),
+        lt(transactionsTable.createdAt, dayEnd),
+      ));
     const depFcfa  = Number(depRow?.totalFcfa  ?? 0);
     const depCount = Number(depRow?.totalCount ?? 0);
 
     const [buyRow] = await db
       .select({ totalFcfa: sum(ordersTable.priceFcfa), totalCount: count() })
       .from(ordersTable)
-      .where(gte(ordersTable.createdAt, today));
+      .where(and(
+        gte(ordersTable.createdAt, yesterday),
+        lt(ordersTable.createdAt, dayEnd),
+      ));
     const buyFcfa  = Number(buyRow?.totalFcfa  ?? 0);
     const buyCount = Number(buyRow?.totalCount ?? 0);
 
@@ -367,7 +378,8 @@ export async function sendDailyReport(): Promise<void> {
     const totalCount = depCount + buyCount;
     const commFcfa   = Math.round(buyFcfa * 0.15);
 
-    const dateStr = `${pad(today.getDate())}/${pad(today.getMonth() + 1)}/${today.getFullYear()}`;
+    // Affiche la date de hier (le jour du bilan)
+    const dateStr = `${pad(yesterday.getDate())}/${pad(yesterday.getMonth() + 1)}/${yesterday.getFullYear()}`;
     const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
     const text = [
@@ -384,7 +396,7 @@ export async function sendDailyReport(): Promise<void> {
       `💼 Commissions: ${fmtNum(commFcfa)} FCFA`,
       `🏦 Solde plateforme: ${fmtNum(platformFcfa)} FCFA`,
       ``,
-      `🕐 Heure: ${dateStr} ${timeStr}`,
+      `🕐 Généré le: ${dateStr} à ${timeStr}`,
     ].join("\n");
 
     await sendMessage(chatId, text);
