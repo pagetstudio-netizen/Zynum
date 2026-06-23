@@ -1350,16 +1350,60 @@ const AGGREGATORS = [
 function AdminOperatorRoutes() {
   const { toast } = useToast();
   const { data, loading, refetch } = useAdminFetch<any>("/v1/admin/operator-routes", []);
-  const [editOp, setEditOp]       = useState<any | null>(null);
-  const [showAdd, setShowAdd]     = useState(false);
-  const [seeding, setSeeding]     = useState(false);
-  const [editForm, setEditForm]   = useState<any>({});
-  const [addForm, setAddForm]     = useState({
+  const [editOp, setEditOp]         = useState<any | null>(null);
+  const [showAdd, setShowAdd]       = useState(false);
+  const [seeding, setSeeding]       = useState(false);
+  const [editForm, setEditForm]     = useState<any>({});
+  const [addForm, setAddForm]       = useState({
     countryCode:"", countryName:"", flag:"🌍", prefix:"", currency:"XOF", currencySymbol:"FCFA",
     operatorName:"", operatorKey:"", aggregator:"omnipay",
     isActive:true, needsOtp:false, needsReturnUrl:false,
     otpHint:"", paxityOperatorId:"",
   });
+
+  // ── Multi-sélection ──────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds]     = useState<Set<number>>(new Set());
+  const [bulkAggregator, setBulkAggregator] = useState("sendavapay");
+  const [bulkAssigning, setBulkAssigning] = useState(false);
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectCountry = (ops: any[]) => {
+    const ids = ops.map((o: any) => o.id);
+    const allSelected = ids.every((id: number) => selectedIds.has(id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (allSelected) ids.forEach((id: number) => next.delete(id));
+      else             ids.forEach((id: number) => next.add(id));
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const bulkAssign = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Assigner ${selectedIds.size} opérateur(s) à ${AGGREGATORS.find(a=>a.id===bulkAggregator)?.label ?? bulkAggregator} ?`)) return;
+    setBulkAssigning(true);
+    try {
+      const r = await adminPost("/v1/admin/operator-routes/bulk-assign", {
+        ids: Array.from(selectedIds),
+        aggregator: bulkAggregator,
+      });
+      if (r.error) { toast({ title: r.error, variant: "destructive" }); return; }
+      toast({ title: `✓ ${r.updated} opérateur(s) assignés à ${AGGREGATORS.find(a=>a.id===bulkAggregator)?.label}` });
+      clearSelection();
+      refetch();
+    } finally {
+      setBulkAssigning(false);
+    }
+  };
 
   const operators: any[] = data?.operators ?? [];
 
@@ -1471,6 +1515,44 @@ function AdminOperatorRoutes() {
         </div>
       </div>
 
+      {/* ── Barre d'action multi-sélection ─────────────────────────────────── */}
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 p-4 rounded-2xl border border-blue-500/30 bg-blue-500/10">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-blue-400 shrink-0" />
+            <span className="text-sm font-semibold text-blue-300">
+              {selectedIds.size} opérateur{selectedIds.size > 1 ? "s" : ""} sélectionné{selectedIds.size > 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className="text-xs text-muted-foreground shrink-0">→ Assigner à :</span>
+            <select
+              value={bulkAggregator}
+              onChange={e => setBulkAggregator(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-white text-sm"
+            >
+              {AGGREGATORS.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+            </select>
+            <Button
+              onClick={bulkAssign}
+              disabled={bulkAssigning}
+              className="bg-blue-600 hover:bg-blue-500 text-white h-8 px-3 text-xs shrink-0"
+            >
+              {bulkAssigning
+                ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Assignation…</>
+                : <><Check className="w-3.5 h-3.5 mr-1" />Appliquer</>
+              }
+            </Button>
+          </div>
+          <button
+            onClick={clearSelection}
+            className="ml-auto p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Add form */}
       {showAdd && (
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 space-y-4">
@@ -1577,10 +1659,25 @@ function AdminOperatorRoutes() {
           <div key={country.code} className="rounded-2xl border border-white/10 bg-card/40 overflow-hidden">
             {/* Country header */}
             <div className="px-5 py-3 border-b border-white/10 flex items-center gap-3">
+              {/* Checkbox "tout sélectionner" pour ce pays */}
+              <input
+                type="checkbox"
+                checked={country.ops.length > 0 && country.ops.every((o: any) => selectedIds.has(o.id))}
+                onChange={() => toggleSelectCountry(country.ops)}
+                className="w-4 h-4 rounded accent-blue-500 shrink-0 cursor-pointer"
+                title="Sélectionner tout le pays"
+              />
               <span className="text-2xl">{country.flag}</span>
               <div className="flex-1">
                 <p className="text-white font-semibold text-sm">{country.name}</p>
-                <p className="text-xs text-muted-foreground">{country.ops.length} opérateur{country.ops.length !== 1 ? "s" : ""}</p>
+                <p className="text-xs text-muted-foreground">
+                  {country.ops.length} opérateur{country.ops.length !== 1 ? "s" : ""}
+                  {country.ops.some((o: any) => selectedIds.has(o.id)) && (
+                    <span className="ml-1.5 text-blue-400">
+                      ({country.ops.filter((o: any) => selectedIds.has(o.id)).length} sélectionné{country.ops.filter((o: any) => selectedIds.has(o.id)).length > 1 ? "s" : ""})
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => bulkToggle(country.code, true)} className="text-xs px-2 py-1 rounded-lg bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 transition-colors">
@@ -1595,7 +1692,17 @@ function AdminOperatorRoutes() {
             {/* Operators list */}
             <div className="divide-y divide-white/5">
               {country.ops.map((op: any) => (
-                <div key={op.id} className="px-5 py-3 flex items-center gap-3">
+                <div
+                  key={op.id}
+                  className={`px-5 py-3 flex items-center gap-3 transition-colors ${selectedIds.has(op.id) ? "bg-blue-500/5" : ""}`}
+                >
+                  {/* Checkbox individuel */}
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(op.id)}
+                    onChange={() => toggleSelect(op.id)}
+                    className="w-4 h-4 rounded accent-blue-500 shrink-0 cursor-pointer"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white">{op.operatorName}</p>
                     <p className="text-xs text-muted-foreground font-mono">{op.operatorKey}</p>

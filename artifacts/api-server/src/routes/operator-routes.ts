@@ -273,6 +273,36 @@ router.patch("/v1/admin/operator-routes/:id", ...auth, async (req: Request, res:
   }
 });
 
+// ─── Admin: bulk assign aggregator by operator IDs ───────────────────────────
+router.post("/v1/admin/operator-routes/bulk-assign", ...auth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { ids, aggregator } = req.body ?? {};
+    if (!Array.isArray(ids) || ids.length === 0 || !aggregator) {
+      res.status(400).json({ error: "ids (tableau) et aggregator requis" });
+      return;
+    }
+    const validAggregators = ["omnipay", "paxity", "sendavapay", "ashtechpay"];
+    if (!validAggregators.includes(String(aggregator))) {
+      res.status(400).json({ error: "Agrégateur invalide" });
+      return;
+    }
+    const numericIds = ids.map((id: unknown) => parseInt(String(id), 10)).filter((id) => !isNaN(id));
+    let updated = 0;
+    for (const id of numericIds) {
+      const [row] = await db
+        .update(operatorRoutesTable)
+        .set({ aggregator: String(aggregator) })
+        .where(eq(operatorRoutesTable.id, id))
+        .returning();
+      if (row) updated++;
+    }
+    res.json({ success: true, updated });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    res.status(500).json({ error: message });
+  }
+});
+
 // ─── Admin: bulk activate / deactivate by country ────────────────────────────
 router.post("/v1/admin/operator-routes/bulk", ...auth, async (req: Request, res: Response): Promise<void> => {
   try {
