@@ -379,31 +379,54 @@ async function seedData() {
     { countryCode:"TG",  countryName:"Togo",               flag:"🇹🇬", prefix:"228", currency:"XOF", currencySymbol:"FCFA", operatorName:"T-Money",           operatorKey:"ATP_TMONEY_TG",    aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null },
     { countryCode:"NE",  countryName:"Niger",              flag:"🇳🇪", prefix:"227", currency:"XOF", currencySymbol:"FCFA", operatorName:"Moov Money",        operatorKey:"ATP_MOOV_NE",      aggregator:"ashtechpay", isActive:true,  needsOtp:false, needsReturnUrl:false, otpHint:null, validationHint:null },
   ];
-  for (const op of ATP_OPERATORS) {
-    await db.insert(operatorRoutesTable).values(op).onConflictDoNothing();
-  }
+  // ── MIGRATION 1 : supprimer tous les doublons (garder le MIN id par operator_key) ──────────
+  await safeExecute(sql`
+    DELETE FROM operator_routes
+    WHERE id NOT IN (
+      SELECT MIN(id) FROM operator_routes GROUP BY operator_key
+    )
+  `).catch(() => {});
 
-  // Migration : supprimer les doublons non-ATP, activer tous les ATP, supprimer opérateurs retirés
+  // ── MIGRATION 2 : supprimer les non-ATP et les clés retirées ─────────────────────────────
   await safeExecute(sql`
     DELETE FROM operator_routes WHERE operator_key NOT LIKE 'ATP_%'
   `).catch(() => {});
   await safeExecute(sql`
-    DELETE FROM operator_routes WHERE operator_key = 'ATP_MOOV_NE'
+    DELETE FROM operator_routes WHERE operator_key IN ('ATP_MOOV_NE')
   `).catch(() => {});
-  // Migration : supprimer les anciennes clés dupliquées (anciens noms remplacés par les nouveaux)
+
+  // ── MIGRATION 3 : ajouter la contrainte UNIQUE sur operator_key si absente ───────────────
   await safeExecute(sql`
-    DELETE FROM operator_routes WHERE operator_key IN (
-      'ATP_MOOV_MONEY_BJ',
-      'ATP_MTN_MOBILE_MONEY_BJ',
-      'ATP_CELTIS_BJ',
-      'ATP_CORIS_MONEY_BJ',
-      'ATP_MTN_MOBILE_MONEY_CM',
-      'ATP_MTN_MOBILE_MONEY_CI',
-      'ATP_MTN_MOBILE_MONEY_CG',
-      'ATP_MTN_MOBILE_MONEY_GN',
-      'ATP_MTN_MOBILE_MONEY_CD'
-    )
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'operator_routes_operator_key_unique'
+      ) THEN
+        ALTER TABLE operator_routes
+          ADD CONSTRAINT operator_routes_operator_key_unique UNIQUE (operator_key);
+      END IF;
+    END$$
   `).catch(() => {});
+
+  // ── MIGRATION 4 : insérer / mettre à jour les opérateurs ATP (upsert) ───────────────────
+  for (const op of ATP_OPERATORS) {
+    await safeExecute(sql`
+      INSERT INTO operator_routes
+        (country_code, country_name, flag, prefix, currency, currency_symbol,
+         operator_name, operator_key, aggregator, is_active,
+         needs_otp, needs_return_url, otp_hint, validation_hint)
+      VALUES (
+        ${op.countryCode}, ${op.countryName}, ${op.flag}, ${op.prefix},
+        ${op.currency}, ${op.currencySymbol}, ${op.operatorName}, ${op.operatorKey},
+        ${op.aggregator}, ${op.isActive}, ${op.needsOtp}, ${op.needsReturnUrl},
+        ${op.otpHint}, ${op.validationHint}
+      )
+      ON CONFLICT (operator_key) DO NOTHING
+    `).catch(() => {});
+  }
+
+  // ── MIGRATION 5 : activer tous les ATP ───────────────────────────────────────────────────
   await safeExecute(sql`
     UPDATE operator_routes SET is_active = true WHERE operator_key LIKE 'ATP_%'
   `).catch(() => {});
