@@ -23,9 +23,14 @@ const CURRENCY_TO_USD: Record<string, number> = {
 interface OpMeta { countryCode: string; namePart: string; currency: string; }
 
 const OP_META: Record<string, OpMeta> = {
+  // Togo
+  MOOV_TG:    { countryCode: "TG",  namePart: "moov",    currency: "XOF" },
+  TOGOCEL_TG: { countryCode: "TG",  namePart: "tmoney",  currency: "XOF" },
+  // RD Congo
   VODACOM_CD: { countryCode: "COD", namePart: "vodacom", currency: "CDF" },
   AIRTEL_CD:  { countryCode: "COD", namePart: "airtel",  currency: "CDF" },
   ORANGE_CD:  { countryCode: "COD", namePart: "orange",  currency: "CDF" },
+  // Congo Brazzaville
   MTN_CG:     { countryCode: "COG", namePart: "mtn",     currency: "XAF" },
   AIRTEL_CG:  { countryCode: "COG", namePart: "airtel",  currency: "XAF" },
 };
@@ -491,6 +496,80 @@ router.post("/v1/webhooks/sendavapay", async (req: Request, res: Response): Prom
     const message = err instanceof Error ? err.message : "Erreur webhook";
     console.error("[SendavaPay webhook] Error:", message);
     res.status(500).json({ error: "webhook_error", message });
+  }
+});
+
+// ─── Admin : test pay-in ──────────────────────────────────────────────────────
+router.post("/v1/admin/sendavapay/test-payin", requireAuth, requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { amount, phone, operatorKey, userId } = req.body ?? {};
+    if (!amount || !phone || !operatorKey) {
+      res.status(400).json({ error: "Champs requis : amount, phone, operatorKey" });
+      return;
+    }
+    const opMeta = OP_META[String(operatorKey)];
+    if (!opMeta) {
+      res.status(400).json({ error: `Opérateur inconnu : ${operatorKey}. Disponibles : ${Object.keys(OP_META).join(", ")}` });
+      return;
+    }
+    const uid      = userId ? parseInt(String(userId), 10) : 0;
+    const rawAmt   = Math.round(Number(amount));
+    const extRef   = generateExtRef(uid || "test");
+    const msisdn   = buildMsisdn(String(phone), opMeta.countryCode);
+    const baseUrl  = process.env.API_BASE_URL ?? `https://${process.env.REPLIT_DEV_DOMAIN ?? "zynum.net"}`;
+    const webhookUrl = `${baseUrl}/api/v1/webhooks/sendavapay`;
+
+    const createRes = await sdkPost("/create-payment", {
+      amount: rawAmt, currency: opMeta.currency,
+      description: "Test ZyNum", customerName: "ZyNum Test",
+      customerPhone: msisdn, payerCountry: opMeta.countryCode,
+      webhookUrl, externalReference: extRef,
+      metadata: { test: true, userId: uid },
+    });
+
+    if (!createRes.success) {
+      res.status(400).json({ step: "create-payment", error: createRes });
+      return;
+    }
+    const createData   = createRes.data as Record<string, unknown>;
+    const reference    = String(createData.reference ?? "");
+    const paymentToken = String(createData.paymentToken ?? "");
+
+    // Pre-save pending tx if userId provided
+    if (uid > 0) {
+      const rate = CURRENCY_TO_USD[opMeta.currency] ?? CURRENCY_TO_USD.XOF;
+      try {
+        await db.insert(transactionsTable).values({
+          userId: uid, type: "recharge",
+          amountUsd: rawAmt * rate, amountFcfa: rawAmt,
+          method: "sendavapay", provider: "sendavapay", status: "pending",
+          reference, metadata: JSON.stringify({ operatorKey, msisdn, currency: opMeta.currency, extRef, paymentToken }),
+        });
+      } catch { /* may already exist */ }
+    }
+
+    const sendavaOpId = await resolveOperatorId(opMeta.countryCode, opMeta.namePart);
+    if (!sendavaOpId) {
+      res.status(400).json({ step: "resolve-operator", error: `Opérateur ${opMeta.namePart} introuvable sur SendavaPay pour ${opMeta.countryCode}` });
+      return;
+    }
+
+    const initiateRes = await corsPost("/initiate-payment", {
+      paymentToken, payerName: "ZyNum Test",
+      payerPhone: msisdn, payerCountry: opMeta.countryCode, operatorId: sendavaOpId,
+    });
+
+    res.json({
+      success: initiateRes.success === true,
+      reference, extRef, msisdn,
+      operatorId: sendavaOpId,
+      createPayment: createData,
+      initiatePayment: initiateRes,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur";
+    console.error("[SendavaPay test-payin]", message);
+    res.status(500).json({ error: message });
   }
 });
 
