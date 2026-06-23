@@ -61,8 +61,8 @@ function paxityHeaders() {
   return {
     Authorization: `Bearer ${process.env.PAXITY_APP_TOKEN ?? ""}`,
     "Content-Type": "application/json",
-    "x-api-key":   process.env.PAXITY_API_KEY   ?? process.env.VITE_PAXITY_API_KEY   ?? "",
-    "X-API-TOKEN": process.env.PAXITY_API_TOKEN  ?? process.env.VITE_PAXITY_API_TOKEN ?? "",
+    "x-api-key":   process.env.PAXITY_API_KEY   ?? "",
+    "X-API-TOKEN": process.env.PAXITY_API_TOKEN ?? "",
   };
 }
 

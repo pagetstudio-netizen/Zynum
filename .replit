@@ -30,8 +30,6 @@ timeoutMs = 20000
 [userenv.development]
 
 [userenv.shared]
-VITE_PAXITY_API_KEY = "private_3mdRuLok6Pe7rcUm2WhbN7KN6pDD6EVl"
-VITE_PAXITY_API_TOKEN = "4HoB2042mb89DQ2oOd1T9lNv7rAcXjyl"
 PAXITY_APP_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJTZW5kYXZhUGF5Iiwicm9sZXMiOlsiQVBQIl0sImlhdCI6MTc3MzY2MzcwNX0.zxTqxbxjhOgji-4vNTIkLcmKFdJRYEDoKqs8nCrdJmEnYGpBx5Mtx5OIWv0oqs83VIe5uFxssE8i0yYxXKJrTQ"
 SUPABASE_DATABASE_URL = "postgresql://postgres.tkaadzqmpjgsavmbibja:o9tgN6oyhDQnlEZg@aws-1-eu-north-1.pooler.supabase.com:6543/postgres"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrYWFkenFtcGpnc2F2bWJpYmphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Mjg4MTIsImV4cCI6MjA5MDQwNDgxMn0.Rrs4rkg51gi3MzjaVeQaIFAPxH0SUcqHAZLf4UvCgws"
@@ -44,6 +42,8 @@ TELEGRAM_BOT_TOKEN = "8599037292:AAFxutJM3Tzu7eoM_I8RLkfXYHgM4yRBNpU"
 SMTP_FROM_PASSWORD = "AAbb11##"
 SENDAVAPAY_SDK_KEY = "sdk_hsyZQgneFo054C8qgxsdHF1cuoVHZOE9"
 SENDAVAPAY_WEBHOOK_SECRET = "whsec_d4ecca74f82ef02fcdc9bb5baed2fd51440db36925dc4ac1"
+PAXITY_API_KEY = "private_3mdRuLok6Pe7rcUm2WhbN7KN6pDD6EVl"
+PAXITY_API_TOKEN = "4HoB2042mb89DQ2oOd1T9lNv7rAcXjyl"
 
 [nix]
 channel = "stable-25_05"
