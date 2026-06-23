@@ -540,7 +540,7 @@ router.patch("/v1/admin/countries/:id", ...auth, async (req, res): Promise<void>
 
 /* ─── EMAIL BROADCAST ──────────────────────────────────────────────── */
 router.post("/v1/admin/send-broadcast-email", ...auth, async (req, res): Promise<void> => {
-  const { subject, message, imageBase64, imageMimeType } = req.body;
+  const { subject, message, imageUrl } = req.body;
   if (!subject || !message) {
     res.status(400).json({ error: "Validation error", message: "Sujet et message requis" });
     return;
@@ -553,20 +553,31 @@ router.post("/v1/admin/send-broadcast-email", ...auth, async (req, res): Promise
 
   let sent = 0;
   let failed = 0;
-  for (const user of users) {
-    try {
-      await sendBroadcastEmail({
-        to: user.email,
-        name: user.name,
-        subject,
-        message,
-        imageBase64: imageBase64 || undefined,
-        imageMimeType: imageMimeType || undefined,
-      });
-      sent++;
-    } catch (err) {
-      console.error(`Broadcast to ${user.email} failed:`, err);
-      failed++;
+  const BATCH_SIZE = 10;
+  const DELAY_MS   = 1000; // pause entre chaque lot pour éviter le rate-limit Resend
+
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batch = users.slice(i, i + BATCH_SIZE);
+    await Promise.allSettled(
+      batch.map(async (user) => {
+        try {
+          await sendBroadcastEmail({
+            to:       user.email,
+            name:     user.name,
+            subject,
+            message,
+            imageUrl: imageUrl || undefined,
+          });
+          sent++;
+        } catch (err) {
+          console.error(`Broadcast to ${user.email} failed:`, err);
+          failed++;
+        }
+      })
+    );
+    // Pause entre les lots (sauf après le dernier)
+    if (i + BATCH_SIZE < users.length) {
+      await new Promise(r => setTimeout(r, DELAY_MS));
     }
   }
 
