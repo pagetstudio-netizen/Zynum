@@ -73,7 +73,7 @@ export function NotificationBanner() {
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="overflow-hidden w-full"
           >
-            <div className={`${bgClass} w-full flex items-center gap-3 px-4 py-3`}>
+            <div className={`${bgClass} w-full flex items-center gap-3 px-4 py-3 text-white`}>
               {/* Text */}
               <p className="flex-1 text-sm font-medium text-white leading-snug">
                 {text}
@@ -85,7 +85,7 @@ export function NotificationBanner() {
                   href={popup.linkUrl}
                   target={popup.linkUrl.startsWith("http") ? "_blank" : undefined}
                   rel="noopener noreferrer"
-                  className="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-white border border-white/70 rounded-lg px-3 py-1.5 hover:bg-white/15 transition-colors whitespace-nowrap"
+                  className="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold !text-white border border-white/70 rounded-lg px-3 py-1.5 hover:bg-white/15 transition-colors whitespace-nowrap no-underline"
                 >
                   {popup.linkLabel || "En savoir plus"}
                   {popup.linkUrl.startsWith("http") && <ExternalLink className="w-3.5 h-3.5" />}
@@ -95,7 +95,7 @@ export function NotificationBanner() {
               {/* Dismiss */}
               <button
                 onClick={() => handleDismiss(popup.id)}
-                className="shrink-0 p-1 rounded-md text-white/70 hover:text-white hover:bg-white/15 transition-colors"
+                className="shrink-0 p-1 rounded-md !text-white/80 hover:!text-white hover:bg-white/15 transition-colors"
                 aria-label="Fermer"
               >
                 <X className="w-4 h-4" />

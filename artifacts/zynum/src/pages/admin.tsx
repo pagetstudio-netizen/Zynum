@@ -996,15 +996,15 @@ function AdminMessages() {
           return (
             <div className="space-y-1.5">
               <p className="text-xs text-muted-foreground font-medium">Aperçu :</p>
-              <div className={`${colorCfg.bg} rounded-xl flex items-center gap-3 px-4 py-3`}>
-                <p className="flex-1 text-sm font-medium text-white leading-snug">{text}</p>
+              <div className={`${colorCfg.bg} rounded-xl flex items-center gap-3 px-4 py-3 text-white`}>
+                <p className="flex-1 text-sm font-medium !text-white leading-snug">{text}</p>
                 {form.linkUrl.trim() && (
-                  <span className="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-white border border-white/70 rounded-lg px-3 py-1.5 whitespace-nowrap">
+                  <span className="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold !text-white border border-white/70 rounded-lg px-3 py-1.5 whitespace-nowrap">
                     {form.linkLabel.trim() || "En savoir plus"}
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </span>
                 )}
-                <span className="shrink-0 p-1 rounded-md text-white/70">
+                <span className="shrink-0 p-1 rounded-md !text-white/80">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </span>
               </div>
