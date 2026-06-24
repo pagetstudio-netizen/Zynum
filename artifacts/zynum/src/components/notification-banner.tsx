@@ -73,9 +73,9 @@ export function NotificationBanner() {
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="overflow-hidden w-full"
           >
-            <div className={`${bgClass} w-full flex items-center gap-3 px-4 py-3 text-white`}>
+            <div className={`${bgClass} w-full flex items-center gap-3 px-4 py-3 text-white`} style={{ color: '#ffffff' }}>
               {/* Text */}
-              <p className="flex-1 text-sm font-medium text-white leading-snug">
+              <p className="flex-1 text-sm font-medium leading-snug" style={{ color: '#ffffff' }}>
                 {text}
               </p>
 
