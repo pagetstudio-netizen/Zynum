@@ -149,12 +149,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {balanceData && (
                     <div className="flex items-center gap-1.5 text-xs font-semibold bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg">
                       <Wallet className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-gray-900">${balanceData.balance.toFixed(2)}</span>
+                      <span className="text-gray-900">${(balanceData.balance ?? 0).toFixed(2)}</span>
                     </div>
                   )}
                   <Link href="/dashboard" className="flex items-center gap-2 bg-gray-100 border border-gray-200 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-blue-400 flex items-center justify-center text-white text-xs font-bold">
-                      {user.name.charAt(0).toUpperCase()}
+                      {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
                     </div>
                     <span className="text-sm font-medium text-gray-900 max-w-[90px] truncate">{user.name}</span>
                   </Link>

@@ -271,7 +271,7 @@ function Profile({ user }: { user: { id: number; name: string; email: string; cr
       <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-primary flex items-center justify-center text-2xl font-bold text-white">
-            {user.name.charAt(0).toUpperCase()}
+            {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
           </div>
           <div>
             <p className="text-xl font-bold text-gray-900">{user.name}</p>
@@ -500,7 +500,7 @@ function UserWidget({
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
-                  {user.name.charAt(0).toUpperCase()}
+                  {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
@@ -663,7 +663,7 @@ export default function Dashboard() {
         <div className="px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-primary flex items-center justify-center font-bold text-white text-sm shrink-0">
-              {user.name.charAt(0).toUpperCase()}
+              {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
