@@ -11,6 +11,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useGetBalance, useGetCurrentUser, getGetBalanceQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { OmnipayModal } from "@/components/omnipay-modal";
+import { OxapayModal } from "@/components/oxapay-modal";
 import iconMobile from "@assets/icons8-argent-mobile-53_1774828244252.png";
 import iconCrypto from "@assets/cryptocurrency-3d-illustration-png_1774828244226.png";
 import iconCard   from "@assets/9242877_1774828244157.png";
@@ -31,6 +32,7 @@ export default function Recharge() {
   const [customAmount,     setCustomAmount]     = useState("");
   const [selectedMethod,   setSelectedMethod]   = useState<string | null>("mobile");
   const [omnipayOpen,      setOmnipayOpen]      = useState(false);
+  const [oxapayOpen,       setOxapayOpen]       = useState(false);
 
   const METHODS: {
     id: string; label: string; sub: string; icon: React.ReactNode;
@@ -59,11 +61,10 @@ export default function Recharge() {
       id:        "crypto",
       icon:      <img src={iconCrypto} alt="Cryptomonnaie" className="w-9 h-9 object-contain" />,
       label:     "Cryptomonnaie",
-      sub:       "USDT, BTC, ETH, BNB…",
+      sub:       "USDT, BTC, ETH, BNB, TRX, LTC…",
       color:     "text-yellow-400",
       bg:        "bg-yellow-400/10 border-yellow-400/20",
-      available: false,
-      soon:      true,
+      available: true,
     },
   ];
 
@@ -99,6 +100,10 @@ export default function Recharge() {
     }
     if (selectedMethod === "mobile") {
       setOmnipayOpen(true);
+      return;
+    }
+    if (selectedMethod === "crypto") {
+      setOxapayOpen(true);
       return;
     }
     toast({ title: t("recharge_soon_toast_title"), description: t("recharge_soon_toast_desc") });
@@ -279,6 +284,16 @@ export default function Recharge() {
           onSuccess={handlePaymentSuccess}
           userFirstName={user.name?.split(" ")[0] ?? "ZyNum"}
           userLastName={user.name?.split(" ").slice(1).join(" ") || `User${user.id}`}
+        />
+      )}
+
+      {user && (
+        <OxapayModal
+          open={oxapayOpen}
+          onClose={() => setOxapayOpen(false)}
+          amountUsd={finalAmountUsdNorm}
+          userId={user.id}
+          onSuccess={handlePaymentSuccess}
         />
       )}
 
