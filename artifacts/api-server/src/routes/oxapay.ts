@@ -89,10 +89,10 @@ router.post("/v1/payments/oxapay/create", requireAuth, async (req: Request, res:
     const expiredAt = oxaJson.expiredAt ?? null;
 
     await db.insert(transactionsTable).values({
-      userId:     String(userId),
+      userId:     Number(userId),
       type:       "deposit",
-      amountUsd:  String(usd.toFixed(4)),
-      amountFcfa: String(Math.round(usd * FCFA_PER_USD)),
+      amountUsd:  usd,
+      amountFcfa: Math.round(usd * FCFA_PER_USD),
       method:     "crypto",
       provider:   "oxapay",
       status:     "pending",
@@ -202,9 +202,10 @@ router.post("/v1/payments/oxapay/status", requireAuth, async (req: Request, res:
           .where(eq(transactionsTable.reference, ref));
 
         await notifyDeposit({
+          userId:    Number(userId),
           userName:  `User #${userId}`,
           amountUsd: amtUsd,
-          amountXof: Math.round(amtUsd * FCFA_PER_USD),
+          amountFcfa: Math.round(amtUsd * FCFA_PER_USD),
           method:    "Crypto (OxaPay)",
           reference: ref,
         }).catch(() => {});
@@ -263,9 +264,10 @@ router.post("/v1/payments/oxapay/webhook", async (req: Request, res: Response) =
       .where(eq(transactionsTable.reference, orderId));
 
     await notifyDeposit({
+      userId:    Number(userId),
       userName:  `User #${userId}`,
       amountUsd: amtUsd,
-      amountXof: Math.round(amtUsd * FCFA_PER_USD),
+      amountFcfa: Math.round(amtUsd * FCFA_PER_USD),
       method:    "Crypto (OxaPay webhook)",
       reference: orderId,
     }).catch(() => {});

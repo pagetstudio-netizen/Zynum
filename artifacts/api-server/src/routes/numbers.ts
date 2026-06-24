@@ -145,7 +145,7 @@ router.get("/v1/check/:orderId", requireAuth, async (req: AuthRequest, res): Pro
   const [dbOrder] = await db
     .select()
     .from(ordersTable)
-    .where(and(eq(ordersTable.id, parseInt(rawId, 10)), eq(ordersTable.userId, req.userId!)))
+    .where(and(eq(ordersTable.id, parseInt(String(rawId), 10)), eq(ordersTable.userId, req.userId!)))
     .limit(1);
 
   if (!dbOrder) {
@@ -204,7 +204,7 @@ router.post("/v1/cancel/:orderId", requireAuth, async (req: AuthRequest, res): P
   const [dbOrder] = await db
     .select()
     .from(ordersTable)
-    .where(and(eq(ordersTable.id, parseInt(rawId, 10)), eq(ordersTable.userId, req.userId!)))
+    .where(and(eq(ordersTable.id, parseInt(String(rawId), 10)), eq(ordersTable.userId, req.userId!)))
     .limit(1);
 
   if (!dbOrder) {
@@ -251,7 +251,7 @@ router.post("/v1/finish/:orderId", requireAuth, async (req: AuthRequest, res): P
   const [dbOrder] = await db
     .select()
     .from(ordersTable)
-    .where(and(eq(ordersTable.id, parseInt(rawId, 10)), eq(ordersTable.userId, userId)))
+    .where(and(eq(ordersTable.id, parseInt(String(rawId), 10)), eq(ordersTable.userId, userId)))
     .limit(1);
 
   if (!dbOrder) {
