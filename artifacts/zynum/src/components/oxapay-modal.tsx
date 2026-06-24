@@ -68,10 +68,10 @@ export function OxapayModal({ open, onClose, amountUsd, userId, onSuccess }: Oxa
     pollCount.current += 1;
     if (pollCount.current > 200) { stopPolling(); return; }
     try {
+      const token = localStorage.getItem("zynum_token") ?? "";
       const res  = await fetch(`${apiBase}/api/v1/payments/oxapay/status`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ trackId: tid, orderId: oid, userId: String(userId) }),
       });
       const json = (await res.json()) as Record<string, unknown>;
@@ -101,10 +101,10 @@ export function OxapayModal({ open, onClose, amountUsd, userId, onSuccess }: Oxa
     setStep("creating");
     setErrorMsg("");
     try {
+      const token = localStorage.getItem("zynum_token") ?? "";
       const res  = await fetch(`${apiBase}/api/v1/payments/oxapay/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ amountUsd, userId: String(userId) }),
       });
       const json = (await res.json()) as Record<string, unknown>;
