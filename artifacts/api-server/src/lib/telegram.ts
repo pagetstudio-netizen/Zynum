@@ -222,6 +222,31 @@ export async function getBotInfo(): Promise<{ ok: boolean; username?: string; fi
 
 // ─── Notification helpers ─────────────────────────────────────────────────────
 
+export async function notifyCryptoPending(opts: {
+  userId: number | string;
+  userName: string;
+  amountUsd: number;
+  amountFcfa: number;
+  reference: string;
+  trackId: string;
+}): Promise<void> {
+  const chatId = await getChatId();
+  if (!chatId) return;
+  const now = fmtDate(new Date());
+  const text = [
+    `₿ <b>TENTATIVE PAIEMENT CRYPTO</b>`,
+    ``,
+    `👤 Utilisateur: <b>${opts.userName}</b> (#${opts.userId})`,
+    `💵 Montant: <b>${fmtNum(opts.amountFcfa)} XOF</b> ($${opts.amountUsd.toFixed(2)})`,
+    `🔖 Référence: <code>${opts.reference}</code>`,
+    `🔑 TrackID OxaPay: <code>${opts.trackId}</code>`,
+    `📅 Date: ${now}`,
+    ``,
+    `⏳ <i>En attente de confirmation blockchain…</i>`,
+  ].join("\n");
+  await sendMessage(chatId, text).catch(() => {});
+}
+
 export async function notifyDeposit(opts: {
   userId: number;
   userName: string;

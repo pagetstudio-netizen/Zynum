@@ -213,12 +213,13 @@ router.get("/v1/admin/orders", ...auth, async (req, res): Promise<void> => {
 
 /* ─── TRANSACTIONS ───────────────────────────────────────────────────── */
 router.get("/v1/admin/transactions", ...auth, async (req, res): Promise<void> => {
-  const { page = "1", limit = "20", q, status, type } = req.query as Record<string, string>;
+  const { page = "1", limit = "20", q, status, type, provider } = req.query as Record<string, string>;
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
   const conditions = [];
-  if (status) conditions.push(eq(transactionsTable.status, status));
-  if (type)   conditions.push(eq(transactionsTable.type, type));
+  if (status)   conditions.push(eq(transactionsTable.status, status));
+  if (type)     conditions.push(eq(transactionsTable.type, type));
+  if (provider) conditions.push(eq(transactionsTable.provider, provider));
   if (q) {
     conditions.push(or(
       like(usersTable.email, `%${q}%`),

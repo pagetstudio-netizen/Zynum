@@ -594,6 +594,7 @@ function AdminTransactions() {
   const [qInput, setQInput] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [providerFilter, setProviderFilter] = useState("");
   const [showDepositForm, setShowDepositForm] = useState(false);
   const [depositForm, setDepositForm] = useState({ ...emptyDepositForm });
   const [depositSaving, setDepositSaving] = useState(false);
@@ -602,13 +603,14 @@ function AdminTransactions() {
   if (q) params.set("q", q);
   if (statusFilter) params.set("status", statusFilter);
   if (typeFilter) params.set("type", typeFilter);
+  if (providerFilter) params.set("provider", providerFilter);
 
   const { data: usersData } = useAdminFetch<any>("/v1/admin/users?limit=100", []);
-  const { data, loading, refetch } = useAdminFetch<any>(`/v1/admin/transactions?${params}`, [page, q, statusFilter, typeFilter]);
+  const { data, loading, refetch } = useAdminFetch<any>(`/v1/admin/transactions?${params}`, [page, q, statusFilter, typeFilter, providerFilter]);
 
   const applySearch = () => { setQ(qInput); setPage(1); };
-  const clearFilters = () => { setQ(""); setQInput(""); setStatusFilter(""); setTypeFilter(""); setPage(1); };
-  const hasFilters = q || statusFilter || typeFilter;
+  const clearFilters = () => { setQ(""); setQInput(""); setStatusFilter(""); setTypeFilter(""); setProviderFilter(""); setPage(1); };
+  const hasFilters = q || statusFilter || typeFilter || providerFilter;
 
   const handleDeposit = async () => {
     if (!depositForm.userId || !depositForm.amountUsd) return;
@@ -686,6 +688,16 @@ function AdminTransactions() {
             <option value="">Tous les types</option>
             <option value="recharge">Recharge</option>
             <option value="debit">Débit</option>
+          </select>
+
+          {/* Provider filter */}
+          <select value={providerFilter} onChange={(e) => { setProviderFilter(e.target.value); setPage(1); }} className={selClass}>
+            <option value="">Tous les providers</option>
+            <option value="oxapay">₿ Crypto (OxaPay)</option>
+            <option value="omnipay">OmniPay</option>
+            <option value="sendavapay">SendavaPay</option>
+            <option value="paxity">Paxity</option>
+            <option value="admin">Admin</option>
           </select>
 
           {hasFilters && (
@@ -810,7 +822,7 @@ function AdminTransactions() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10 bg-white/[0.02]">
-                      {["ID", "Utilisateur", "Type", "Méthode", "Montant", "Statut", "Référence", "Date"].map((h) => (
+                      {["ID", "Utilisateur", "Type", "Méthode", "Montant", "Statut", "Référence / TrackID", "Date"].map((h) => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -830,25 +842,49 @@ function AdminTransactions() {
                             {t.type === "recharge" ? "Recharge" : "Débit"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground text-sm capitalize">
-                          {t.method}{t.provider && t.provider !== t.method ? <span className="text-muted-foreground/50"> • {t.provider}</span> : ""}
+                        <td className="px-4 py-3 text-sm">
+                          <div className="flex items-center gap-1.5">
+                            {t.provider === "oxapay" && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">₿ Crypto</span>
+                            )}
+                            <span className="text-muted-foreground capitalize">{t.method}{t.provider && t.provider !== t.method && t.provider !== "oxapay" ? <span className="text-muted-foreground/50"> • {t.provider}</span> : ""}</span>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-white font-semibold text-sm">${n(t.amountUsd).toFixed(2)}</p>
                           <p className="text-xs text-muted-foreground">{Math.round(n(t.amountFcfa)).toLocaleString()} FCFA</p>
                         </td>
                         <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
-                        <td className="px-4 py-3 max-w-[150px]">
+                        <td className="px-4 py-3 max-w-[180px]">
                           {t.reference ? (
-                            <div className="flex items-center gap-1.5 group">
-                              <span className="text-muted-foreground text-xs font-mono truncate" title={t.reference}>{t.reference}</span>
-                              <button
-                                onClick={() => { navigator.clipboard.writeText(t.reference); toast({ title: "Référence copiée", description: t.reference }); }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-white flex-shrink-0"
-                                title="Copier la référence"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                              </button>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5 group">
+                                <span className="text-muted-foreground text-xs font-mono truncate" title={t.reference}>{t.reference}</span>
+                                <button
+                                  onClick={() => { navigator.clipboard.writeText(t.reference); toast({ title: "Référence copiée", description: t.reference }); }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-white flex-shrink-0"
+                                  title="Copier la référence"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                </button>
+                              </div>
+                              {t.provider === "oxapay" && (() => {
+                                try {
+                                  const meta = JSON.parse(t.metadata ?? "{}");
+                                  return meta.trackId ? (
+                                    <div className="flex items-center gap-1 group">
+                                      <span className="text-yellow-500/70 text-[10px] font-mono truncate" title={meta.trackId}>TID: {meta.trackId}</span>
+                                      <button
+                                        onClick={() => { navigator.clipboard.writeText(meta.trackId); toast({ title: "TrackID copié", description: meta.trackId }); }}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-yellow-400 flex-shrink-0"
+                                        title="Copier le TrackID"
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                      </button>
+                                    </div>
+                                  ) : null;
+                                } catch { return null; }
+                              })()}
                             </div>
                           ) : <span className="text-muted-foreground text-xs">—</span>}
                         </td>

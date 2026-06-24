@@ -2,7 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db, usersTable, transactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
-import { notifyDeposit } from "../lib/telegram.js";
+import { notifyDeposit, notifyCryptoPending } from "../lib/telegram.js";
 
 const router: IRouter = Router();
 
@@ -99,6 +99,20 @@ router.post("/v1/payments/oxapay/create", requireAuth, async (req: Request, res:
       reference:  orderId,
       metadata:   JSON.stringify({ trackId, amountUsd: usd }),
     });
+
+    // Récupérer le nom de l'utilisateur pour Telegram
+    const [userRow] = await db.select({ name: usersTable.name, email: usersTable.email })
+      .from(usersTable).where(eq(usersTable.id, Number(userId))).limit(1);
+    const userName = userRow?.name ?? userRow?.email ?? `User #${userId}`;
+
+    notifyCryptoPending({
+      userId,
+      userName,
+      amountUsd: usd,
+      amountFcfa: Math.round(usd * FCFA_PER_USD),
+      reference: orderId,
+      trackId,
+    }).catch(() => {});
 
     res.json({ success: true, trackId, orderId, payLink, expiredAt });
   } catch (err) {
