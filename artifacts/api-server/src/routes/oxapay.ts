@@ -18,7 +18,7 @@ function getBaseUrl(): string {
 }
 
 /* ── POST /api/v1/payments/oxapay/create ───────────────────────── */
-router.post("/api/v1/payments/oxapay/create", requireAuth, async (req: Request, res: Response) => {
+router.post("/v1/payments/oxapay/create", requireAuth, async (req: Request, res: Response) => {
   const merchantKey = getMerchantKey();
   if (!merchantKey) {
     res.status(503).json({ error: "OxaPay non configuré." });
@@ -103,7 +103,7 @@ router.post("/api/v1/payments/oxapay/create", requireAuth, async (req: Request, 
 });
 
 /* ── POST /api/v1/payments/oxapay/status ───────────────────────── */
-router.post("/api/v1/payments/oxapay/status", requireAuth, async (req: Request, res: Response) => {
+router.post("/v1/payments/oxapay/status", requireAuth, async (req: Request, res: Response) => {
   const merchantKey = getMerchantKey();
   if (!merchantKey) {
     res.status(503).json({ error: "OxaPay non configuré." });
@@ -201,7 +201,7 @@ router.post("/api/v1/payments/oxapay/status", requireAuth, async (req: Request, 
 });
 
 /* ── POST /api/v1/payments/oxapay/webhook ──────────────────────── */
-router.post("/api/v1/payments/oxapay/webhook", async (req: Request, res: Response) => {
+router.post("/v1/payments/oxapay/webhook", async (req: Request, res: Response) => {
   try {
     const body = req.body as Record<string, unknown>;
 
