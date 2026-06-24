@@ -1285,6 +1285,7 @@ function AdminSettings() {
         support_channel: data.settings.support_channel ?? "telegram",
         maintenance_mode: data.settings.maintenance_mode ?? "false",
         maintenance_buy: data.settings.maintenance_buy ?? "false",
+        crypto_recharge_enabled: data.settings.crypto_recharge_enabled ?? "true",
         commission_type: data.settings.commission_type ?? "percent",
         commission_value: data.settings.commission_value ?? "0",
         currency_rate: data.settings.currency_rate ?? "620",
@@ -1433,6 +1434,20 @@ function AdminSettings() {
         <h3 className="font-bold text-white flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-yellow-400" /> Maintenance</h3>
         <Toggle k="maintenance_mode" label="Mode maintenance général" />
         <Toggle k="maintenance_buy" label="Achats de numéros désactivés" />
+      </div>
+
+      <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-6 space-y-3">
+        <h3 className="font-bold text-white flex items-center gap-2">
+          <CreditCard className="w-5 h-5 text-yellow-400" /> Paiements Crypto
+        </h3>
+        <p className="text-xs text-muted-foreground">Activez ou désactivez la recharge par cryptomonnaie (OxaPay) pour tous les utilisateurs.</p>
+        <Toggle k="crypto_recharge_enabled" label="Recharge par cryptomonnaie (OxaPay)" />
+        {form.crypto_recharge_enabled !== "true" && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            Le bouton crypto est masqué sur la page de recharge pour tous les utilisateurs.
+          </div>
+        )}
       </div>
 
       <Button onClick={save} disabled={saving} className="bg-primary hover:bg-primary/90 text-white w-full">

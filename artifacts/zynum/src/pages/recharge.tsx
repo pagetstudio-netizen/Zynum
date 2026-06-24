@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Wallet,
   ArrowRight, Check, Lock,
@@ -33,6 +33,17 @@ export default function Recharge() {
   const [selectedMethod,   setSelectedMethod]   = useState<string | null>("mobile");
   const [omnipayOpen,      setOmnipayOpen]      = useState(false);
   const [oxapayOpen,       setOxapayOpen]       = useState(false);
+  const [cryptoEnabled,    setCryptoEnabled]    = useState(true);
+
+  useEffect(() => {
+    fetch("/api/v1/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        const val = d?.settings?.crypto_recharge_enabled;
+        if (val === "false") setCryptoEnabled(false);
+      })
+      .catch(() => {});
+  }, []);
 
   const METHODS: {
     id: string; label: string; sub: string; icon: React.ReactNode;
@@ -61,10 +72,11 @@ export default function Recharge() {
       id:        "crypto",
       icon:      <img src={iconCrypto} alt="Cryptomonnaie" className="w-9 h-9 object-contain" />,
       label:     "Cryptomonnaie",
-      sub:       "USDT, BTC, ETH, BNB, TRX, LTC…",
+      sub:       cryptoEnabled ? "USDT, BTC, ETH, BNB, TRX, LTC…" : "Temporairement indisponible",
       color:     "text-yellow-400",
       bg:        "bg-yellow-400/10 border-yellow-400/20",
-      available: true,
+      available: cryptoEnabled,
+      soon:      !cryptoEnabled,
     },
   ];
 
