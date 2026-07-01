@@ -69,29 +69,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
     ],
   };
 
+  const isHome = location === "/";
+
   return (
-    <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-background">
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden" style={{ background: isHome ? "#0a0a0a" : undefined }}>
       {/* ── Navbar ────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/90 backdrop-blur-xl shadow-sm">
+      <header
+        className="sticky top-0 z-50 w-full backdrop-blur-xl"
+        style={{
+          borderBottom: isHome ? "1px solid rgba(255,255,255,0.07)" : "1px solid #e5e7eb",
+          background: isHome ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.92)",
+          boxShadow: isHome ? "none" : "0 1px 3px rgba(0,0,0,0.08)",
+        }}
+      >
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-18 py-4">
 
             {/* Logo */}
-            {location === "/" ? (
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-primary/20">
-                  <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-                </div>
-                <span className="font-display font-bold text-xl tracking-tight text-gray-900">ZyNum</span>
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-primary/20 group-hover:shadow-primary/40 transition-all">
+                <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
               </div>
-            ) : (
-              <Link href="/" className="flex items-center gap-3 group">
-                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-primary/20 group-hover:shadow-primary/40 transition-all">
-                  <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-                </div>
-                <span className="font-display font-bold text-xl tracking-tight text-gray-900 group-hover:text-primary transition-colors">ZyNum</span>
-              </Link>
-            )}
+              <span
+                className="font-display font-bold text-xl tracking-tight transition-colors"
+                style={{ color: isHome ? "#fff" : "#111827" }}
+              >
+                ZyNum
+              </span>
+            </Link>
 
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center space-x-0.5">
@@ -99,11 +104,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    location === link.href
-                      ? "bg-gray-100 text-gray-900"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    color: isHome
+                      ? (location === link.href ? "#fff" : "rgba(255,255,255,0.55)")
+                      : (location === link.href ? "#111827" : "#6b7280"),
+                  }}
                 >
                   {link.label}
                 </Link>
@@ -113,14 +119,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* Right side */}
             <div className="hidden md:flex items-center gap-3">
               {/* Currency toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
+              <div
+                className="flex items-center rounded-lg p-1"
+                style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6", border: isHome ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e5e7eb" }}
+              >
                 {(["USD", "FCFA"] as const).map((c) => (
                   <button
                     key={c}
                     onClick={() => setCurrency(c)}
-                    className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
-                      currency === c ? "bg-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-900"
-                    }`}
+                    className="px-3 py-1 rounded-md text-xs font-bold transition-all"
+                    style={{
+                      background: currency === c ? "#f97316" : "transparent",
+                      color: currency === c ? "#fff" : isHome ? "rgba(255,255,255,0.5)" : "#6b7280",
+                    }}
                   >
                     {c}
                   </button>
@@ -128,14 +139,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               {/* Language toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
+              <div
+                className="flex items-center rounded-lg p-1"
+                style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6", border: isHome ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e5e7eb" }}
+              >
                 {(["fr", "en"] as const).map((l) => (
                   <button
                     key={l}
                     onClick={() => setLang(l)}
-                    className={`px-3 py-1 rounded-md text-xs font-bold transition-all uppercase ${
-                      lang === l ? "bg-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-900"
-                    }`}
+                    className="px-3 py-1 rounded-md text-xs font-bold transition-all uppercase"
+                    style={{
+                      background: lang === l ? "#f97316" : "transparent",
+                      color: lang === l ? "#fff" : isHome ? "rgba(255,255,255,0.5)" : "#6b7280",
+                    }}
                   >
                     {l}
                   </button>
@@ -143,25 +159,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               {isLoadingUser ? (
-                <div className="w-24 h-9 animate-pulse bg-gray-100 rounded-lg" />
+                <div className="w-24 h-9 animate-pulse rounded-lg" style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6" }} />
               ) : user ? (
                 <div className="flex items-center gap-3">
                   {balanceData && (
-                    <div className="flex items-center gap-1.5 text-xs font-semibold bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg">
-                      <Wallet className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-gray-900">${(balanceData.balance ?? 0).toFixed(2)}</span>
+                    <div
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6", border: isHome ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e5e7eb", color: isHome ? "#fff" : "#111827" }}
+                    >
+                      <Wallet className="w-3.5 h-3.5" style={{ color: "#f97316" }} />
+                      <span>${(balanceData.balance ?? 0).toFixed(2)}</span>
                     </div>
                   )}
-                  <Link href="/dashboard" className="flex items-center gap-2 bg-gray-100 border border-gray-200 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors">
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full transition-colors"
+                    style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6", border: isHome ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e5e7eb" }}
+                  >
                     <div className="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-blue-400 flex items-center justify-center text-white text-xs font-bold">
                       {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium text-gray-900 max-w-[90px] truncate">{user.name}</span>
+                    <span className="text-sm font-medium max-w-[90px] truncate" style={{ color: isHome ? "#fff" : "#111827" }}>{user.name}</span>
                   </Link>
                   <button
                     onClick={() => logoutMutation.mutate()}
                     disabled={logoutMutation.isPending}
-                    className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ color: isHome ? "rgba(255,255,255,0.4)" : "#9ca3af" }}
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -169,14 +193,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ) : (
                 <div className="flex items-center gap-2">
                   <Link href="/login">
-                    <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 font-medium">
+                    <button
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                      style={{ color: isHome ? "rgba(255,255,255,0.6)" : "#6b7280" }}
+                    >
                       {t("nav_login")}
-                    </Button>
+                    </button>
                   </Link>
                   <Link href="/register">
-                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-semibold shadow-md shadow-primary/20 rounded-lg">
+                    <button
+                      className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                      style={{ background: "#f97316", color: "#fff", boxShadow: "0 0 20px rgba(249,115,22,0.3)" }}
+                    >
                       {t("nav_register")}
-                    </Button>
+                    </button>
                   </Link>
                 </div>
               )}
@@ -184,7 +214,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
             {/* Mobile menu btn */}
             <button
-              className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-lg transition-colors"
+              style={{ color: isHome ? "rgba(255,255,255,0.7)" : "#4b5563" }}
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <Menu className="w-5 h-5" />
@@ -279,7 +310,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="relative z-10 border-t border-gray-200 bg-gray-50">
+      <footer
+        className="relative z-10"
+        style={{
+          borderTop: isHome ? "1px solid rgba(255,255,255,0.07)" : "1px solid #e5e7eb",
+          background: isHome ? "#111" : "#f9fafb",
+        }}
+      >
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Main footer grid */}
@@ -291,18 +328,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-primary/20 group-hover:shadow-primary/40 transition-all">
                   <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
                 </div>
-                <span className="font-display font-bold text-xl text-gray-900 group-hover:text-primary transition-colors">ZyNum</span>
+                <span
+                  className="font-display font-bold text-xl transition-colors"
+                  style={{ color: isHome ? "#fff" : "#111827" }}
+                >ZyNum</span>
               </Link>
-              <p className="text-sm text-gray-500 leading-relaxed max-w-xs">
+              <p className="text-sm leading-relaxed max-w-xs" style={{ color: isHome ? "rgba(255,255,255,0.45)" : "#6b7280" }}>
                 {t("footer_desc")}
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 border border-gray-200 bg-white px-3 py-1.5 rounded-lg">
-                  <Shield className="w-3.5 h-3.5 text-green-500" /> {t("footer_ssl")}
-                </div>
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 border border-gray-200 bg-white px-3 py-1.5 rounded-lg">
-                  <Globe2 className="w-3.5 h-3.5 text-blue-500" /> {t("footer_countries")}
-                </div>
+                {[
+                  { icon: <Shield className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />, label: t("footer_ssl") },
+                  { icon: <Globe2 className="w-3.5 h-3.5" style={{ color: "#3b82f6" }} />, label: t("footer_countries") },
+                ].map((b) => (
+                  <div
+                    key={b.label}
+                    className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg"
+                    style={{ color: isHome ? "rgba(255,255,255,0.5)" : "#6b7280", border: isHome ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e5e7eb", background: isHome ? "rgba(255,255,255,0.04)" : "#fff" }}
+                  >
+                    {b.icon} {b.label}
+                  </div>
+                ))}
               </div>
               <SocialBar label="Suivez-nous" className="pt-1" size="sm" />
             </div>
@@ -310,11 +356,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* Nav columns */}
             {Object.entries(footerLinks).map(([section, links]) => (
               <div key={section}>
-                <p className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">{section}</p>
+                <p
+                  className="text-xs font-bold uppercase tracking-widest mb-4"
+                  style={{ color: isHome ? "rgba(255,255,255,0.6)" : "#111827" }}
+                >{section}</p>
                 <ul className="space-y-3">
                   {links.map((link) => (
                     <li key={link.label}>
-                      <Link href={link.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                      <Link
+                        href={link.href}
+                        className="text-sm transition-colors"
+                        style={{ color: isHome ? "rgba(255,255,255,0.4)" : "#6b7280" }}
+                      >
                         {link.label}
                       </Link>
                     </li>
@@ -325,15 +378,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Bottom bar */}
-          <div className="border-t border-gray-200 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
+          <div
+            className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs"
+            style={{ borderTop: isHome ? "1px solid rgba(255,255,255,0.07)" : "1px solid #e5e7eb", color: isHome ? "rgba(255,255,255,0.3)" : "#9ca3af" }}
+          >
             <p>© {new Date().getFullYear()} ZyNum. {t("footer_rights")}</p>
             <div className="flex items-center gap-5">
-              <Link href="/terms" className="hover:text-gray-700 transition-colors">{t("footer_cgu")}</Link>
-              <Link href="/privacy" className="hover:text-gray-700 transition-colors">{t("footer_confidentiality")}</Link>
-              <Link href="/faq" className="hover:text-gray-700 transition-colors">
+              <Link href="/terms" className="hover:opacity-80 transition-opacity">{t("footer_cgu")}</Link>
+              <Link href="/privacy" className="hover:opacity-80 transition-opacity">{t("footer_confidentiality")}</Link>
+              <Link href="/faq" className="hover:opacity-80 transition-opacity">
                 <span className="flex items-center gap-1"><HelpCircle className="w-3.5 h-3.5" /> FAQ</span>
               </Link>
-              <Link href="/contact" className="hover:text-gray-700 transition-colors">{t("nav_contact")}</Link>
+              <Link href="/contact" className="hover:opacity-80 transition-opacity">{t("nav_contact")}</Link>
             </div>
           </div>
         </div>
