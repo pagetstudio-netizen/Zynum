@@ -72,43 +72,45 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isHome = false;
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-x-hidden" style={{ background: isHome ? "#0a0a0a" : undefined }}>
-      {/* ── Navbar ────────────────────────────────────────────────────────── */}
-      <header
-        className="sticky top-0 z-50 w-full backdrop-blur-xl"
-        style={{
-          borderBottom: isHome ? "1px solid rgba(255,255,255,0.07)" : "1px solid #e5e7eb",
-          background: isHome ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.92)",
-          boxShadow: isHome ? "none" : "0 1px 3px rgba(0,0,0,0.08)",
-        }}
-      >
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18 py-4">
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+      {/* ── Navbar flottante style CardsPro ───────────────────────────────── */}
+      <div className="sticky top-0 z-50 w-full" style={{ padding: "12px 16px" }}>
+        <header
+          style={{
+            background: "#1c1f26",
+            borderRadius: 18,
+            boxShadow: "0 4px 32px rgba(0,0,0,0.28)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            maxWidth: 1280,
+            margin: "0 auto",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px" }}>
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-primary/20 group-hover:shadow-primary/40 transition-all">
-                <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
+                <img src="/logo.jpg" alt="ZyNum" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
-              <span
-                className="font-display font-bold text-xl tracking-tight transition-colors"
-                style={{ color: isHome ? "#fff" : "#111827" }}
-              >
+              <span style={{ fontWeight: 800, fontSize: 18, color: "#ffffff", letterSpacing: "-0.3px" }}>
                 ZyNum
               </span>
             </Link>
 
-            {/* Desktop nav */}
-            <nav className="hidden md:flex items-center space-x-0.5">
+            {/* Desktop nav links (hidden on mobile) */}
+            <nav className="hidden md:flex" style={{ gap: 4 }}>
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                   style={{
-                    color: isHome
-                      ? (location === link.href ? "#fff" : "rgba(255,255,255,0.55)")
-                      : (location === link.href ? "#111827" : "#6b7280"),
+                    padding: "7px 14px",
+                    borderRadius: 10,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: location === link.href ? "#fff" : "rgba(255,255,255,0.5)",
+                    textDecoration: "none",
+                    transition: "color 0.15s",
                   }}
                 >
                   {link.label}
@@ -117,112 +119,103 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </nav>
 
             {/* Right side */}
-            <div className="hidden md:flex items-center gap-3">
-              {/* Currency toggle */}
-              <div
-                className="flex items-center rounded-lg p-1"
-                style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6", border: isHome ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e5e7eb" }}
-              >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+
+              {/* Currency toggle — desktop only */}
+              <div className="hidden md:flex" style={{ alignItems: "center", background: "rgba(255,255,255,0.07)", borderRadius: 10, padding: "3px" }}>
                 {(["USD", "FCFA"] as const).map((c) => (
                   <button
                     key={c}
                     onClick={() => setCurrency(c)}
-                    className="px-3 py-1 rounded-md text-xs font-bold transition-all"
                     style={{
+                      padding: "4px 10px",
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
                       background: currency === c ? "#f97316" : "transparent",
-                      color: currency === c ? "#fff" : isHome ? "rgba(255,255,255,0.5)" : "#6b7280",
+                      color: currency === c ? "#fff" : "rgba(255,255,255,0.45)",
                     }}
-                  >
-                    {c}
-                  </button>
+                  >{c}</button>
                 ))}
               </div>
 
-              {/* Language toggle */}
-              <div
-                className="flex items-center rounded-lg p-1"
-                style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6", border: isHome ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e5e7eb" }}
-              >
+              {/* Language toggle — desktop only */}
+              <div className="hidden md:flex" style={{ alignItems: "center", background: "rgba(255,255,255,0.07)", borderRadius: 10, padding: "3px" }}>
                 {(["fr", "en"] as const).map((l) => (
                   <button
                     key={l}
                     onClick={() => setLang(l)}
-                    className="px-3 py-1 rounded-md text-xs font-bold transition-all uppercase"
                     style={{
+                      padding: "4px 10px",
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                      textTransform: "uppercase" as const,
                       background: lang === l ? "#f97316" : "transparent",
-                      color: lang === l ? "#fff" : isHome ? "rgba(255,255,255,0.5)" : "#6b7280",
+                      color: lang === l ? "#fff" : "rgba(255,255,255,0.45)",
                     }}
-                  >
-                    {l}
-                  </button>
+                  >{l}</button>
                 ))}
               </div>
 
+              {/* Balance (logged in) */}
+              {user && balanceData && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: "#fff" }}>
+                  <Wallet style={{ width: 14, height: 14, color: "#f97316" }} />
+                  <span>${(balanceData.balance ?? 0).toFixed(2)}</span>
+                </div>
+              )}
+
+              {/* User pill or register button */}
               {isLoadingUser ? (
-                <div className="w-24 h-9 animate-pulse rounded-lg" style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6" }} />
+                <div style={{ width: 80, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.08)", animation: "pulse 1.5s infinite" }} />
               ) : user ? (
-                <div className="flex items-center gap-3">
-                  {balanceData && (
-                    <div
-                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
-                      style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6", border: isHome ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e5e7eb", color: isHome ? "#fff" : "#111827" }}
-                    >
-                      <Wallet className="w-3.5 h-3.5" style={{ color: "#f97316" }} />
-                      <span>${(balanceData.balance ?? 0).toFixed(2)}</span>
-                    </div>
-                  )}
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full transition-colors"
-                    style={{ background: isHome ? "rgba(255,255,255,0.08)" : "#f3f4f6", border: isHome ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e5e7eb" }}
-                  >
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-blue-400 flex items-center justify-center text-white text-xs font-bold">
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 50, padding: "6px 14px 6px 6px", textDecoration: "none" }}>
+                    <div style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, #f97316, #fb923c)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 800 }}>
                       {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium max-w-[90px] truncate" style={{ color: isHome ? "#fff" : "#111827" }}>{user.name}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</span>
                   </Link>
                   <button
                     onClick={() => logoutMutation.mutate()}
                     disabled={logoutMutation.isPending}
-                    className="p-2 rounded-lg transition-colors"
-                    style={{ color: isHome ? "rgba(255,255,255,0.4)" : "#9ca3af" }}
+                    style={{ padding: "7px", borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", display: "flex" }}
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut style={{ width: 15, height: 15 }} />
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Link href="/login">
-                    <button
-                      className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                      style={{ color: isHome ? "rgba(255,255,255,0.6)" : "#6b7280" }}
-                    >
-                      {t("nav_login")}
-                    </button>
+                <>
+                  <Link href="/login" className="hidden md:block" style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.5)", textDecoration: "none", padding: "7px 12px" }}>
+                    {t("nav_login")}
                   </Link>
-                  <Link href="/register">
-                    <button
-                      className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-                      style={{ background: "#f97316", color: "#fff", boxShadow: "0 0 20px rgba(249,115,22,0.3)" }}
-                    >
+                  <Link href="/register" style={{ textDecoration: "none" }}>
+                    <button style={{ background: "#f97316", color: "#fff", border: "none", borderRadius: 50, padding: "9px 20px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 0 20px rgba(249,115,22,0.35)", whiteSpace: "nowrap" as const }}>
                       {t("nav_register")}
                     </button>
                   </Link>
-                </div>
+                </>
               )}
-            </div>
 
-            {/* Mobile menu btn */}
-            <button
-              className="md:hidden p-2 rounded-lg transition-colors"
-              style={{ color: isHome ? "rgba(255,255,255,0.7)" : "#4b5563" }}
-              onClick={() => setIsMobileMenuOpen(true)}
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+              {/* Hamburger — mobile */}
+              <button
+                className="md:hidden"
+                onClick={() => setIsMobileMenuOpen(true)}
+                style={{ background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "8px 10px", cursor: "pointer", color: "rgba(255,255,255,0.75)", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <Menu style={{ width: 18, height: 18 }} />
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* ── Mobile menu — dark sidebar overlay ─────────────────────────────── */}
       {isMobileMenuOpen && (
