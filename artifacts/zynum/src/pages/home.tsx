@@ -103,6 +103,21 @@ export default function Home() {
 
   return (
     <div style={{ background: "#f9fafb", color: "#111827", overflowX: "hidden" }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .hero-inner { flex-direction: column !important; gap: 40px !important; padding-top: 80px !important; padding-bottom: 60px !important; }
+          .hero-left { text-align: center !important; align-items: center !important; display: flex !important; flex-direction: column !important; }
+          .hero-left h1 { text-align: center !important; }
+          .hero-left p { text-align: center !important; margin-left: auto !important; margin-right: auto !important; }
+          .hero-btns { justify-content: center !important; }
+          .hero-dl { justify-content: center !important; }
+          .hero-trust { justify-content: center !important; }
+          .hero-pill { align-self: center !important; }
+          .hero-right { order: -1 !important; max-width: 320px !important; margin: 0 auto !important; }
+          .hero-right .hero-badge-left { left: 0 !important; font-size: 12px !important; padding: 8px 12px !important; }
+          .hero-right .hero-badge-right { right: 0 !important; padding: 10px 12px !important; }
+        }
+      `}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden", background: "#fff" }}>
@@ -116,11 +131,12 @@ export default function Home() {
         <div style={{ position: "absolute", top: "20%", right: "-5%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%)", zIndex: 0, pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "-10%", left: "-5%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,115,22,0.05) 0%, transparent 70%)", zIndex: 0, pointerEvents: "none" }} />
 
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "120px 24px 80px", position: "relative", zIndex: 1, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 64, width: "100%" }}>
+        <div className="hero-inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "120px 24px 80px", position: "relative", zIndex: 1, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 64, width: "100%" }}>
           {/* Left */}
-          <div style={{ flex: "1 1 480px", minWidth: 0 }}>
+          <div className="hero-left" style={{ flex: "1 1 480px", minWidth: 0 }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              className="hero-pill"
               style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(249,115,22,0.10)", border: "1px solid rgba(249,115,22,0.25)", borderRadius: 999, padding: "6px 16px", marginBottom: 28 }}
             >
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: O, display: "inline-block" }} />
@@ -129,7 +145,7 @@ export default function Home() {
 
             <motion.h1
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
-              style={{ fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 800, lineHeight: 1.08, letterSpacing: "-1.5px", marginBottom: 24, color: "#111827" }}
+              style={{ fontSize: "clamp(36px, 6vw, 72px)", fontWeight: 800, lineHeight: 1.08, letterSpacing: "-1.5px", marginBottom: 24, color: "#111827" }}
             >
               Recevez vos<br />
               <span style={{ color: O }}>codes OTP</span><br />
@@ -138,13 +154,14 @@ export default function Home() {
 
             <motion.p
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-              style={{ color: "#6b7280", fontSize: 18, lineHeight: 1.7, maxWidth: 480, marginBottom: 40 }}
+              style={{ color: "#6b7280", fontSize: 17, lineHeight: 1.7, maxWidth: 480, marginBottom: 40 }}
             >
               Numéros virtuels temporaires pour Telegram, WhatsApp, Google et 200+ services.
               Payez par Mobile Money ou crypto. Livré en moins de 30 secondes.
             </motion.p>
 
             <motion.div
+              className="hero-btns"
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
               style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 40 }}
             >
@@ -162,32 +179,30 @@ export default function Home() {
 
             {/* Download buttons */}
             <motion.div
+              className="hero-dl"
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
               style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 48 }}
             >
-              <a href="#" style={{ display: "flex", alignItems: "center", gap: 12, background: "#111827", border: "none", borderRadius: 12, padding: "12px 20px", textDecoration: "none", cursor: "pointer" }}>
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.32.07 2.22.72 2.98.75.98-.16 1.93-.82 2.97-.77 1.27.07 2.22.55 2.83 1.44-2.59 1.55-1.98 4.95.34 5.94-.52 1.28-1.1 2.54-2.12 3.5zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, background: "#111827", border: "1.5px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "11px 18px", textDecoration: "none", cursor: "pointer" }}>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.32.07 2.22.72 2.98.75.98-.16 1.93-.82 2.97-.77 1.27.07 2.22.55 2.83 1.44-2.59 1.55-1.98 4.95.34 5.94-.52 1.28-1.1 2.54-2.12 3.5zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
                 <div>
-                  <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 10, lineHeight: 1 }}>Télécharger sur</div>
-                  <div style={{ color: "#fff", fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>App Store</div>
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, lineHeight: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>Télécharger sur</div>
+                  <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}>App Store</div>
                 </div>
               </a>
-              <a href="https://play.google.com" target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, background: "#111827", borderRadius: 12, padding: "12px 20px", textDecoration: "none", cursor: "pointer" }}>
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-                  <path d="M3 20.5v-17c0-.83 1-1.3 1.6-.75l14 8.5c.54.33.54 1.17 0 1.5l-14 8.5c-.6.55-1.6.08-1.6-.75z" fill="#34A853"/>
-                  <path d="M3 3.5l8.5 8.5L3 20.5V3.5z" fill="#EA4335"/>
-                  <path d="M3 3.5l8.5 8.5 5-5L3 3.5z" fill="#FBBC04"/>
-                  <path d="M3 20.5l8.5-8.5 5 5L3 20.5z" fill="#0F9D58"/>
+              <a href="https://play.google.com" target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, background: "#111827", border: "1.5px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "11px 18px", textDecoration: "none", cursor: "pointer" }}>
+                <svg viewBox="0 0 512 512" width="22" height="22">
+                  <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.6 225.6l-58.9-34-65.7 64.5 65.7 64.5 60.1-34.3c17.1-9.8 17.1-34.4-1.2-60.7zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z" fill="white"/>
                 </svg>
                 <div>
-                  <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 10, lineHeight: 1 }}>Disponible sur</div>
-                  <div style={{ color: "#fff", fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>Google Play</div>
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, lineHeight: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>Disponible sur</div>
+                  <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}>Google Play</div>
                 </div>
               </a>
             </motion.div>
 
             {/* Trust pills */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            <motion.div className="hero-trust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               {["50K+ utilisateurs", "180+ pays", "200+ services", "99.9% uptime"].map((label) => (
                 <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 8, padding: "6px 14px", fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
                   <CheckCircle size={12} color={O} /> {label}
@@ -198,16 +213,17 @@ export default function Home() {
 
           {/* Right: app mockup */}
           <motion.div
+            className="hero-right"
             initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
             style={{ flex: "1 1 380px", display: "flex", justifyContent: "center", position: "relative" }}
           >
             <div style={{ position: "relative", maxWidth: 480, width: "100%" }}>
               <img src={appDouble} alt="ZyNum App" style={{ width: "100%", objectFit: "contain", filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.18))" }} />
-              <div style={{ position: "absolute", top: "8%", left: "-5%", background: O, borderRadius: 14, padding: "10px 18px", boxShadow: "0 8px 24px rgba(249,115,22,0.4)", display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="hero-badge-left" style={{ position: "absolute", top: "8%", left: "-5%", background: O, borderRadius: 14, padding: "10px 18px", boxShadow: "0 8px 24px rgba(249,115,22,0.4)", display: "flex", alignItems: "center", gap: 8 }}>
                 <Zap size={16} color="#fff" />
                 <span style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>Livraison instantanée</span>
               </div>
-              <div style={{ position: "absolute", bottom: "12%", right: "-5%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "12px 18px", boxShadow: "0 8px 24px rgba(0,0,0,0.10)", display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="hero-badge-right" style={{ position: "absolute", bottom: "12%", right: "-5%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "12px 18px", boxShadow: "0 8px 24px rgba(0,0,0,0.10)", display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(249,115,22,0.10)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Star size={16} color={O} fill={O} />
                 </div>
