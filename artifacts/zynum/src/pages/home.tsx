@@ -10,7 +10,6 @@ import { useGetServices } from "@workspace/api-client-react";
 import appDouble from "@assets/20260701_162442_1782923584243.png";
 import appHand from "@assets/20260701_161314_1782923584332.png";
 import mobileMoney from "@assets/20260701_160702_1782923584360.jpg";
-import cardsStack from "@assets/45_1782923553826.png";
 import cryptoIcon from "@assets/cryptocurrency-3d-icon-png-download-5701572_1782924013725.png";
 import mobileMoneyLogos from "@assets/20260619_074037_1782924110611.png";
 import iconGift from "@assets/téléchargement_(66)_1782924013839.png";
@@ -624,9 +623,6 @@ export default function Home() {
             </motion.div>
           </div>
 
-          <motion.div {...fadeUp(0.15)} style={{ textAlign: "center" }}>
-            <img src={cardsStack} alt="Cartes ZyNum" style={{ maxWidth: 380, width: "100%", objectFit: "contain", filter: "drop-shadow(0 16px 40px rgba(0,0,0,0.12))" }} />
-          </motion.div>
         </div>
       </section>
 
