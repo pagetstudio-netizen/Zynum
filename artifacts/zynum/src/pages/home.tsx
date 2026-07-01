@@ -217,21 +217,8 @@ export default function Home() {
             initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
             style={{ flex: "1 1 380px", display: "flex", justifyContent: "center", position: "relative" }}
           >
-            <div style={{ position: "relative", maxWidth: 480, width: "100%" }}>
+            <div style={{ maxWidth: 480, width: "100%" }}>
               <img src={appDouble} alt="ZyNum App" style={{ width: "100%", objectFit: "contain", filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.18))" }} />
-              <div className="hero-badge-left" style={{ position: "absolute", top: "8%", left: "-5%", background: O, borderRadius: 14, padding: "10px 18px", boxShadow: "0 8px 24px rgba(249,115,22,0.4)", display: "flex", alignItems: "center", gap: 8 }}>
-                <Zap size={16} color="#fff" />
-                <span style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>Livraison instantanée</span>
-              </div>
-              <div className="hero-badge-right" style={{ position: "absolute", bottom: "12%", right: "-5%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "12px 18px", boxShadow: "0 8px 24px rgba(0,0,0,0.10)", display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(249,115,22,0.10)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Star size={16} color={O} fill={O} />
-                </div>
-                <div>
-                  <div style={{ color: "#111827", fontSize: 13, fontWeight: 700 }}>4.9 / 5 étoiles</div>
-                  <div style={{ color: "#9ca3af", fontSize: 11 }}>50K+ avis</div>
-                </div>
-              </div>
             </div>
           </motion.div>
         </div>
