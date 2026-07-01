@@ -43,8 +43,8 @@ function CopyField({ value, label }: { value: string; label: string }) {
   return (
     <div className="space-y-1.5">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
-      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3">
-        <span className="flex-1 text-sm font-mono text-gray-800 break-all leading-relaxed">{value}</span>
+      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 min-w-0">
+        <span className="flex-1 text-sm font-mono text-gray-800 truncate leading-relaxed min-w-0">{value}</span>
         <button
           onClick={() => { navigator.clipboard.writeText(value).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); }}
           className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
