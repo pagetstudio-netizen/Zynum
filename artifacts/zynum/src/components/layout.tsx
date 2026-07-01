@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useQueryClient } from "@tanstack/react-query";
 import {
-  Menu, X, Phone, LogOut, Wallet,
+  Menu, X, Phone,
   MessageSquare, Globe2, Shield, HelpCircle,
 } from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
-import { Button } from "@/components/ui/button";
-import { useGetCurrentUser, useLogoutUser, getGetCurrentUserQueryKey, useGetBalance } from "@workspace/api-client-react";
+import { useGetCurrentUser } from "@workspace/api-client-react";
 import { SocialBar } from "@/components/social-bar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -16,29 +14,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { currency, setCurrency } = useCurrency();
   const { lang, setLang, t } = useLanguage();
-  const queryClient = useQueryClient();
-
   const { data: user, isLoading: isLoadingUser } = useGetCurrentUser({
     query: { retry: false, staleTime: 5 * 60 * 1000 },
   });
 
-  const { data: balanceData } = useGetBalance({
-    query: { enabled: !!user, refetchInterval: 30000 },
-  });
-
-  const logoutMutation = useLogoutUser({
-    mutation: {
-      onSettled: () => {
-        localStorage.removeItem("zynum_token");
-        queryClient.clear();
-        setLocation("/login");
-      },
-    },
-  });
-
   const navLinks = [
     { href: "/login",   label: t("nav_services"), icon: <Phone         className="w-4 h-4 mr-2" /> },
-    { href: "/login",   label: t("nav_pricing"),  icon: <Wallet        className="w-4 h-4 mr-2" /> },
+    { href: "/login",   label: t("nav_pricing"),  icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
     { href: "/aide",    label: t("nav_help"),     icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
     { href: "/about",   label: t("nav_about"),    icon: <MessageSquare className="w-4 h-4 mr-2" /> },
   ];
@@ -164,33 +146,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
 
-              {/* Balance (logged in) */}
-              {user && balanceData && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: "#fff" }}>
-                  <Wallet style={{ width: 14, height: 14, color: "#f97316" }} />
-                  <span>${(balanceData.balance ?? 0).toFixed(2)}</span>
-                </div>
-              )}
-
               {/* User pill or register button */}
               {isLoadingUser ? (
                 <div style={{ width: 80, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.08)", animation: "pulse 1.5s infinite" }} />
               ) : user ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 50, padding: "6px 14px 6px 6px", textDecoration: "none" }}>
-                    <div style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, #f97316, #fb923c)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 800 }}>
-                      {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</span>
-                  </Link>
-                  <button
-                    onClick={() => logoutMutation.mutate()}
-                    disabled={logoutMutation.isPending}
-                    style={{ padding: "7px", borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", display: "flex" }}
-                  >
-                    <LogOut style={{ width: 15, height: 15 }} />
-                  </button>
-                </div>
+                <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 50, padding: "6px 14px 6px 6px", textDecoration: "none" }}>
+                  <div style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, #f97316, #fb923c)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 800 }}>
+                    {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</span>
+                </Link>
               ) : (
                 <>
                   <Link href="/login" className="hidden md:block" style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.5)", textDecoration: "none", padding: "7px 12px" }}>
