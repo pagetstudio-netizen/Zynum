@@ -414,10 +414,10 @@ export default function Home() {
       {/* ── APP SCREENSHOT SECTION ─────────────────────────────────────────── */}
       <section style={{ padding: "0 24px 100px", background: "#fff" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ background: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%)", border: "1px solid #fed7aa", borderRadius: 32, padding: "60px 48px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 48, overflow: "hidden", position: "relative" }}>
+          <div style={{ background: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%)", border: "1px solid #fed7aa", borderRadius: 32, padding: "60px 48px 0", display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 48, overflow: "hidden", position: "relative" }}>
             <div style={{ position: "absolute", top: "50%", right: "30%", transform: "translateY(-50%)", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-            <div style={{ flex: "1 1 320px", position: "relative", zIndex: 1 }}>
+            <div style={{ flex: "1 1 320px", position: "relative", zIndex: 1, paddingBottom: 60 }}>
               <motion.div {...fadeUp()}>
                 <p style={{ color: O, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 16 }}>Application mobile</p>
                 <h2 style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 20, lineHeight: 1.15, color: "#111827" }}>
