@@ -17,6 +17,7 @@ import iconBuy       from "@assets/84426_1774829368186.png";
 import iconHistory   from "@assets/5708960_1774829436660.png";
 import iconRecharge  from "@assets/2534215_1774829355101.png";
 import iconProfile   from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
+import iconAffiliate from "@assets/20260228_002918_1772238747293_1782945047044.png";
 import iconHelp      from "@assets/images_(12)_1774828482000.png";
 import iconSupport   from "@assets/3430127_1774831941357.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
@@ -623,7 +624,7 @@ export default function Dashboard() {
     { id: "buy",        label: t("dash_tab_buy"),      imgSrc: iconBuy },
     { id: "history",    label: t("dash_tab_history"),  imgSrc: iconHistory },
     { id: "recharge",   label: t("dash_tab_recharge"), imgSrc: iconRecharge },
-    { id: "affiliate",  label: "Affiliation 🚀",       isLucide: true, emoji: "🚀" },
+    { id: "affiliate",  label: "Affiliation",            imgSrc: iconAffiliate },
     { id: "profile",    label: t("dash_tab_profile"),  imgSrc: iconProfile },
     ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", isLucide: true }] : []),
   ];
