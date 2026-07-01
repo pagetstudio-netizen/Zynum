@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight, Phone, Users, Wallet, Zap, Globe2,
-  Shield, ChevronDown, MessageSquare, Bitcoin, Smartphone,
-  CheckCircle, Star,
+  ArrowRight, Phone, Wallet, Zap, Globe2,
+  Smartphone, CheckCircle, Star,
 } from "lucide-react";
 import { useGetServices } from "@workspace/api-client-react";
 
@@ -12,6 +11,16 @@ import appDouble from "@assets/20260701_162442_1782923584243.png";
 import appHand from "@assets/20260701_161314_1782923584332.png";
 import mobileMoney from "@assets/20260701_160702_1782923584360.jpg";
 import cardsStack from "@assets/45_1782923553826.png";
+import cryptoIcon from "@assets/cryptocurrency-3d-icon-png-download-5701572_1782924013725.png";
+import mobileMoneyLogos from "@assets/20260619_074037_1782924110611.png";
+import iconGift from "@assets/téléchargement_(66)_1782924013839.png";
+import iconWithdraw from "@assets/withdraw-icon-DFsum39V_(1)_1782924013862.png";
+import iconSupport from "@assets/mine-mod-cs-DtBQ0Sp0_1782924013880.png";
+import iconLock from "@assets/mine-mod-change-pwd-D4tL_Aft_1782924013897.png";
+import iconCard from "@assets/mine-mod-bankcard-CLOhqwHj_1782924013913.png";
+import iconInfo from "@assets/mine-mod-aboutus-xnaBhqOq_1782924013928.png";
+
+const ICON_ORANGE = "brightness(0) saturate(100%) invert(58%) sepia(97%) saturate(2476%) hue-rotate(346deg) brightness(1.1) contrast(1)";
 
 const O = "#f97316";
 const fadeUp = (delay = 0) => ({
@@ -358,20 +367,29 @@ export default function Home() {
                 Rechargez votre solde ZyNum directement depuis votre téléphone avec les services Mobile Money disponibles en Afrique.
               </p>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
                 {[
-                  { name: "Orange Money", color: "#FF6600", emoji: "🟠" },
-                  { name: "MTN MoMo", color: "#FFCC00", emoji: "🟡" },
-                  { name: "Wave", color: "#0052CC", emoji: "🌊" },
-                  { name: "Moov Money", color: "#00B5E2", emoji: "🔵" },
-                  { name: "Celtiis Cash", color: "#E30613", emoji: "🔴" },
-                  { name: "Free Money", color: "#FF0000", emoji: "🆓" },
+                  { name: "Orange Money", bg: "#FF6600", letter: "O", textColor: "#fff" },
+                  { name: "MTN MoMo",     bg: "#FFCC00", letter: "M", textColor: "#000" },
+                  { name: "Wave",         bg: "#1A73E8", letter: "W", textColor: "#fff" },
+                  { name: "Moov Money",  bg: "#00B5E2", letter: "M", textColor: "#fff" },
+                  { name: "T-Money",     bg: "#E8C100", letter: "T", textColor: "#C0392B" },
+                  { name: "Free Money",  bg: "#E30613", letter: "F", textColor: "#fff" },
+                  { name: "Celtiis Cash",bg: "#2C3E80", letter: "C", textColor: "#fff" },
+                  { name: "Airtel Money",bg: "#FF0000", letter: "A", textColor: "#fff" },
                 ].map((p) => (
-                  <div key={p.name} style={{ background: "#161616", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 20 }}>{p.emoji}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{p.name}</span>
+                  <div key={p.name} style={{ background: "#161616", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: p.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 900, fontSize: 15, color: p.textColor, fontFamily: "sans-serif" }}>
+                      {p.letter}
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)", lineHeight: 1.3 }}>{p.name}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Logos image */}
+              <div style={{ marginTop: 28 }}>
+                <img src={mobileMoneyLogos} alt="TM Money, Wave, Airtel" style={{ maxWidth: 280, width: "100%", objectFit: "contain", borderRadius: 12, filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.5))" }} />
               </div>
             </motion.div>
           </div>
@@ -383,8 +401,8 @@ export default function Home() {
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 32, padding: "60px 48px", textAlign: "center" }}>
             <motion.div {...fadeUp()}>
-              <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-                <Bitcoin size={32} color={O} />
+              <div style={{ margin: "0 auto 24px", width: 90, height: 90 }}>
+                <img src={cryptoIcon} alt="Crypto" style={{ width: 90, height: 90, objectFit: "contain", filter: "drop-shadow(0 8px 24px rgba(249,115,22,0.35))" }} />
               </div>
               <p style={{ color: O, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 16 }}>Cryptomonnaies</p>
               <h2 style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
@@ -495,14 +513,14 @@ export default function Home() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
             {[
-              { icon: <Zap size={24} color={O} />, title: "Ultra rapide", desc: "Recevez votre numéro et votre SMS en moins de 30 secondes." },
-              { icon: <Globe2 size={24} color={O} />, title: "180+ pays", desc: "Des numéros dans presque tous les pays du monde." },
-              { icon: <Shield size={24} color={O} />, title: "Confidentiel", desc: "Aucune information personnelle requise. 100% anonyme." },
-              { icon: <Wallet size={24} color={O} />, title: "Mobile Money", desc: "Payez avec Orange Money, Wave, MTN et plus." },
-              { icon: <Bitcoin size={24} color={O} />, title: "Crypto acceptée", desc: "USDT, BTC, ETH — toutes les cryptos majeures." },
-              { icon: <Users size={24} color={O} />, title: "Parrainage", desc: "Gagnez des commissions en invitant vos amis." },
-              { icon: <MessageSquare size={24} color={O} />, title: "Support 24/7", desc: "Une équipe disponible à tout moment pour vous aider." },
-              { icon: <CheckCircle size={24} color={O} />, title: "Sans abonnement", desc: "Payez uniquement ce que vous utilisez. Pas d'engagement." },
+              { icon: <Zap size={24} color={O} />,                                                                           title: "Ultra rapide",     desc: "Recevez votre numéro et votre SMS en moins de 30 secondes." },
+              { icon: <Globe2 size={24} color={O} />,                                                                        title: "180+ pays",        desc: "Des numéros dans presque tous les pays du monde." },
+              { icon: <img src={iconLock}    alt="" style={{ width: 24, height: 24, filter: ICON_ORANGE }} />,               title: "Confidentiel",     desc: "Aucune information personnelle requise. 100% anonyme." },
+              { icon: <img src={iconCard}    alt="" style={{ width: 24, height: 24, filter: ICON_ORANGE }} />,               title: "Mobile Money",     desc: "Payez avec Orange Money, Wave, MTN et plus." },
+              { icon: <img src={cryptoIcon}  alt="" style={{ width: 28, height: 28, objectFit: "contain" }} />,             title: "Crypto acceptée",  desc: "USDT, BTC, ETH — toutes les cryptos majeures." },
+              { icon: <img src={iconGift}    alt="" style={{ width: 24, height: 24, filter: ICON_ORANGE }} />,               title: "Parrainage",       desc: "Gagnez des commissions en invitant vos amis." },
+              { icon: <img src={iconSupport} alt="" style={{ width: 24, height: 24, filter: ICON_ORANGE }} />,               title: "Support 24/7",     desc: "Une équipe disponible à tout moment pour vous aider." },
+              { icon: <img src={iconWithdraw}alt="" style={{ width: 24, height: 24, filter: ICON_ORANGE }} />,               title: "Sans abonnement",  desc: "Payez uniquement ce que vous utilisez. Pas d'engagement." },
             ].map((f, i) => (
               <motion.div key={f.title} {...fadeUp(i * 0.05)}
                 style={{ background: "#161616", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "28px 24px" }}
