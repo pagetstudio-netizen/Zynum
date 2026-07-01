@@ -510,45 +510,20 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 24 }}>
-            {/* Card 1 */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
             <motion.div {...fadeUp(0.05)}
-              style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 28, padding: 36, position: "relative", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
+              style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 28, padding: 40, position: "relative", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", maxWidth: 480, width: "100%" }}
             >
-              <div style={{ position: "absolute", top: 24, right: 28, fontSize: 13, color: "rgba(0,0,0,0.12)", fontWeight: 600 }}>01</div>
-              <div style={{ width: 60, height: 60, borderRadius: "50%", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 32, background: "#f9fafb" }}>
+              <div style={{ width: 60, height: 60, borderRadius: "50%", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, background: "#f9fafb" }}>
                 <Globe2 size={26} color="#6b7280" />
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 12, color: "#111827" }}>Numéro virtuel :</div>
-              <div style={{ color: "#6b7280", fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>
-                <strong style={{ color: "#111827" }}>10%</strong> de commission sur chaque achat de votre filleul (niveau 1)<br />
-                <strong style={{ color: "#111827" }}>5%</strong> sur les achats de vos filleuls de niveau 2
+              <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: "#111827" }}>Programme de parrainage</div>
+              <div style={{ color: "#6b7280", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>
+                Gagnez <strong style={{ color: O, fontSize: 20 }}>10%</strong> de commission sur chaque achat effectué par vos filleuls. Crédité automatiquement sur votre solde.
               </div>
               <Link href="/register">
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid #e5e7eb", color: "#374151", borderRadius: 10, padding: "10px 20px", fontWeight: 600, cursor: "pointer", fontSize: 14, background: "#f9fafb" }}>
-                  Participer <ArrowRight size={14} />
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Card 2 - Orange gradient */}
-            <motion.div {...fadeUp(0.1)}
-              style={{ background: "linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 28, padding: 36, position: "relative", overflow: "hidden" }}
-            >
-              <div style={{ position: "absolute", top: 24, right: 28, fontSize: 13, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>02</div>
-              <div style={{ width: 60, height: 60, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 32 }}>
-                <img src={iconGift} alt="gift" style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }} />
-              </div>
-              <div style={{ display: "inline-block", background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 8, padding: "3px 12px", fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 16 }}>best seller</div>
-              <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 12, color: "#fff" }}>Pack Premium :</div>
-              <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>
-                <strong style={{ color: "#fff" }}>15%</strong> de commission niveau 1<br />
-                <strong style={{ color: "#fff" }}>7%</strong> de commission niveau 2<br />
-                + Accès aux statistiques avancées
-              </div>
-              <Link href="/register">
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.2)", color: "#fff", borderRadius: 10, padding: "10px 20px", fontWeight: 600, cursor: "pointer", fontSize: 14, border: "1px solid rgba(255,255,255,0.3)" }}>
-                  Participer <ArrowRight size={14} />
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: O, color: "#fff", borderRadius: 10, padding: "12px 24px", fontWeight: 700, cursor: "pointer", fontSize: 15, boxShadow: "0 4px 16px rgba(249,115,22,0.3)" }}>
+                  Participer <ArrowRight size={15} />
                 </div>
               </Link>
             </motion.div>
