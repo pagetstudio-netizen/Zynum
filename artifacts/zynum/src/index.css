@@ -6,8 +6,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
-  --font-display: 'Outfit', sans-serif;
+  --font-sans: 'Satoshi', 'Plus Jakarta Sans', sans-serif;
+  --font-display: 'Satoshi', 'Outfit', sans-serif;
 
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -133,6 +133,43 @@ html.dark {
   --overlay-text: rgba(255,255,255,1);
   --overlay-text-muted: rgba(255,255,255,0.55);
 }
+
+/* ── Global typography — Satoshi (MakeTou style) ─────────────────────────── */
+*, body {
+  font-family: 'Satoshi', 'Plus Jakarta Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.font-display {
+  font-family: 'Satoshi', 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-weight: 900; }
+h2 { font-weight: 800; }
+h3 { font-weight: 700; }
+
+/* ── Entrance animation (MakeTou style fade-up) ─────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s ease both;
+}
+.animation-delay-100 { animation-delay: 0.1s; }
+.animation-delay-200 { animation-delay: 0.2s; }
+.animation-delay-300 { animation-delay: 0.3s; }
+.animation-delay-400 { animation-delay: 0.4s; }
+.animation-delay-500 { animation-delay: 0.5s; }
 
 /* ── Surface helper classes ──────────────────────────────────────────────── */
 .bg-surface        { background-color: var(--color-surface) !important; }
