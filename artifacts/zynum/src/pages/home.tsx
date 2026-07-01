@@ -29,6 +29,38 @@ import icon3dSupport  from "@assets/support@2x.0delawx1ppnnt_1782933694962.png";
 const ICON_ORANGE = "brightness(0) saturate(100%) invert(58%) sepia(97%) saturate(2476%) hue-rotate(346deg) brightness(1.1) contrast(1)";
 
 const O = "#f97316";
+
+function CountUp({ to, suffix = "", duration = 1800 }: { to: number; suffix?: string; duration?: number }) {
+  const [count, setCount] = React.useState(0);
+  const ref = React.useRef<HTMLSpanElement>(null);
+  const [started, setStarted] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  React.useEffect(() => {
+    if (!started) return;
+    const startTime = performance.now();
+    const step = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * to));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [started, to, duration]);
+
+  const display = to >= 1000 ? count.toLocaleString("fr-FR") : count;
+  return <span ref={ref}>{display}{suffix}</span>;
+}
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 28 },
   whileInView: { opacity: 1, y: 0 },
@@ -188,22 +220,22 @@ export default function Home() {
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
               style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 48 }}
             >
-              <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, background: "#111827", border: "1.5px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "11px 18px", textDecoration: "none", cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#111827", border: "1.5px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "11px 18px", opacity: 0.55, cursor: "not-allowed", userSelect: "none" }}>
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.32.07 2.22.72 2.98.75.98-.16 1.93-.82 2.97-.77 1.27.07 2.22.55 2.83 1.44-2.59 1.55-1.98 4.95.34 5.94-.52 1.28-1.1 2.54-2.12 3.5zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
                 <div>
-                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, lineHeight: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>Télécharger sur</div>
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, lineHeight: 1, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>Télécharger sur</div>
                   <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}>App Store</div>
                 </div>
-              </a>
-              <a href="https://play.google.com" target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, background: "#111827", border: "1.5px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "11px 18px", textDecoration: "none", cursor: "pointer" }}>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#111827", border: "1.5px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "11px 18px", opacity: 0.55, cursor: "not-allowed", userSelect: "none" }}>
                 <svg viewBox="0 0 512 512" width="22" height="22">
                   <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.6 225.6l-58.9-34-65.7 64.5 65.7 64.5 60.1-34.3c17.1-9.8 17.1-34.4-1.2-60.7zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z" fill="white"/>
                 </svg>
                 <div>
-                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, lineHeight: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>Disponible sur</div>
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, lineHeight: 1, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>Disponible sur</div>
                   <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}>Google Play</div>
                 </div>
-              </a>
+              </div>
             </motion.div>
 
             {/* Trust pills */}
@@ -233,13 +265,15 @@ export default function Home() {
       <div style={{ borderTop: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb", background: "#fff" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px", display: "flex", flexWrap: "wrap", justifyContent: "space-around", gap: 24 }}>
           {[
-            { val: "50 000+", label: "Clients actifs" },
-            { val: "180+", label: "Pays disponibles" },
-            { val: "200+", label: "Services supportés" },
-            { val: "30 sec", label: "Délai de livraison" },
+            { to: 50000, suffix: "+", label: "Clients actifs" },
+            { to: 180,   suffix: "+", label: "Pays disponibles" },
+            { to: 200,   suffix: "+", label: "Services supportés" },
+            { to: 30,    suffix: " sec", label: "Délai de livraison" },
           ].map((s) => (
             <div key={s.label} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 36, fontWeight: 800, color: O, letterSpacing: "-1px" }}>{s.val}</div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: O, letterSpacing: "-1px" }}>
+                <CountUp to={s.to} suffix={s.suffix} />
+              </div>
               <div style={{ fontSize: 14, color: "#6b7280", marginTop: 4 }}>{s.label}</div>
             </div>
           ))}
@@ -588,16 +622,16 @@ export default function Home() {
                 </div>
 
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                  <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, background: "#111827", color: "#fff", borderRadius: 12, padding: "12px 20px", textDecoration: "none", fontWeight: 700, fontSize: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#111827", color: "#fff", borderRadius: 12, padding: "12px 20px", fontWeight: 700, fontSize: 14, opacity: 0.55, cursor: "not-allowed", userSelect: "none" }}>
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.32.07 2.22.72 2.98.75.98-.16 1.93-.82 2.97-.77 1.27.07 2.22.55 2.83 1.44-2.59 1.55-1.98 4.95.34 5.94-.52 1.28-1.1 2.54-2.12 3.5zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
                     App Store
-                  </a>
-                  <a href="https://play.google.com" target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, background: O, color: "#fff", borderRadius: 12, padding: "12px 20px", textDecoration: "none", fontWeight: 700, fontSize: 14 }}>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, background: O, color: "#fff", borderRadius: 12, padding: "12px 20px", fontWeight: 700, fontSize: 14, opacity: 0.55, cursor: "not-allowed", userSelect: "none" }}>
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
                       <path d="M3 20.5v-17c0-.83 1-1.3 1.6-.75l14 8.5c.54.33.54 1.17 0 1.5l-14 8.5c-.6.55-1.6.08-1.6-.75z" fill="white"/>
                     </svg>
                     Google Play
-                  </a>
+                  </div>
                 </div>
               </motion.div>
             </div>
