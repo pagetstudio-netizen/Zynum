@@ -21,6 +21,10 @@ import iconCard from "@assets/mine-mod-bankcard-CLOhqwHj_1782924013913.png";
 import promoIdentite from "@assets/IMG-20260701-WA0006_1782925117480.jpg";
 import promoAffiliation from "@assets/ZyNum_pub1_1782925134917.jpg";
 import promoMonde from "@assets/zynum_pub2_1782925134966.jpg";
+import icon3dMoney    from "@assets/money@2x.00-zzbht3am0n_1782931480959.png";
+import icon3dPartners from "@assets/partners@2x.07xoz5yxyff0b_1782931480890.png";
+import icon3dClients  from "@assets/clients@2x.0ijun8_o5qiat_1782931481090.png";
+import icon3dIncome   from "@assets/income-image@3x.0-d1di3zb~-f__1782931481119.png";
 
 const ICON_ORANGE = "brightness(0) saturate(100%) invert(58%) sepia(97%) saturate(2476%) hue-rotate(346deg) brightness(1.1) contrast(1)";
 
@@ -240,6 +244,97 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* ── CARROUSEL HORIZONTAL ───────────────────────────────────────────── */}
+      <section style={{ padding: "80px 0 80px 24px", overflow: "hidden" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto 0 0", paddingLeft: 0 }}>
+          <motion.div {...fadeUp()} style={{ textAlign: "center", marginBottom: 48, paddingRight: 24 }}>
+            <p style={{ color: O, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 12 }}>Ce que vous pouvez faire</p>
+            <h2 style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 800, letterSpacing: "-1px", color: "#111827" }}>
+              Une plateforme, tout en un
+            </h2>
+          </motion.div>
+
+          {/* Scroll container */}
+          <div style={{
+            display: "flex",
+            gap: 20,
+            overflowX: "auto",
+            paddingBottom: 16,
+            paddingRight: 24,
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+            msOverflowStyle: "none",
+            scrollbarWidth: "none",
+          }}>
+            {[
+              {
+                num: "01",
+                title: "Recharge Mobile Money",
+                desc: "Rechargez votre solde ZyNum directement depuis votre téléphone en quelques secondes.",
+                bg: "linear-gradient(145deg, #fff7ed 0%, #fed7aa 100%)",
+                icon: icon3dMoney,
+              },
+              {
+                num: "02",
+                title: "Cryptomonnaies",
+                desc: "Payez avec USDT, BTC, ETH et bien d'autres cryptos. Transactions sécurisées via OxaPay.",
+                bg: "linear-gradient(145deg, #fef9c3 0%, #fde68a 100%)",
+                icon: icon3dIncome,
+              },
+              {
+                num: "03",
+                title: "Numéro virtuel",
+                desc: "Obtenez un numéro de téléphone temporaire pour valider vos comptes sur 200+ services.",
+                bg: "linear-gradient(145deg, #f0fdf4 0%, #bbf7d0 100%)",
+                icon: icon3dClients,
+              },
+              {
+                num: "04",
+                title: "10% de commission",
+                desc: "Parrainez vos amis et gagnez 10% de commission sur chaque achat de vos filleuls.",
+                bg: "linear-gradient(145deg, #fdf4ff 0%, #e9d5ff 100%)",
+                icon: icon3dPartners,
+              },
+            ].map((card) => (
+              <div
+                key={card.num}
+                style={{
+                  flex: "0 0 300px",
+                  minWidth: 300,
+                  height: 400,
+                  borderRadius: 28,
+                  background: card.bg,
+                  padding: "32px 28px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  scrollSnapAlign: "start",
+                  position: "relative",
+                  overflow: "hidden",
+                  border: "1px solid rgba(0,0,0,0.06)",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
+                }}
+              >
+                {/* Décoratif × */}
+                <div style={{ position: "absolute", top: 24, right: 24, fontSize: 28, color: "rgba(0,0,0,0.08)", fontWeight: 800, lineHeight: 1 }}>×</div>
+
+                {/* Texte */}
+                <div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#111827", lineHeight: 1.3, marginBottom: 12, paddingRight: 32 }}>{card.title}</div>
+                  <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.65 }}>{card.desc}</div>
+                </div>
+
+                {/* Icône 3D + numéro */}
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "rgba(0,0,0,0.18)", letterSpacing: "-1px" }}>{card.num}</div>
+                  <img src={card.icon} alt={card.title} style={{ width: 160, height: 160, objectFit: "contain", marginBottom: -8, marginRight: -12 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── CARTES PROMO ───────────────────────────────────────────────────── */}
       <section style={{ padding: "80px 24px" }}>
