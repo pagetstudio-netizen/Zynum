@@ -381,7 +381,7 @@ router.post("/v1/admin/settings/bulk", ...auth, async (req, res): Promise<void> 
 router.get("/v1/settings", async (req, res): Promise<void> => {
   const settings = await db.select().from(adminSettingsTable);
   const map: Record<string, string> = {};
-  const publicKeys = ["platform_name", "support_email", "support_telegram", "support_whatsapp", "maintenance_mode", "maintenance_buy", "commission_type", "commission_value", "currency_rate", "crypto_recharge_enabled"];
+  const publicKeys = ["platform_name", "support_email", "support_telegram", "support_whatsapp", "maintenance_mode", "maintenance_buy", "commission_type", "commission_value", "currency_rate", "crypto_recharge_enabled", "whatsapp_button_enabled", "whatsapp_button_link", "playstore_url", "appstore_url"];
   for (const s of settings) {
     if (publicKeys.includes(s.key)) map[s.key] = s.value;
   }

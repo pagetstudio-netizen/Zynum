@@ -3392,7 +3392,162 @@ function AdminBalances() {
   );
 }
 
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "operators" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate" | "balances";
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION: DÉVELOPPEUR (WhatsApp support + store links)
+══════════════════════════════════════════════════════════════════════════════ */
+function AdminDeveloper() {
+  const { toast } = useToast();
+  const { data, loading, refetch } = useAdminFetch<any>("/v1/admin/settings", []);
+  const [form, setForm] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (data?.settings) {
+      setForm({
+        whatsapp_button_enabled: data.settings.whatsapp_button_enabled ?? "false",
+        whatsapp_button_link:    data.settings.whatsapp_button_link    ?? "",
+        playstore_url:           data.settings.playstore_url           ?? "",
+        appstore_url:            data.settings.appstore_url            ?? "",
+      });
+    }
+  }, [data]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await adminPost("/v1/admin/settings/bulk", { settings: form });
+      if (res?.error) {
+        toast({ title: res.message ?? "Erreur lors de la sauvegarde", variant: "destructive" });
+      } else {
+        toast({ title: "Paramètres sauvegardés" });
+        refetch();
+      }
+    } catch {
+      toast({ title: "Erreur réseau. Réessayez.", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const ToggleDev = ({ k, label, desc }: { k: string; label: string; desc?: string }) => (
+    <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5">
+      <div>
+        <p className="text-sm font-medium text-white">{label}</p>
+        {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
+        <p className="text-xs text-muted-foreground mt-0.5">{form[k] === "true" ? "Activé" : "Désactivé"}</p>
+      </div>
+      <button
+        onClick={() => setForm({ ...form, [k]: form[k] === "true" ? "false" : "true" })}
+        className={`relative w-11 h-6 rounded-full transition-colors ${form[k] === "true" ? "bg-green-500" : "bg-white/20"}`}
+      >
+        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${form[k] === "true" ? "translate-x-6" : "translate-x-1"}`} />
+      </button>
+    </div>
+  );
+
+  const FieldDev = ({ k, label, placeholder }: { k: string; label: string; placeholder?: string }) => (
+    <div>
+      <label className="text-xs text-muted-foreground block mb-1">{label}</label>
+      <input
+        value={form[k] ?? ""}
+        onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+        placeholder={placeholder}
+        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-white/30"
+      />
+    </div>
+  );
+
+  if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+
+      {/* ── Bouton WhatsApp Support ── */}
+      <div className="rounded-2xl border border-green-500/30 bg-green-500/5 p-6 space-y-4">
+        <h3 className="font-bold text-white flex items-center gap-2">
+          <svg viewBox="0 0 24 24" className="w-5 h-5 fill-green-400" aria-hidden="true">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          Bouton Support WhatsApp
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Affiche un bouton WhatsApp sur les pages Contact, Centre d'aide et FAQ.
+          Le bouton disparaît automatiquement si désactivé.
+        </p>
+        <ToggleDev
+          k="whatsapp_button_enabled"
+          label="Activer le bouton WhatsApp"
+          desc="Affiché sur les pages Contact, Aide et FAQ"
+        />
+        <FieldDev
+          k="whatsapp_button_link"
+          label="Numéro ou lien WhatsApp"
+          placeholder="Ex : +2250700000000 ou https://wa.me/2250700000000"
+        />
+        {form.whatsapp_button_enabled === "true" && !form.whatsapp_button_link && (
+          <p className="text-xs text-red-400 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" /> Bouton activé mais aucun lien configuré
+          </p>
+        )}
+        {form.whatsapp_button_enabled === "true" && form.whatsapp_button_link && (
+          <p className="text-xs text-green-400 flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" /> Bouton actif — cliquez sur Sauvegarder pour appliquer
+          </p>
+        )}
+      </div>
+
+      {/* ── Liens stores ── */}
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-6 space-y-4">
+        <h3 className="font-bold text-white flex items-center gap-2">
+          <Package className="w-5 h-5 text-primary" /> Liens de téléchargement (après build Plesk)
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Configurez les liens vers vos applications mobiles publiées.
+          Ces URLs alimentent les boutons Play Store / App Store du site.
+        </p>
+
+        <div>
+          <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1">
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#34A853]" aria-hidden="true">
+              <path d="M3.18 23.76c.32.18.7.2 1.04.08l12.2-7.04-2.45-2.45-10.79 9.41zm-1.77-20.1C1.15 3.98 1 4.33 1 4.73v14.54c0 .4.15.75.41 1.02l.07.06 8.15-8.15v-.19L1.41 3.67l-.06.06zm17.69 7.78-2.59-1.5L14 10l2.52 2.52 2.6-1.5c.74-.43.74-1.13 0-1.56l-.02-.02zM4.22.24L16.42 7.3l-2.44 2.44L3.2.4A1.17 1.17 0 014.22.24z"/>
+            </svg>
+            Lien Google Play Store
+          </label>
+          <input
+            value={form.playstore_url ?? ""}
+            onChange={(e) => setForm({ ...form, playstore_url: e.target.value })}
+            placeholder="https://play.google.com/store/apps/details?id=..."
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-white/30"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1">
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white" aria-hidden="true">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+            Lien Apple App Store
+          </label>
+          <input
+            value={form.appstore_url ?? ""}
+            onChange={(e) => setForm({ ...form, appstore_url: e.target.value })}
+            placeholder="https://apps.apple.com/app/..."
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-white/30"
+          />
+        </div>
+      </div>
+
+      <Button onClick={save} disabled={saving} className="bg-primary hover:bg-primary/90 text-white font-semibold">
+        {saving
+          ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 inline-block" />Sauvegarde…</>
+          : <><CheckCircle className="w-4 h-4 mr-2" />Sauvegarder</>
+        }
+      </Button>
+    </div>
+  );
+}
+
+type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "operators" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate" | "balances" | "developer";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
@@ -3413,6 +3568,7 @@ const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "countries",    label: "Pays",            icon: <Globe2 className="w-4 h-4" /> },
   { id: "telegram",     label: "Telegram Bot",    icon: <Bell className="w-4 h-4" /> },
   { id: "affiliate",    label: "Affiliations",    icon: <Share2 className="w-4 h-4" /> },
+  { id: "developer",    label: "Développeur",     icon: <Zap className="w-4 h-4" /> },
 ];
 
 export default function AdminPanel() {
@@ -3475,6 +3631,7 @@ export default function AdminPanel() {
           {activeTab === "countries"    && <AdminCountries />}
           {activeTab === "telegram"     && <AdminTelegram />}
           {activeTab === "affiliate"    && <AdminAffiliations />}
+          {activeTab === "developer"    && <AdminDeveloper />}
         </motion.div>
       </AnimatePresence>
     </div>

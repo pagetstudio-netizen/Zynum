@@ -10,6 +10,10 @@ export interface PublicSettings {
   commission_type?: string;
   commission_value?: string;
   currency_rate?: string;
+  whatsapp_button_enabled?: string;
+  whatsapp_button_link?: string;
+  playstore_url?: string;
+  appstore_url?: string;
 }
 
 export function usePublicSettings() {
@@ -18,7 +22,9 @@ export function usePublicSettings() {
     queryFn: async () => {
       const res = await fetch("/api/v1/settings");
       if (!res.ok) return {};
-      return res.json();
+      const json = await res.json();
+      // The API wraps settings in { settings: {...} } — unwrap safely
+      return (json.settings ?? json) as PublicSettings;
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -29,5 +35,17 @@ export function openTelegramSupport(telegramHandle: string) {
   const url = telegramHandle.startsWith("http")
     ? telegramHandle
     : `https://t.me/${telegramHandle.replace(/^@/, "")}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+export function openWhatsAppSupport(linkOrNumber: string) {
+  let url: string;
+  if (linkOrNumber.startsWith("http")) {
+    url = linkOrNumber;
+  } else {
+    // Strip spaces, dashes, parentheses
+    const cleaned = linkOrNumber.replace(/[\s\-().]/g, "");
+    url = `https://wa.me/${cleaned.replace(/^\+/, "")}`;
+  }
   window.open(url, "_blank", "noopener,noreferrer");
 }
