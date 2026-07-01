@@ -24,6 +24,7 @@ import icon3dMoney    from "@assets/money@2x.00-zzbht3am0n_1782931480959.png";
 import icon3dPartners from "@assets/partners@2x.07xoz5yxyff0b_1782931480890.png";
 import icon3dClients  from "@assets/clients@2x.0ijun8_o5qiat_1782931481090.png";
 import icon3dIncome   from "@assets/income-image@3x.0-d1di3zb~-f__1782931481119.png";
+import icon3dSupport  from "@assets/support@2x.0delawx1ppnnt_1782933694962.png";
 
 const ICON_ORANGE = "brightness(0) saturate(100%) invert(58%) sepia(97%) saturate(2476%) hue-rotate(346deg) brightness(1.1) contrast(1)";
 
@@ -295,6 +296,13 @@ export default function Home() {
                 desc: "Parrainez vos amis et gagnez 10% de commission sur chaque achat de vos filleuls.",
                 bg: "linear-gradient(145deg, #fdf4ff 0%, #e9d5ff 100%)",
                 icon: icon3dPartners,
+              },
+              {
+                num: "05",
+                title: "Service Client 24/7",
+                desc: "Notre équipe de support est disponible à toute heure pour vous aider à résoudre vos problèmes.",
+                bg: "linear-gradient(145deg, #f0f9ff 0%, #bae6fd 100%)",
+                icon: icon3dSupport,
               },
             ].map((card) => (
               <div
