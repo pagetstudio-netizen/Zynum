@@ -69,7 +69,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     ],
   };
 
-  const isHome = location === "/";
+  const isHome = false;
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-x-hidden" style={{ background: isHome ? "#0a0a0a" : undefined }}>
