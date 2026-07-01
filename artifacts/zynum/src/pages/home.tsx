@@ -476,36 +476,20 @@ export default function Home() {
       <section style={{ padding: "0 24px 100px", background: "#fff" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div style={{ background: "linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)", border: "1px solid #e5e7eb", borderRadius: 32, padding: "60px 48px", textAlign: "center", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}>
-            <motion.div {...fadeUp()}>
-              <div style={{ margin: "0 auto 24px", width: 90, height: 90 }}>
-                <img src={cryptoIcon} alt="Crypto" style={{ width: 90, height: 90, objectFit: "contain", filter: "drop-shadow(0 8px 24px rgba(249,115,22,0.25))" }} />
+            <motion.div {...fadeUp()} style={{ maxWidth: 520, margin: "0 auto" }}>
+              <div style={{ margin: "0 auto 24px", width: 72, height: 72 }}>
+                <img src={cryptoIcon} alt="Crypto" style={{ width: 72, height: 72, objectFit: "contain", filter: "drop-shadow(0 8px 24px rgba(249,115,22,0.25))" }} />
               </div>
               <p style={{ color: O, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 16 }}>Cryptomonnaies</p>
-              <h2 style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16, color: "#111827" }}>
+              <h2 style={{ fontSize: "clamp(26px, 3vw, 42px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16, color: "#111827" }}>
                 Payez en crypto
               </h2>
-              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 520, margin: "0 auto 40px", lineHeight: 1.7 }}>
-                Rechargez votre compte avec USDT, Bitcoin, Ethereum, ou d'autres cryptos. Transactions rapides et sécurisées.
+              <p style={{ color: "#6b7280", fontSize: 16, lineHeight: 1.7, marginBottom: 36 }}>
+                Rechargez votre compte avec USDT, Bitcoin, Ethereum et d'autres cryptos. Transactions rapides et sécurisées via OxaPay.
               </p>
-
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
-                {[
-                  { symbol: "USDT", name: "Tether",   color: "#26A17B", icon: "₮" },
-                  { symbol: "BTC",  name: "Bitcoin",  color: "#F7931A", icon: "₿" },
-                  { symbol: "ETH",  name: "Ethereum", color: "#627EEA", icon: "Ξ" },
-                  { symbol: "USDC", name: "USD Coin", color: "#2775CA", icon: "◎" },
-                  { symbol: "BNB",  name: "BNB",      color: "#F3BA2F", icon: "B" },
-                  { symbol: "TRX",  name: "TRON",     color: "#E50914", icon: "T" },
-                ].map((c) => (
-                  <div key={c.symbol} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "16px 24px", display: "flex", alignItems: "center", gap: 12, minWidth: 140, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: c.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 16, flexShrink: 0 }}>
-                      {c.icon}
-                    </div>
-                    <div style={{ textAlign: "left" }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{c.symbol}</div>
-                      <div style={{ fontSize: 12, color: "#9ca3af" }}>{c.name}</div>
-                    </div>
-                  </div>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10 }}>
+                {["USDT", "BTC", "ETH", "USDC", "BNB", "TRX"].map((sym) => (
+                  <span key={sym} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, padding: "6px 16px", fontSize: 13, fontWeight: 700, color: "#374151", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>{sym}</span>
                 ))}
               </div>
             </motion.div>
