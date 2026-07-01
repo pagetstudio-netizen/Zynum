@@ -99,9 +99,10 @@ export default function Home() {
   const featured = FEATURED_IDS.map(id => all.find(s => s.id === id)).filter(Boolean) as typeof all;
 
   const STEPS = [
-    { num: "01", icon: <Smartphone className="w-6 h-6" />, title: "Créez votre compte", desc: "Inscription gratuite en 30 secondes. Aucune carte bancaire requise pour commencer." },
-    { num: "02", icon: <Wallet className="w-6 h-6" />, title: "Rechargez votre solde", desc: "Orange Money, Wave, MTN Mobile Money, USDT, BTC ou cartes crypto — vous choisissez." },
-    { num: "03", icon: <Phone className="w-6 h-6" />, title: "Recevez votre SMS", desc: "Choisissez le service, le pays, et recevez votre code OTP en moins de 30 secondes." },
+    { num: "01", img: icon3dClients,  title: "Crée ton compte",       desc: "Inscription gratuite en 30 secondes. Aucune carte bancaire requise.", accent: "#fff7ed", border: "#fed7aa" },
+    { num: "02", img: icon3dMoney,    title: "Recharge ton solde",     desc: "Orange Money, Wave, MTN, USDT, BTC... Paiement instantané.", accent: "#f0fdf4", border: "#bbf7d0" },
+    { num: "03", img: icon3dIncome,   title: "Choisis ton service",    desc: "Telegram, WhatsApp, Google, TikTok — 200+ services disponibles.", accent: "#eff6ff", border: "#bfdbfe" },
+    { num: "04", img: icon3dPartners, title: "Reçois ton code OTP",    desc: "Ton numéro est livré en moins de 30 secondes. Code copié en 1 clic.", accent: "#fdf4ff", border: "#e9d5ff" },
   ];
 
   return (
@@ -431,30 +432,89 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ───────────────────────────────────────────────────── */}
-      <section style={{ padding: "0 24px 100px", background: "#fff" }}>
+      <section style={{ padding: "80px 24px 100px", background: "#fff" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <motion.div {...fadeUp()} style={{ textAlign: "center", marginBottom: 64 }}>
-            <p style={{ color: O, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 12 }}>Comment ça marche</p>
-            <h2 style={{ fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 800, letterSpacing: "-1px", color: "#111827" }}>
-              3 étapes, c'est tout
+
+          {/* Header */}
+          <motion.div {...fadeUp()} style={{ textAlign: "center", marginBottom: 72 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 50, padding: "6px 16px", marginBottom: 20 }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: O }} />
+              <span style={{ color: O, fontSize: 12, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.15em" }}>Comment ça marche</span>
+            </div>
+            <h2 style={{ fontSize: "clamp(32px, 4vw, 56px)", fontWeight: 900, letterSpacing: "-1.5px", color: "#111827", lineHeight: 1.1 }}>
+              4 étapes,<br />
+              <span style={{ color: O }}>c'est tout.</span>
             </h2>
+            <p style={{ color: "#6b7280", fontSize: 17, marginTop: 16, maxWidth: 480, margin: "16px auto 0" }}>
+              De l'inscription à la réception de ton code — moins de 2 minutes.
+            </p>
           </motion.div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+          {/* Steps grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
             {STEPS.map((step, i) => (
-              <motion.div key={step.num} {...fadeUp(i * 0.1)}
-                style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 24, padding: 36, position: "relative", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}
+              <motion.div
+                key={step.num}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                style={{ position: "relative" }}
               >
-                <div style={{ position: "absolute", top: 24, right: 28, fontSize: 56, fontWeight: 900, color: "rgba(0,0,0,0.04)", lineHeight: 1, userSelect: "none" }}>{step.num}</div>
-                <div style={{ width: 52, height: 52, borderRadius: 16, background: "rgba(249,115,22,0.10)", border: "1px solid rgba(249,115,22,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: O, marginBottom: 24 }}>
-                  {step.icon}
+                <div
+                  style={{
+                    background: step.accent,
+                    border: `1px solid ${step.border}`,
+                    borderRadius: 28,
+                    padding: "32px 28px 0",
+                    overflow: "hidden",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column" as const,
+                    minHeight: 320,
+                  }}
+                >
+                  {/* Step badge */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                    <div style={{ background: "#fff", border: `1px solid ${step.border}`, borderRadius: 50, padding: "4px 14px", fontSize: 12, fontWeight: 800, color: "#374151", letterSpacing: "0.05em" }}>
+                      Étape {step.num}
+                    </div>
+                    <div style={{ fontSize: 48, fontWeight: 900, color: `${step.border}`, opacity: 0.4, lineHeight: 1, userSelect: "none" as const }}>{step.num}</div>
+                  </div>
+
+                  {/* Text */}
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: 20, fontWeight: 800, color: "#111827", marginBottom: 10, letterSpacing: "-0.3px" }}>{step.title}</h3>
+                    <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.7 }}>{step.desc}</p>
+                  </div>
+
+                  {/* 3D icon — floats at the bottom right */}
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
+                    <motion.img
+                      src={step.img}
+                      alt={step.title}
+                      style={{ width: 130, height: 130, objectFit: "contain", filter: "drop-shadow(0 12px 28px rgba(0,0,0,0.15))" }}
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6, delay: i * 0.12 + 0.2, ease: [0.22, 1, 0.36, 1] }}
+                      whileHover={{ y: -8, scale: 1.05 }}
+                    />
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: O, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>{step.num}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{step.title}</div>
-                <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.7 }}>{step.desc}</div>
               </motion.div>
             ))}
           </div>
+
+          {/* CTA below */}
+          <motion.div {...fadeUp(0.3)} style={{ textAlign: "center", marginTop: 52 }}>
+            <Link href="/register">
+              <button style={{ background: O, color: "#fff", border: "none", borderRadius: 50, padding: "14px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 0 32px rgba(249,115,22,0.35)", display: "inline-flex", alignItems: "center", gap: 10 }}>
+                Commencer gratuitement <ArrowRight size={18} />
+              </button>
+            </Link>
+          </motion.div>
+
         </div>
       </section>
 
