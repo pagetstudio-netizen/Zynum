@@ -203,6 +203,28 @@ async function ensureSchema() {
       CONSTRAINT "discount_codes_code_unique" UNIQUE("code")
     )
   `);
+  await safeExecute(sql`
+    CREATE TABLE IF NOT EXISTS "email_codes" (
+      "id" serial PRIMARY KEY NOT NULL,
+      "email" text NOT NULL,
+      "user_id" integer,
+      "code" text NOT NULL,
+      "token" text NOT NULL,
+      "type" text NOT NULL,
+      "expires_at" timestamp with time zone NOT NULL,
+      "used_at" timestamp with time zone,
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+      CONSTRAINT "email_codes_token_unique" UNIQUE("token")
+    )
+  `);
+
+  // Core users columns added after initial schema (idempotent)
+  for (const col of [
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at timestamp with time zone`,
+  ]) {
+    await db.execute(sql.raw(col)).catch(() => {});
+  }
 
   // Affiliate system columns (idempotent)
   for (const col of [
