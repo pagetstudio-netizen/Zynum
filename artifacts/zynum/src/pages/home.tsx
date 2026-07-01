@@ -464,28 +464,8 @@ export default function Home() {
                 Rechargez votre solde ZyNum directement depuis votre téléphone avec les services Mobile Money disponibles en Afrique.
               </p>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
-                {[
-                  { name: "Orange Money", bg: "#FF6600", letter: "O", textColor: "#fff" },
-                  { name: "MTN MoMo",     bg: "#FFCC00", letter: "M", textColor: "#000" },
-                  { name: "Wave",         bg: "#1A73E8", letter: "W", textColor: "#fff" },
-                  { name: "Moov Money",   bg: "#00B5E2", letter: "M", textColor: "#fff" },
-                  { name: "T-Money",      bg: "#E8C100", letter: "T", textColor: "#C0392B" },
-                  { name: "Free Money",   bg: "#E30613", letter: "F", textColor: "#fff" },
-                  { name: "Celtiis Cash", bg: "#2C3E80", letter: "C", textColor: "#fff" },
-                  { name: "Airtel Money", bg: "#FF0000", letter: "A", textColor: "#fff" },
-                ].map((p) => (
-                  <div key={p.name} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: p.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 900, fontSize: 15, color: p.textColor, fontFamily: "sans-serif" }}>
-                      {p.letter}
-                    </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "#374151", lineHeight: 1.3 }}>{p.name}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: 28 }}>
-                <img src={mobileMoneyLogos} alt="TM Money, Wave, Airtel" style={{ maxWidth: 280, width: "100%", objectFit: "contain", borderRadius: 12, filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.12))" }} />
+              <div>
+                <img src={mobileMoneyLogos} alt="TM Money, Wave, Airtel" style={{ maxWidth: 160, width: "100%", objectFit: "contain", filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.12))" }} />
               </div>
             </motion.div>
           </div>
