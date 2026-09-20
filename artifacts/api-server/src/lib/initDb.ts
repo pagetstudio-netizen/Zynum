@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { db, usersTable, socialLinksTable, paymentProvidersTable, operatorRoutesTable } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
+import { OWNER_ADMIN_EMAIL } from "./adminPolicy.js";
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -38,6 +39,11 @@ async function ensureSchema() {
       CONSTRAINT "users_email_unique" UNIQUE("email"),
       CONSTRAINT "users_api_key_unique" UNIQUE("api_key")
     )
+  `);
+  await safeExecute(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS "users_single_admin_idx"
+    ON "users" ("is_admin")
+    WHERE "is_admin" = true
   `);
   await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "sessions" (
@@ -316,6 +322,11 @@ async function seedData() {
       target: usersTable.email,
       set: { isAdmin: true, name: "Admin" },
     });
+
+  await db
+    .update(usersTable)
+    .set({ isAdmin: false })
+    .where(and(eq(usersTable.isAdmin, true), ne(usersTable.email, OWNER_ADMIN_EMAIL)));
 
   const existingSocials = await db.select().from(socialLinksTable).limit(1);
   if (existingSocials.length === 0) {

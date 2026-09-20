@@ -11,6 +11,7 @@ import {
   sendPasswordResetEmail,
   sendLoginVerificationEmail,
 } from "../lib/email.js";
+import { isOwnerAdmin } from "../lib/adminPolicy.js";
 
 const router: IRouter = Router();
 
@@ -130,7 +131,7 @@ router.post("/v1/auth/verify-email", async (req, res): Promise<void> => {
 
   res.json({
     token,
-    user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin, createdAt: user.createdAt },
+    user: { id: user.id, name: user.name, email: user.email, isAdmin: isOwnerAdmin(user), createdAt: user.createdAt },
   });
 });
 
@@ -260,7 +261,7 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
 
   const token = await createSession(user.id);
   res.json({
-    user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin, isBanned: user.isBanned, createdAt: user.createdAt },
+    user: { id: user.id, name: user.name, email: user.email, isAdmin: isOwnerAdmin(user), isBanned: user.isBanned, createdAt: user.createdAt },
     token,
   });
 });
@@ -294,7 +295,7 @@ router.post("/v1/auth/verify-login", async (req, res): Promise<void> => {
   const token = await createSession(user.id);
 
   res.json({
-    user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin, isBanned: user.isBanned, createdAt: user.createdAt },
+    user: { id: user.id, name: user.name, email: user.email, isAdmin: isOwnerAdmin(user), isBanned: user.isBanned, createdAt: user.createdAt },
     token,
   });
 });
@@ -401,7 +402,7 @@ router.get("/v1/auth/me", requireAuth, async (req: AuthRequest, res): Promise<vo
     id: user.id,
     name: user.name,
     email: user.email,
-    isAdmin: user.isAdmin,
+    isAdmin: isOwnerAdmin(user),
     isBanned: user.isBanned,
     createdAt: user.createdAt,
   });

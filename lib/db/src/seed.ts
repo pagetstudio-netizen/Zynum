@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { db, usersTable, socialLinksTable, paymentProvidersTable, adminSettingsTable } from "./index.js";
+import { and, eq, ne } from "drizzle-orm";
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -34,6 +35,11 @@ async function seed() {
       target: usersTable.email,
       set: { isAdmin: true, name: "Admin", emailVerified: true },
     });
+
+  await db
+    .update(usersTable)
+    .set({ isAdmin: false })
+    .where(and(eq(usersTable.isAdmin, true), ne(usersTable.email, adminEmail)));
 
   console.log("Admin account ready");
 

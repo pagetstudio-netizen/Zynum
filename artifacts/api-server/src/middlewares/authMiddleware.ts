@@ -22,7 +22,7 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
     const { db, usersTable } = await import("@workspace/db");
     const { eq } = await import("drizzle-orm");
     const [user] = await db.select().from(usersTable).where(eq(usersTable.apiKey, token)).limit(1);
-    if (!user) {
+    if (!user || user.isBanned) {
       res.status(401).json({ error: "Unauthorized", message: "Invalid API key" });
       return;
     }
@@ -35,6 +35,12 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
   const userId = await validateToken(token);
   if (!userId) {
     res.status(401).json({ error: "Unauthorized", message: "Invalid or expired token" });
+    return;
+  }
+
+  const user = await getUserById(userId);
+  if (!user || user.isBanned) {
+    res.status(401).json({ error: "Unauthorized", message: "Account access is disabled" });
     return;
   }
 

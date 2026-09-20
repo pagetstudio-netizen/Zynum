@@ -7,6 +7,7 @@ import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import { hashPassword } from "../lib/auth.js";
 import { invalidateCommissionCache } from "../lib/commission.js";
 import { sendBroadcastEmail, sendDirectEmail } from "../lib/email.js";
+import { OWNER_ADMIN_EMAIL } from "../lib/adminPolicy.js";
 
 const router = Router();
 const auth = [requireAuth, requireAdmin];
@@ -123,8 +124,30 @@ router.patch("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void
   const { name, email, password, balanceUsd, isAdmin, isBanned } = req.body;
 
   // Fetch current user to compute balance delta
-  const [current] = await db.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  const [current] = await db
+    .select({
+      balanceUsd: usersTable.balanceUsd,
+      email: usersTable.email,
+      isAdmin: usersTable.isAdmin,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
   if (!current) { res.status(404).json({ error: "User not found" }); return; }
+
+  const isOwner = current.email.trim().toLowerCase() === OWNER_ADMIN_EMAIL;
+  if (isOwner && (isAdmin === false || (email !== undefined && String(email).trim().toLowerCase() !== OWNER_ADMIN_EMAIL))) {
+    res.status(403).json({ error: "Forbidden", message: "Le compte propriétaire ne peut pas perdre ses droits administrateur." });
+    return;
+  }
+  if (!isOwner && isAdmin === true) {
+    res.status(403).json({ error: "Forbidden", message: "Un seul compte propriétaire peut être administrateur." });
+    return;
+  }
+  if (email !== undefined && String(email).trim().toLowerCase() === OWNER_ADMIN_EMAIL && !isOwner) {
+    res.status(403).json({ error: "Forbidden", message: "L'adresse administrateur est réservée au compte propriétaire." });
+    return;
+  }
 
   const updates: Record<string, unknown> = {};
   if (name !== undefined) updates.name = name;
