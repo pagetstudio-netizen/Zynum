@@ -1,6 +1,6 @@
 import { db, emailCodesTable } from "@workspace/db";
-import { eq, and, lt } from "drizzle-orm";
-import { randomBytes } from "crypto";
+import { eq, and, gt, isNull } from "drizzle-orm";
+import { createHash, randomBytes, timingSafeEqual } from "crypto";
 
 export function generateCode(): string {
   const digits = "0123456789";
@@ -16,10 +16,21 @@ export function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+function hashCode(code: string): string {
+  return createHash("sha256").update(code.trim()).digest("hex");
+}
+
+function hashesMatch(storedHash: string, code: string): boolean {
+  const candidateHash = hashCode(code);
+  const stored = Buffer.from(storedHash, "hex");
+  const candidate = Buffer.from(candidateHash, "hex");
+  return stored.length === candidate.length && timingSafeEqual(stored, candidate);
+}
+
 export async function createEmailCode(opts: {
   email: string;
   userId?: number;
-  type: "verify_email" | "reset_password" | "login_2fa";
+  type: "verify_email" | "reset_password" | "login_2fa" | "admin_telegram";
   expiresInMinutes: number;
 }): Promise<{ code: string; token: string }> {
   await db.delete(emailCodesTable).where(
@@ -36,7 +47,7 @@ export async function createEmailCode(opts: {
   await db.insert(emailCodesTable).values({
     email: opts.email,
     userId: opts.userId,
-    code,
+    code: hashCode(code),
     token,
     type: opts.type,
     expiresAt,
@@ -49,37 +60,41 @@ export async function verifyEmailCode(opts: {
   email: string;
   code?: string;
   token?: string;
-  type: "verify_email" | "reset_password" | "login_2fa";
+  type: "verify_email" | "reset_password" | "login_2fa" | "admin_telegram";
 }): Promise<{ valid: boolean; record?: typeof emailCodesTable.$inferSelect }> {
   const conditions = [
     eq(emailCodesTable.email, opts.email),
     eq(emailCodesTable.type, opts.type),
+    isNull(emailCodesTable.usedAt),
+    gt(emailCodesTable.expiresAt, new Date()),
   ];
 
   const rows = await db.select().from(emailCodesTable).where(and(...conditions));
 
-  const now = new Date();
   const record = rows.find((r) => {
-    if (r.usedAt) return false;
-    if (r.expiresAt < now) return false;
-    if (opts.code && r.code !== opts.code) return false;
+    if (opts.code && !hashesMatch(r.code, opts.code)) return false;
     if (opts.token && r.token !== opts.token) return false;
     return true;
   });
 
   if (!record) return { valid: false };
 
-  await db
+  const [usedRecord] = await db
     .update(emailCodesTable)
-    .set({ usedAt: now })
-    .where(eq(emailCodesTable.id, record.id));
+    .set({ usedAt: new Date() })
+    .where(and(
+      eq(emailCodesTable.id, record.id),
+      isNull(emailCodesTable.usedAt),
+      gt(emailCodesTable.expiresAt, new Date()),
+    ))
+    .returning();
 
-  return { valid: true, record };
+  return usedRecord ? { valid: true, record: usedRecord } : { valid: false };
 }
 
 export async function verifyEmailToken(opts: {
   token: string;
-  type: "verify_email" | "reset_password" | "login_2fa";
+  type: "verify_email" | "reset_password" | "login_2fa" | "admin_telegram";
 }): Promise<{ valid: boolean; record?: typeof emailCodesTable.$inferSelect }> {
   const [record] = await db
     .select()
@@ -89,13 +104,17 @@ export async function verifyEmailToken(opts: {
 
   if (!record) return { valid: false };
   if (record.type !== opts.type) return { valid: false };
-  if (record.usedAt) return { valid: false };
-  if (record.expiresAt < new Date()) return { valid: false };
+  if (record.usedAt || record.expiresAt < new Date()) return { valid: false };
 
-  await db
+  const [usedRecord] = await db
     .update(emailCodesTable)
     .set({ usedAt: new Date() })
-    .where(eq(emailCodesTable.id, record.id));
+    .where(and(
+      eq(emailCodesTable.id, record.id),
+      isNull(emailCodesTable.usedAt),
+      gt(emailCodesTable.expiresAt, new Date()),
+    ))
+    .returning();
 
-  return { valid: true, record };
+  return usedRecord ? { valid: true, record: usedRecord } : { valid: false };
 }

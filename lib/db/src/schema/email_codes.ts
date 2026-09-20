@@ -4,6 +4,7 @@ export const emailCodesTable = pgTable("email_codes", {
   id: serial("id").primaryKey(),
   email: text("email").notNull(),
   userId: integer("user_id"),
+  // Stores a SHA-256 digest of the one-time code, never the code itself.
   code: text("code").notNull(),
   token: text("token").notNull().unique(),
   type: text("type").notNull(), // verify_email | reset_password | login_2fa

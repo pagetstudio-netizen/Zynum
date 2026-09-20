@@ -44,9 +44,8 @@ artifacts-monorepo/
 
 ## Admin Account
 
-- **Email**: pagetstudio@gmail.com
-- **Password**: AAbb11##
-- **Access**: Onglet "Administration" visible uniquement pour les comptes admin dans le dashboard
+- **Credentials**: configured through the `ADMIN_EMAIL` and `ADMIN_PASSWORD` secrets
+- **Access**: Onglet "Administration" visible uniquement pour le compte administrateur autorisé
 
 ## Database Tables
 

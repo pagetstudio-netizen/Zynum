@@ -332,29 +332,32 @@ async function ensureSchema() {
 }
 
 async function seedData() {
-  const adminEmail = "pagetstudio@gmail.com";
-  const adminPassword = "AAbb11##";
+  const adminEmail = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+  if (adminEmail && adminPassword) {
+    await db
+      .insert(usersTable)
+      .values({
+        name: "Admin",
+        email: adminEmail,
+        passwordHash: hashPassword(adminPassword),
+        apiKey: generateApiKey(),
+        balanceUsd: 0,
+        isAdmin: true,
+        isBanned: false,
+      })
+      .onConflictDoUpdate({
+        target: usersTable.email,
+        set: { isAdmin: true, name: "Admin", passwordHash: hashPassword(adminPassword), emailVerified: true },
+      });
 
-  await db
-    .insert(usersTable)
-    .values({
-      name: "Admin",
-      email: adminEmail,
-      passwordHash: hashPassword(adminPassword),
-      apiKey: generateApiKey(),
-      balanceUsd: 0,
-      isAdmin: true,
-      isBanned: false,
-    })
-    .onConflictDoUpdate({
-      target: usersTable.email,
-      set: { isAdmin: true, name: "Admin" },
-    });
-
-  await db
-    .update(usersTable)
-    .set({ isAdmin: false })
-    .where(and(eq(usersTable.isAdmin, true), ne(usersTable.email, OWNER_ADMIN_EMAIL)));
+    await db
+      .update(usersTable)
+      .set({ isAdmin: false })
+      .where(and(eq(usersTable.isAdmin, true), ne(usersTable.email, OWNER_ADMIN_EMAIL)));
+  } else {
+    console.warn("Admin seed skipped: ADMIN_EMAIL and ADMIN_PASSWORD are not configured as secrets");
+  }
 
   const existingSocials = await db.select().from(socialLinksTable).limit(1);
   if (existingSocials.length === 0) {

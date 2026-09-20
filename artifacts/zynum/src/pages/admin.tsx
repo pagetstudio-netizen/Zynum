@@ -917,6 +917,91 @@ const POPUP_COLORS = [
 
 const emptyForm = { type: "popup", target: "all", subject: "", content: "", color: "blue", linkUrl: "", linkLabel: "", imageUrl: "" };
 
+function AdminSecurity() {
+  const { toast } = useToast();
+  const { data: eventsData, loading: eventsLoading, refetch: refetchEvents } = useAdminFetch<any>("/v1/admin/security/events?limit=50", []);
+  const { data: blocksData, loading: blocksLoading, refetch: refetchBlocks } = useAdminFetch<any>("/v1/admin/security/blocked-ips", []);
+  const [ip, setIp] = useState("");
+  const [reason, setReason] = useState("");
+
+  const blockIp = async () => {
+    if (!ip.trim()) return;
+    const result = await adminPost("/v1/admin/security/blocked-ips", { ip: ip.trim(), reason: reason.trim() || "Blocage manuel" });
+    if (result?.success) {
+      setIp("");
+      setReason("");
+      refetchBlocks();
+      toast({ title: "Adresse IP bloquée pendant 30 minutes" });
+    } else {
+      toast({ title: result?.error ?? "Impossible de bloquer cette adresse", variant: "destructive" });
+    }
+  };
+
+  const unblockIp = async (value: string) => {
+    await adminDelete(`/v1/admin/security/blocked-ips/${encodeURIComponent(value)}`);
+    refetchBlocks();
+    toast({ title: "Adresse IP débloquée" });
+  };
+
+  const events = eventsData?.events ?? [];
+  const blocks = blocksData?.blocks ?? [];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-white flex items-center gap-2"><Shield className="w-5 h-5 text-red-400" /> Sécurité et alertes</h2>
+        <p className="text-sm text-muted-foreground mt-1">Les actions sensibles sont enregistrées avec l’adresse IP, le compte et le pays détecté.</p>
+      </div>
+
+      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
+        <h3 className="font-bold text-white mb-3">Bloquer une adresse IP</h3>
+        <div className="flex flex-col md:flex-row gap-2">
+          <input value={ip} onChange={(e) => setIp(e.target.value)} placeholder="203.0.113.10" className="flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-red-400" />
+          <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motif (facultatif)" className="flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-red-400" />
+          <Button onClick={blockIp} className="bg-red-600 hover:bg-red-500">Bloquer 30 min</Button>
+        </div>
+      </div>
+
+      <section className="space-y-3">
+        <h3 className="font-bold text-white">Blocages actifs</h3>
+        {blocksLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : (
+          <Table headers={["IP", "Motif", "Jusqu'à", "Action"]} empty={!blocks.length}>
+            {blocks.map((block: any) => (
+              <tr key={block.id} className="border-b border-white/5">
+                <td className="px-4 py-3 font-mono text-sm text-white">{block.ip}</td>
+                <td className="px-4 py-3 text-sm text-muted-foreground">{block.reason}</td>
+                <td className="px-4 py-3 text-sm text-muted-foreground">{new Date(block.blockedUntil).toLocaleString()}</td>
+                <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => unblockIp(block.ip)}>Débloquer</Button></td>
+              </tr>
+            ))}
+          </Table>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-white">Journal récent</h3>
+          <Button variant="outline" size="sm" onClick={() => { refetchEvents(); refetchBlocks(); }}><RefreshCw className="mr-2 h-3.5 w-3.5" />Actualiser</Button>
+        </div>
+        {eventsLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : (
+          <Table headers={["Date", "Événement", "IP", "Pays", "Compte", "Action"]} empty={!events.length}>
+            {events.map((event: any) => (
+              <tr key={event.id} className="border-b border-white/5">
+                <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(event.createdAt).toLocaleString()}</td>
+                <td className="px-4 py-3"><StatusBadge status={event.severity} /><span className="ml-2 text-sm text-white">{event.eventType}</span></td>
+                <td className="px-4 py-3 font-mono text-xs text-white">{event.ip}</td>
+                <td className="px-4 py-3 text-sm text-muted-foreground">{event.countryCode ?? "—"}</td>
+                <td className="px-4 py-3 text-sm text-muted-foreground">{event.email ?? "—"}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{event.method ?? ""} {event.path ?? ""}</td>
+              </tr>
+            ))}
+          </Table>
+        )}
+      </section>
+    </div>
+  );
+}
+
 function AdminMessages() {
   const { toast } = useToast();
   const { data, loading, refetch } = useAdminFetch<any>("/v1/admin/messages", []);
@@ -3547,10 +3632,11 @@ function AdminDeveloper() {
   );
 }
 
-type AdminTab = "stats" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "operators" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate" | "balances" | "developer";
+type AdminTab = "stats" | "security" | "users" | "orders" | "transactions" | "messages" | "settings" | "payments" | "operators" | "faq" | "social" | "countries" | "contact" | "waitlist" | "promos" | "email" | "telegram" | "affiliate" | "balances" | "developer";
 
 const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "stats",        label: "Statistiques",    icon: <BarChart3 className="w-4 h-4" /> },
+  { id: "security",     label: "Sécurité",        icon: <Shield className="w-4 h-4" /> },
   { id: "users",        label: "Utilisateurs",    icon: <Users className="w-4 h-4" /> },
   { id: "balances",     label: "Soldes",          icon: <Wallet className="w-4 h-4" /> },
   { id: "orders",       label: "Commandes",       icon: <ShoppingBag className="w-4 h-4" /> },
@@ -3614,6 +3700,7 @@ export default function AdminPanel() {
       <AnimatePresence mode="wait">
         <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
           {activeTab === "stats"        && <AdminStats />}
+          {activeTab === "security"     && <AdminSecurity />}
           {activeTab === "users"        && <AdminUsers />}
           {activeTab === "balances"     && <AdminBalances />}
           {activeTab === "orders"       && <AdminOrders />}

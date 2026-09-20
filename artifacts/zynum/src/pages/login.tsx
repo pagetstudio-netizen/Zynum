@@ -8,7 +8,7 @@ import { useLanguage } from "@/hooks/use-language";
 
 const API = "/api";
 
-type Step = "credentials" | "verify_2fa" | "verify_email";
+type Step = "credentials" | "verify_2fa" | "verify_admin_2fa" | "verify_email";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -35,6 +35,12 @@ export default function Login() {
       onSuccess: (data: any) => {
         if (data.requires2FA) {
           setStep("verify_2fa");
+          setErrorMsg("");
+          setTimeout(() => codeRefs.current[0]?.focus(), 100);
+          return;
+        }
+        if (data.requiresAdmin2FA) {
+          setStep("verify_admin_2fa");
           setErrorMsg("");
           setTimeout(() => codeRefs.current[0]?.focus(), 100);
           return;
@@ -116,6 +122,32 @@ export default function Login() {
     }
   };
 
+  const handleVerifyAdmin2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = codeDigits.join("");
+    if (code.length < 6) return;
+    setIsSubmitting(true);
+    setErrorMsg("");
+    try {
+      const r = await fetch(`${API}/v1/auth/verify-admin-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code }),
+      });
+      const data = await r.json();
+      if (!r.ok) { setErrorMsg(data.message || "Code invalide ou expiré"); return; }
+      localStorage.setItem("zynum_token", data.token);
+      sessionStorage.removeItem("zynum_dismissed_popups");
+      sessionStorage.setItem("zynum_login_at", String(Date.now()));
+      queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+      toast({ title: "Connecté avec succès !", description: "Bienvenue sur ZyNum." });
+      const hasPendingBuy = !!sessionStorage.getItem("zynum_buy_intent");
+      setLocation(hasPendingBuy ? "/dashboard?tab=buy" : "/dashboard");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleVerifyEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = codeDigits.join("");
@@ -142,6 +174,11 @@ export default function Login() {
 
   const handleResend = async () => {
     const endpoint = step === "verify_email" ? "/v1/auth/resend-verification" : "/v1/auth/login";
+    if (step === "verify_admin_2fa") {
+      loginMutation.mutate({ data: { email, password } });
+      setCodeDigits(["", "", "", "", "", ""]);
+      return;
+    }
     if (step === "verify_2fa") {
       loginMutation.mutate({ data: { email, password } });
       return;
@@ -332,25 +369,27 @@ export default function Login() {
           )}
 
           {/* ── Step: 2FA or email verify code ── */}
-          {(step === "verify_2fa" || step === "verify_email") && (
+          {(step === "verify_2fa" || step === "verify_admin_2fa" || step === "verify_email") && (
             <>
               <div className="mb-8">
                 <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mb-5">
                   <ShieldCheck className="w-7 h-7 text-red-500" />
                 </div>
                 <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">
-                  {step === "verify_2fa" ? "Vérification 🔑" : "Vérifiez votre email ✉️"}
+                    {step === "verify_email" ? "Vérifiez votre email ✉️" : "Vérification 🔑"}
                 </h1>
                 <p className="text-[15px] text-gray-500">
                   {step === "verify_2fa"
                     ? "Vous n'avez pas utilisé ZyNum depuis plus de 3 jours. Entrez le code envoyé à :"
-                    : "Entrez le code envoyé à :"}
+                    : step === "verify_admin_2fa"
+                      ? "Entrez le code de sécurité à usage unique pour continuer :"
+                      : "Entrez le code envoyé à :"}
                   <br />
-                  <span className="font-semibold text-gray-800">{email}</span>
+                  {step !== "verify_admin_2fa" && <span className="font-semibold text-gray-800">{email}</span>}
                 </p>
-                <p className="mt-3 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                {step !== "verify_admin_2fa" && <p className="mt-3 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
                   📩 Si vous ne trouvez pas l'email, vérifiez votre dossier <strong>spam / courrier indésirable</strong>.
-                </p>
+                </p>}
               </div>
 
               {errorMsg && (
@@ -360,7 +399,7 @@ export default function Login() {
                 </div>
               )}
 
-              <form onSubmit={step === "verify_2fa" ? handleVerify2FA : handleVerifyEmail}>
+              <form onSubmit={step === "verify_2fa" ? handleVerify2FA : step === "verify_admin_2fa" ? handleVerifyAdmin2FA : handleVerifyEmail}>
                 <div className="flex gap-2 justify-center mb-6" onPaste={handleCodePaste}>
                   {codeDigits.map((d, i) => (
                     <input

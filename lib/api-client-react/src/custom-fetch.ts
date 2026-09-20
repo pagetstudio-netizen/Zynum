@@ -315,6 +315,15 @@ export async function customFetch<T = unknown>(
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
+    const securityCode = getStringField(errorData, "error");
+    if (
+      typeof window !== "undefined"
+      && response.status === 403
+      && (securityCode === "VPN_BLOCKED" || securityCode === "ADMIN_COUNTRY_BLOCKED")
+      && window.location.pathname !== "/country-unavailable"
+    ) {
+      window.location.assign("/country-unavailable");
+    }
     throw new ApiError(response, errorData, requestInfo);
   }
 

@@ -1,1 +1,2 @@
 - [Remboursements de numéros](number-refunds.md) — confirmer l’état remboursable chez 5SIM et verrouiller la commande avant tout crédit utilisateur.
+- [MFA administrateur](admin-auth-security.md) — le second facteur admin utilise un code à usage unique haché et un chat privé dédié, sans fallback vers les notifications générales.

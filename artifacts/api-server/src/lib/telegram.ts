@@ -23,6 +23,29 @@ export async function getChatId(): Promise<string | null> {
   return process.env.TELEGRAM_CHAT_ID ?? null;
 }
 
+// Keep the admin login challenge on its dedicated private chat. Never fall
+// back to the general notification chat, which may have a broader audience.
+export function getAdminChatId(): string | null {
+  return process.env.TELEGRAM_ADMIN_CHAT_ID ?? null;
+}
+
+export async function sendAdminLoginCode(code: string): Promise<boolean> {
+  const chatId = getAdminChatId();
+  if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) {
+    console.error("Admin login verification is unavailable: Telegram secrets are not configured");
+    return false;
+  }
+  return sendMessage(
+    chatId,
+    [
+      "🔐 <b>Code de connexion administrateur ZyNum</b>",
+      "",
+      `Code à usage unique : <code>${code}</code>`,
+      "Ce code expire dans 10 minutes et ne peut être utilisé qu'une seule fois.",
+    ].join("\n"),
+  );
+}
+
 export async function saveChatId(chatId: string): Promise<void> {
   await db
     .insert(adminSettingsTable)

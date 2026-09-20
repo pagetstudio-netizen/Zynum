@@ -15,8 +15,11 @@ function generateApiKey(): string {
 async function seed() {
   console.log("Seeding database...");
 
-  const adminEmail = "pagetstudio@gmail.com";
-  const adminPassword = "AAbb11##";
+  const adminEmail = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+  if (!adminEmail || !adminPassword) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be configured as secrets");
+  }
 
   await db
     .insert(usersTable)
@@ -33,7 +36,7 @@ async function seed() {
     })
     .onConflictDoUpdate({
       target: usersTable.email,
-      set: { isAdmin: true, name: "Admin", emailVerified: true },
+      set: { isAdmin: true, name: "Admin", passwordHash: hashPassword(adminPassword), emailVerified: true },
     });
 
   await db

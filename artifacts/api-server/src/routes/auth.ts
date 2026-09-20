@@ -11,6 +11,7 @@ import {
   sendPasswordResetEmail,
   sendLoginVerificationEmail,
 } from "../lib/email.js";
+import { sendAdminLoginCode } from "../lib/telegram.js";
 import { isOwnerAdmin } from "../lib/adminPolicy.js";
 import { adminLocationAllowed, getClientIp, recordSecurityEvent } from "../middlewares/securityMiddleware.js";
 
@@ -268,6 +269,25 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
+  if (isOwnerAdmin(user)) {
+    const { code } = await createEmailCode({
+      email,
+      userId: user.id,
+      type: "admin_telegram",
+      expiresInMinutes: 10,
+    });
+    const sent = await sendAdminLoginCode(code);
+    if (!sent) {
+      res.status(503).json({
+        error: "ADMIN_2FA_UNAVAILABLE",
+        message: "La connexion administrateur est temporairement indisponible. Réessayez plus tard.",
+      });
+      return;
+    }
+    res.json({ requiresAdmin2FA: true, email });
+    return;
+  }
+
   const now = new Date();
   const needsLoginVerification = !user.lastLoginAt || (now.getTime() - user.lastLoginAt.getTime() > THREE_DAYS_MS);
 
@@ -319,6 +339,67 @@ router.post("/v1/auth/verify-login", async (req, res): Promise<void> => {
 
   const token = await createSession(user.id);
 
+  res.json({
+    user: { id: user.id, name: user.name, email: user.email, isAdmin: isOwnerAdmin(user), isBanned: user.isBanned, createdAt: user.createdAt },
+    token,
+  });
+});
+
+// ─── VERIFY ADMIN LOGIN 2FA ─────────────────────────────────────────────────
+
+router.post("/v1/auth/verify-admin-login", async (req, res): Promise<void> => {
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const code = typeof req.body?.code === "string" ? req.body.code.trim() : "";
+  if (!email || !/^\d{6}$/.test(code)) {
+    res.status(400).json({ error: "Validation error", message: "Email et code requis" });
+    return;
+  }
+
+  const [candidate] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+  if (!candidate || !isOwnerAdmin(candidate) || candidate.isBanned) {
+    res.status(400).json({ error: "Invalid code", message: "Code invalide ou expiré" });
+    return;
+  }
+
+  const location = await adminLocationAllowed(req);
+  if (!location.allowed) {
+    await recordSecurityEvent({
+      eventType: "admin_login_blocked",
+      severity: "critical",
+      ip: getClientIp(req),
+      geo: location.geo,
+      userId: candidate.id,
+      email: candidate.email,
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: 403,
+      details: "Validation administrateur refusée hors de la zone autorisée",
+      notify: true,
+    });
+    res.status(403).json({
+      error: "ADMIN_COUNTRY_BLOCKED",
+      message: "La connexion administrateur est disponible uniquement depuis le Togo.",
+    });
+    return;
+  }
+
+  const { valid } = await verifyEmailCode({ email, code, type: "admin_telegram" });
+  if (!valid) {
+    res.status(400).json({ error: "Invalid code", message: "Code invalide ou expiré" });
+    return;
+  }
+
+  const [user] = await db
+    .update(usersTable)
+    .set({ lastLoginAt: new Date() })
+    .where(eq(usersTable.id, candidate.id))
+    .returning();
+  if (!user) {
+    res.status(404).json({ error: "Not found", message: "Utilisateur introuvable" });
+    return;
+  }
+
+  const token = await createSession(user.id);
   res.json({
     user: { id: user.id, name: user.name, email: user.email, isAdmin: isOwnerAdmin(user), isBanned: user.isBanned, createdAt: user.createdAt },
     token,

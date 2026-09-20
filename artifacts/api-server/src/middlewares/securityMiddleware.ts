@@ -1,11 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
-import { db, ipBlocksTable, securityEventsTable, usersTable } from "@workspace/db";
+import { db, ipBlocksTable, securityEventsTable } from "@workspace/db";
 import { and, eq, gt } from "drizzle-orm";
 import { sendDirectEmail } from "../lib/email.js";
 import { getUserById } from "../lib/auth.js";
 import type { AuthRequest } from "./authMiddleware.js";
+import { OWNER_ADMIN_EMAIL } from "../lib/adminPolicy.js";
 
-const OWNER_EMAIL = "pagetstudio@gmail.com";
+const OWNER_EMAIL = OWNER_ADMIN_EMAIL;
 const ADMIN_COUNTRY = "TG";
 const BLOCK_DURATION_MS = 30 * 60 * 1000;
 const GEO_CACHE_DURATION_MS = 15 * 60 * 1000;
@@ -167,6 +168,9 @@ export async function adminLocationAllowed(req: Request): Promise<{ allowed: boo
   const ip = getClientIp(req);
   const geo = await lookupGeo(ip);
   if (!geo) return { allowed: false, geo: null };
+  if (process.env.NODE_ENV !== "production" && geo.countryCode === "LOCAL") {
+    return { allowed: true, geo };
+  }
   return {
     allowed: geo.countryCode === ADMIN_COUNTRY && !geo.vpn && !geo.proxy && !geo.tor && !geo.hosting,
     geo,
@@ -277,7 +281,7 @@ export async function securityMiddleware(req: Request, res: Response, next: Next
   res.on("finish", () => {
     void (async () => {
       const authRequest = req as AuthRequest;
-      let user: Awaited<ReturnType<typeof getUserById>> = null;
+      let user: Awaited<ReturnType<typeof getUserById>> | null = null;
       if (authRequest.userId) user = await getUserById(authRequest.userId);
 
       if ([401, 403, 429].includes(res.statusCode)) {

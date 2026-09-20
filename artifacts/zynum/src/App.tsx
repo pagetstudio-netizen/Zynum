@@ -22,6 +22,7 @@ import HelpCenter from "@/pages/aide";
 import ApiDocs from "@/pages/api-docs";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
+import CountryUnavailable from "@/pages/country-unavailable";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/country-unavailable" component={CountryUnavailable} />
       <Route>
         <Layout>
           <Switch>
