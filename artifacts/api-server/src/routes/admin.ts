@@ -10,6 +10,22 @@ import { sendBroadcastEmail, sendDirectEmail } from "../lib/email.js";
 
 const router = Router();
 const auth = [requireAuth, requireAdmin];
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 100;
+
+function parsePagination(pageValue: unknown, limitValue: unknown) {
+  const parsedPage = Number.parseInt(String(pageValue ?? "1"), 10);
+  const parsedLimit = Number.parseInt(String(limitValue ?? DEFAULT_PAGE_SIZE), 10);
+  const page = Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const limit = Number.isSafeInteger(parsedLimit) && parsedLimit > 0
+    ? Math.min(parsedLimit, MAX_PAGE_SIZE)
+    : DEFAULT_PAGE_SIZE;
+  return { page, limit, offset: (page - 1) * limit };
+}
+
+function escapeLikePattern(value: string) {
+  return value.replace(/[\\%_]/g, "\\$&");
+}
 
 /* ─── STATS ─────────────────────────────────────────────────────────── */
 router.get("/v1/admin/stats", ...auth, async (req, res): Promise<void> => {
@@ -76,18 +92,19 @@ router.get("/v1/admin/stats", ...auth, async (req, res): Promise<void> => {
 
 /* ─── USERS ──────────────────────────────────────────────────────────── */
 router.get("/v1/admin/users", ...auth, async (req, res): Promise<void> => {
-  const { q, page = "1", limit = "20" } = req.query as Record<string, string>;
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const { q } = req.query as Record<string, string>;
+  const { page, limit, offset } = parsePagination(req.query.page, req.query.limit);
+  const search = q ? `%${escapeLikePattern(q)}%` : null;
 
-  const whereClause = q ? or(like(usersTable.name, `%${q}%`), like(usersTable.email, `%${q}%`)) : undefined;
+  const whereClause = search ? or(like(usersTable.name, search), like(usersTable.email, search)) : undefined;
   const users = await db.select({ id: usersTable.id, name: usersTable.name, email: usersTable.email, balanceUsd: usersTable.balanceUsd, isAdmin: usersTable.isAdmin, isBanned: usersTable.isBanned, createdAt: usersTable.createdAt }).from(usersTable)
     .where(whereClause)
-    .orderBy(desc(usersTable.createdAt)).limit(parseInt(limit)).offset(offset);
+    .orderBy(desc(usersTable.createdAt)).limit(limit).offset(offset);
   const [{ c }] = await db.select({ c: count() }).from(usersTable);
   const [{ s: totalBal }] = await db.select({ s: sum(usersTable.balanceUsd) }).from(usersTable);
   const [{ wbal }] = await db.select({ wbal: count() }).from(usersTable).where(gt(usersTable.balanceUsd, 0));
 
-  res.json({ users, total: c, page: parseInt(page), limit: parseInt(limit), totalBalanceUsd: totalBal ?? 0, usersWithBalance: wbal ?? 0 });
+  res.json({ users, total: c, page, limit, totalBalanceUsd: totalBal ?? 0, usersWithBalance: wbal ?? 0 });
 });
 
 router.get("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => {
@@ -187,8 +204,7 @@ router.delete("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> =>
 
 /* ─── ORDERS ─────────────────────────────────────────────────────────── */
 router.get("/v1/admin/orders", ...auth, async (req, res): Promise<void> => {
-  const { q, page = "1", limit = "20", status } = req.query as Record<string, string>;
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const { page, limit, offset } = parsePagination(req.query.page, req.query.limit);
 
   const orders = await db.select({
     id: ordersTable.id,
@@ -202,26 +218,27 @@ router.get("/v1/admin/orders", ...auth, async (req, res): Promise<void> => {
     createdAt: ordersTable.createdAt,
     userName: usersTable.name,
     userEmail: usersTable.email,
-  }).from(ordersTable).leftJoin(usersTable, eq(ordersTable.userId, usersTable.id)).orderBy(desc(ordersTable.createdAt)).limit(parseInt(limit)).offset(offset);
+  }).from(ordersTable).leftJoin(usersTable, eq(ordersTable.userId, usersTable.id)).orderBy(desc(ordersTable.createdAt)).limit(limit).offset(offset);
 
   const [{ c }] = await db.select({ c: count() }).from(ordersTable);
-  res.json({ orders, total: c, page: parseInt(page), limit: parseInt(limit) });
+  res.json({ orders, total: c, page, limit });
 });
 
 /* ─── TRANSACTIONS ───────────────────────────────────────────────────── */
 router.get("/v1/admin/transactions", ...auth, async (req, res): Promise<void> => {
-  const { page = "1", limit = "20", q, status, type, provider } = req.query as Record<string, string>;
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const { q, status, type, provider } = req.query as Record<string, string>;
+  const { page, limit, offset } = parsePagination(req.query.page, req.query.limit);
 
   const conditions = [];
   if (status)   conditions.push(eq(transactionsTable.status, status));
   if (type)     conditions.push(eq(transactionsTable.type, type));
   if (provider) conditions.push(eq(transactionsTable.provider, provider));
   if (q) {
+    const search = `%${escapeLikePattern(q)}%`;
     conditions.push(or(
-      like(usersTable.email, `%${q}%`),
-      like(usersTable.name, `%${q}%`),
-      like(transactionsTable.reference, `%${q}%`),
+      like(usersTable.email, search),
+      like(usersTable.name, search),
+      like(transactionsTable.reference, search),
     ));
   }
   const where = conditions.length ? and(...conditions) : undefined;
@@ -245,7 +262,7 @@ router.get("/v1/admin/transactions", ...auth, async (req, res): Promise<void> =>
     .leftJoin(usersTable, eq(transactionsTable.userId, usersTable.id))
     .where(where)
     .orderBy(desc(transactionsTable.createdAt))
-    .limit(parseInt(limit))
+    .limit(limit)
     .offset(offset);
 
   const [{ c }] = await db.select({ c: count() }).from(transactionsTable)
@@ -257,7 +274,7 @@ router.get("/v1/admin/transactions", ...auth, async (req, res): Promise<void> =>
     .leftJoin(usersTable, eq(transactionsTable.userId, usersTable.id))
     .where(where);
 
-  res.json({ transactions: txs, total: c, page: parseInt(page), limit: parseInt(limit), totalRevenue: rev.s ?? 0 });
+  res.json({ transactions: txs, total: c, page, limit, totalRevenue: rev.s ?? 0 });
 });
 
 // Admin: manually create a transaction (offline deposit, credit, debit)
@@ -660,8 +677,8 @@ router.post("/v1/admin/reset-my-stats", ...auth, async (_req: any, res): Promise
 /* ─── AFFILIATE WITHDRAWALS ──────────────────────────────────────────── */
 
 router.get("/v1/admin/affiliate/withdrawals", ...auth, async (req, res): Promise<void> => {
-  const { status, page = "1", limit = "20" } = req.query as Record<string, string>;
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const { status } = req.query as Record<string, string>;
+  const { page, limit, offset } = parsePagination(req.query.page, req.query.limit);
 
   const conditions = status ? eq(affiliateWithdrawalsTable.status, status) : undefined;
 
@@ -682,7 +699,7 @@ router.get("/v1/admin/affiliate/withdrawals", ...auth, async (req, res): Promise
     .leftJoin(usersTable, eq(affiliateWithdrawalsTable.userId, usersTable.id))
     .where(conditions)
     .orderBy(desc(affiliateWithdrawalsTable.createdAt))
-    .limit(parseInt(limit))
+    .limit(limit)
     .offset(offset);
 
   const [{ total }] = await db
@@ -690,7 +707,7 @@ router.get("/v1/admin/affiliate/withdrawals", ...auth, async (req, res): Promise
     .from(affiliateWithdrawalsTable)
     .where(conditions);
 
-  res.json({ withdrawals: rows, total: Number(total), page: parseInt(page), limit: parseInt(limit) });
+  res.json({ withdrawals: rows, total: Number(total), page, limit });
 });
 
 router.post("/v1/admin/affiliate/withdrawals/:id/validate", ...auth, async (req, res): Promise<void> => {
