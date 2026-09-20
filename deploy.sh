@@ -27,6 +27,6 @@ NODE_ENV=production pnpm --filter @workspace/api-server run build
 echo ""
 echo "=== Build complete ==="
 echo ""
-echo "  Startup command : NODE_ENV=production node artifacts/api-server/dist/index.cjs"
+echo "  Startup command : NODE_ENV=production node app.js"
 echo "  Static files    : artifacts/api-server/dist/public/"
 echo ""

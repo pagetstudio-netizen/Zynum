@@ -21,7 +21,7 @@ Le build produit :
 Dans la configuration de l’application Node.js Plesk :
 
 - **Application root** : racine du dépôt
-- **Startup file** : `artifacts/api-server/dist/index.cjs`
+- **Startup file** : `app.js`
 - **Application URL** : le domaine ZyNum
 - **Node.js** : version compatible avec `.nvmrc` / `.node-version`
 - **Port** : laisser Plesk fournir `PORT`
@@ -30,7 +30,7 @@ Dans la configuration de l’application Node.js Plesk :
 La commande de démarrage équivalente est :
 
 ```bash
-NODE_ENV=production node artifacts/api-server/dist/index.cjs
+NODE_ENV=production node app.js
 ```
 
 Le script racine suivant peut aussi être utilisé par Plesk :
