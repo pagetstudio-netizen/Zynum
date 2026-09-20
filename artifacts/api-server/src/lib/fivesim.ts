@@ -1,3 +1,6 @@
+import { db, adminSettingsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+
 const BASE_URL = "https://5sim.net/v1";
 export const FCFA_RATE = 620;       // taux affiché : 1 USD = 620 FCFA
 export const MIN_PRICE_FCFA = 1100; // plancher minimum ZyNum
@@ -6,17 +9,29 @@ export function usdToFcfa(usd: number): number {
   return Math.round(usd * FCFA_RATE);
 }
 
-// ─── Clé API 5sim (Replit Secret uniquement) ──────────────────────────────
+// ─── Clé API 5sim (base admin > secret d'environnement) ───────────────────
 let cachedApiKey: string | null = null;
 let cacheExpiry = 0;
 const KEY_TTL = 60_000; // 1 minute
+
+export function invalidateFiveSimKeyCache() {
+  cachedApiKey = null;
+  cacheExpiry = 0;
+}
 
 async function getFiveSimApiKey(): Promise<string> {
   const now = Date.now();
   if (cachedApiKey && now < cacheExpiry) return cachedApiKey;
 
+  const rows = await db.select().from(adminSettingsTable).where(eq(adminSettingsTable.key, "fivesim_api_key"));
+  if (rows.length > 0 && rows[0].value.trim()) {
+    cachedApiKey = rows[0].value.trim();
+    cacheExpiry = now + KEY_TTL;
+    return cachedApiKey;
+  }
+
   const envKey = (process.env.FIVESIM_API_KEY ?? "").trim();
-  if (!envKey) throw new Error("FIVESIM_API_KEY non configurée dans les secrets Replit.");
+  if (!envKey) throw new Error("Clé API 5SIM non configurée dans l'administration ni dans les secrets Replit.");
   cachedApiKey = envKey;
   cacheExpiry = now + KEY_TTL;
   return cachedApiKey;

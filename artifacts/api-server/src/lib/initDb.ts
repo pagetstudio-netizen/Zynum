@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { db, usersTable, socialLinksTable, paymentProvidersTable, operatorRoutesTable, adminSettingsTable } from "@workspace/db";
+import { db, usersTable, socialLinksTable, paymentProvidersTable, operatorRoutesTable } from "@workspace/db";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { OWNER_ADMIN_EMAIL } from "./adminPolicy.js";
 
@@ -332,9 +332,6 @@ async function ensureSchema() {
 }
 
 async function seedData() {
-  // Remove the legacy database copy. 5SIM credentials now live only in Replit Secrets.
-  await db.delete(adminSettingsTable).where(eq(adminSettingsTable.key, "fivesim_api_key"));
-
   const adminEmail = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD ?? "";
   if (adminEmail && adminPassword) {

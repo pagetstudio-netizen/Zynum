@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable, adminMessagesTable, paymentProvidersTable, faqArticlesTable, socialLinksTable, countryOverridesTable, affiliateWithdrawalsTable, securityEventsTable, ipBlocksTable } from "@workspace/db";
+import { invalidateFiveSimKeyCache } from "../lib/fivesim.js";
 import { eq, desc, count, sum, and, gte, lte, gt, like, or, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
@@ -391,37 +392,29 @@ router.delete("/v1/admin/messages/:id", ...auth, async (req, res): Promise<void>
 router.get("/v1/admin/settings", ...auth, async (req, res): Promise<void> => {
   const settings = await db.select().from(adminSettingsTable);
   const map: Record<string, string> = {};
-  for (const s of settings) {
-    if (s.key !== "fivesim_api_key") map[s.key] = s.value;
-  }
+  for (const s of settings) map[s.key] = s.value;
   res.json({ settings: map });
 });
 
 router.post("/v1/admin/settings", ...auth, async (req, res): Promise<void> => {
   const { key, value } = req.body;
   if (!key || value === undefined) { res.status(400).json({ error: "key and value required" }); return; }
-  if (key === "fivesim_api_key") {
-    res.status(400).json({ error: "FIVESIM_API_KEY doit être configurée dans les secrets Replit" });
-    return;
-  }
 
   await db.insert(adminSettingsTable).values({ key, value }).onConflictDoUpdate({ target: adminSettingsTable.key, set: { value } });
   if (key === "commission_type" || key === "commission_value") invalidateCommissionCache();
+  if (key === "fivesim_api_key") invalidateFiveSimKeyCache();
   res.json({ success: true });
 });
 
 router.post("/v1/admin/settings/bulk", ...auth, async (req, res): Promise<void> => {
   const { settings } = req.body as { settings: Record<string, string> };
   if (!settings || typeof settings !== "object") { res.status(400).json({ error: "settings object required" }); return; }
-  if (Object.prototype.hasOwnProperty.call(settings, "fivesim_api_key")) {
-    res.status(400).json({ error: "FIVESIM_API_KEY doit être configurée dans les secrets Replit" });
-    return;
-  }
 
   for (const [key, value] of Object.entries(settings)) {
     await db.insert(adminSettingsTable).values({ key, value }).onConflictDoUpdate({ target: adminSettingsTable.key, set: { value } });
   }
   invalidateCommissionCache();
+  if ("fivesim_api_key" in settings) invalidateFiveSimKeyCache();
   res.json({ success: true });
 });
 

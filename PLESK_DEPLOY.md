@@ -41,8 +41,7 @@ pnpm start
 
 ## Variables à renseigner dans Plesk
 
-Ne jamais mettre ces valeurs dans GitHub, `.env.example`, le panneau admin ou
-les logs :
+Ne jamais mettre les valeurs secrètes dans GitHub, `.env.example` ou les logs :
 
 ```text
 NODE_ENV=production
@@ -58,9 +57,9 @@ RESEND_FROM_EMAIL=...
 ```
 
 Ajouter aussi les secrets de paiement utilisés par l’installation, en suivant
-`.env.example`. `FIVESIM_API_KEY` est lu uniquement depuis l’environnement
-secret ; elle n’est jamais lue depuis la base et n’est jamais renvoyée par
-l’API admin.
+`.env.example`. La clé 5SIM peut être configurée dans le panneau admin ;
+`FIVESIM_API_KEY` reste disponible comme solution de secours si aucune clé
+n’est enregistrée dans les paramètres admin.
 
 ## Après un Pull + Deploy Now
 
@@ -73,5 +72,5 @@ l’API admin.
    `https://zynum.net/api/healthz`
 5. Vérifier ensuite la connexion admin et l’achat d’un numéro.
 
-Le démarrage initialise le schéma et supprime l’ancienne copie éventuelle de
-`fivesim_api_key` dans `admin_settings`.
+Le démarrage initialise le schéma. Après connexion admin, configure la clé
+5SIM dans **Paramètres**, puis sauvegarde.
