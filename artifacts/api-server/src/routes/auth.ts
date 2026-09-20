@@ -167,9 +167,14 @@ router.get("/v1/auth/verify-email-link", async (req, res): Promise<void> => {
   }
 
   const sessionToken = await createSession(user.id);
-  const dashboardUrl = new URL("https://zynum.net/dashboard");
-  dashboardUrl.hash = new URLSearchParams({ auth_token: sessionToken }).toString();
-  res.status(303).setHeader("Location", dashboardUrl.toString()).end();
+  res.cookie("zynum_session", sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: "/",
+  });
+  res.redirect("https://zynum.net/dashboard");
 });
 
 // ─── RESEND VERIFICATION ─────────────────────────────────────────────────────
@@ -375,8 +380,11 @@ router.post("/v1/auth/reset-password", async (req, res): Promise<void> => {
 // ─── LOGOUT ───────────────────────────────────────────────────────────────────
 
 router.post("/v1/auth/logout", requireAuth, async (req: AuthRequest, res): Promise<void> => {
-  const token = req.headers.authorization?.replace("Bearer ", "") ?? "";
-  await deleteSession(token);
+  const token = req.headers.authorization?.replace("Bearer ", "") ?? req.cookies?.zynum_session;
+  if (token) {
+    await deleteSession(token);
+  }
+  res.clearCookie("zynum_session", { path: "/" });
   res.json({ success: true, message: "Déconnecté avec succès" });
 });
 

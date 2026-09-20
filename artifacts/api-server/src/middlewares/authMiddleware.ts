@@ -8,13 +8,14 @@ export interface AuthRequest extends Request {
 
 export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
+  const cookieToken = req.cookies?.zynum_session;
 
-  if (!authHeader) {
+  if (!authHeader && !cookieToken) {
     res.status(401).json({ error: "Unauthorized", message: "No token provided" });
     return;
   }
 
-  const token = authHeader.replace("Bearer ", "");
+  const token = authHeader?.replace("Bearer ", "") ?? cookieToken;
 
   // Check if it's an API key (starts with zyn_)
   if (token.startsWith("zyn_")) {

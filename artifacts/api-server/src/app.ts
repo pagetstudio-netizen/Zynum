@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import path from "path";
 import router from "./routes/index.js";
 
@@ -22,6 +23,7 @@ app.use(cors({
   },
   credentials: true,
 }));
+app.use(cookieParser());
 app.use(express.json({
   verify: (req: any, _res, buf) => { req.rawBody = buf; },
 }));
