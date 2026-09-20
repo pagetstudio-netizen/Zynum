@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable, adminMessagesTable, paymentProvidersTable, faqArticlesTable, socialLinksTable, countryOverridesTable, affiliateWithdrawalsTable } from "@workspace/db";
+import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable, adminMessagesTable, paymentProvidersTable, faqArticlesTable, socialLinksTable, countryOverridesTable, affiliateWithdrawalsTable, securityEventsTable, ipBlocksTable } from "@workspace/db";
 import { invalidateFiveSimKeyCache } from "../lib/fivesim.js";
 import { eq, desc, count, sum, and, gte, lte, gt, like, or, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
@@ -8,6 +8,7 @@ import { hashPassword } from "../lib/auth.js";
 import { invalidateCommissionCache } from "../lib/commission.js";
 import { sendBroadcastEmail, sendDirectEmail } from "../lib/email.js";
 import { OWNER_ADMIN_EMAIL } from "../lib/adminPolicy.js";
+import { blockIp, getClientIp, recordSecurityEvent } from "../middlewares/securityMiddleware.js";
 
 const router = Router();
 const auth = [requireAuth, requireAdmin];
@@ -414,6 +415,63 @@ router.post("/v1/admin/settings/bulk", ...auth, async (req, res): Promise<void> 
   }
   invalidateCommissionCache();
   if ("fivesim_api_key" in settings) invalidateFiveSimKeyCache();
+  res.json({ success: true });
+});
+
+/* ─── SECURITY ───────────────────────────────────────────────────────── */
+router.get("/v1/admin/security/events", ...auth, async (req, res): Promise<void> => {
+  const { page, limit, offset } = parsePagination(req.query.page, req.query.limit);
+  const events = await db.select().from(securityEventsTable)
+    .orderBy(desc(securityEventsTable.createdAt))
+    .limit(limit)
+    .offset(offset);
+  const [{ c }] = await db.select({ c: count() }).from(securityEventsTable);
+  res.json({ events, total: c, page, limit });
+});
+
+router.get("/v1/admin/security/blocked-ips", ...auth, async (_req, res): Promise<void> => {
+  const blocks = await db.select().from(ipBlocksTable).orderBy(desc(ipBlocksTable.createdAt));
+  res.json({ blocks });
+});
+
+router.post("/v1/admin/security/blocked-ips", ...auth, async (req: any, res): Promise<void> => {
+  const ip = typeof req.body?.ip === "string" ? req.body.ip.trim() : "";
+  const reason = typeof req.body?.reason === "string" && req.body.reason.trim()
+    ? req.body.reason.trim()
+    : "Blocage manuel";
+  if (!ip || !/^[0-9a-f:.]+$/i.test(ip)) {
+    res.status(400).json({ error: "Adresse IP invalide" });
+    return;
+  }
+  const blockedUntil = await blockIp(ip, reason, req.userId);
+  await recordSecurityEvent({
+    eventType: "ip_blocked_manual",
+    severity: "high",
+    ip: getClientIp(req),
+    userId: req.userId,
+    method: req.method,
+    path: req.originalUrl,
+    statusCode: 200,
+    details: `IP ${ip} bloquée jusqu'au ${blockedUntil.toISOString()}`,
+    notify: true,
+  });
+  res.json({ success: true, ip, blockedUntil });
+});
+
+router.delete("/v1/admin/security/blocked-ips/:ip", ...auth, async (req: any, res): Promise<void> => {
+  const ip = String(req.params.ip);
+  await db.delete(ipBlocksTable).where(eq(ipBlocksTable.ip, ip));
+  await recordSecurityEvent({
+    eventType: "ip_unblocked",
+    severity: "info",
+    ip: getClientIp(req),
+    userId: req.userId,
+    method: req.method,
+    path: req.originalUrl,
+    statusCode: 200,
+    details: `IP ${ip} débloquée manuellement`,
+    notify: true,
+  });
   res.json({ success: true });
 });
 

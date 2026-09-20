@@ -46,6 +46,34 @@ async function ensureSchema() {
     WHERE "is_admin" = true
   `);
   await safeExecute(sql`
+    CREATE TABLE IF NOT EXISTS "security_events" (
+      "id" serial PRIMARY KEY NOT NULL,
+      "event_type" text NOT NULL,
+      "severity" text NOT NULL DEFAULT 'info',
+      "ip" text NOT NULL,
+      "country_code" text,
+      "country_name" text,
+      "user_id" integer,
+      "email" text,
+      "method" text,
+      "path" text,
+      "status_code" integer,
+      "details" text,
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL
+    )
+  `);
+  await safeExecute(sql`
+    CREATE TABLE IF NOT EXISTS "ip_blocks" (
+      "id" serial PRIMARY KEY NOT NULL,
+      "ip" text NOT NULL,
+      "reason" text NOT NULL,
+      "blocked_until" timestamp with time zone NOT NULL,
+      "created_by_user_id" integer,
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+      CONSTRAINT "ip_blocks_ip_unique" UNIQUE("ip")
+    )
+  `);
+  await safeExecute(sql`
     CREATE TABLE IF NOT EXISTS "sessions" (
       "id" serial PRIMARY KEY NOT NULL,
       "user_id" integer NOT NULL,

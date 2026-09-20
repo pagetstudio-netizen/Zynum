@@ -12,6 +12,7 @@ import {
   sendLoginVerificationEmail,
 } from "../lib/email.js";
 import { isOwnerAdmin } from "../lib/adminPolicy.js";
+import { adminLocationAllowed, getClientIp, recordSecurityEvent } from "../middlewares/securityMiddleware.js";
 
 const router: IRouter = Router();
 
@@ -230,6 +231,30 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
   if (user.isBanned) {
     res.status(403).json({ error: "Forbidden", message: "Votre compte a été suspendu. Contactez le support." });
     return;
+  }
+
+  if (isOwnerAdmin(user)) {
+    const location = await adminLocationAllowed(req);
+    if (!location.allowed) {
+      await recordSecurityEvent({
+        eventType: "admin_login_blocked",
+        severity: "critical",
+        ip: getClientIp(req),
+        geo: location.geo,
+        userId: user.id,
+        email: user.email,
+        method: req.method,
+        path: req.originalUrl,
+        statusCode: 403,
+        details: "Connexion administrateur autorisée uniquement depuis le Togo",
+        notify: true,
+      });
+      res.status(403).json({
+        error: "ADMIN_COUNTRY_BLOCKED",
+        message: "La connexion administrateur est disponible uniquement depuis le Togo.",
+      });
+      return;
+    }
   }
 
   if (!user.emailVerified) {

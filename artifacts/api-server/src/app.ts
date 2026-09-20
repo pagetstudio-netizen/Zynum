@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import router from "./routes/index.js";
+import { securityMiddleware } from "./middlewares/securityMiddleware.js";
 
 const app: Express = express();
 
@@ -29,6 +30,8 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true }));
 
+app.set("trust proxy", 1);
+app.use("/api", securityMiddleware);
 app.use("/api", router);
 
 if (process.env.NODE_ENV === "production") {
