@@ -22,6 +22,11 @@ async function seed() {
   }
 
   await db
+    .update(usersTable)
+    .set({ isAdmin: false })
+    .where(and(eq(usersTable.isAdmin, true), ne(usersTable.email, adminEmail)));
+
+  await db
     .insert(usersTable)
     .values({
       name: "Admin",
@@ -38,11 +43,6 @@ async function seed() {
       target: usersTable.email,
       set: { isAdmin: true, name: "Admin", passwordHash: hashPassword(adminPassword), emailVerified: true },
     });
-
-  await db
-    .update(usersTable)
-    .set({ isAdmin: false })
-    .where(and(eq(usersTable.isAdmin, true), ne(usersTable.email, adminEmail)));
 
   console.log("Admin account ready");
 

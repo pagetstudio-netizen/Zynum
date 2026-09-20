@@ -336,6 +336,11 @@ async function seedData() {
   const adminPassword = process.env.ADMIN_PASSWORD ?? "";
   if (adminEmail && adminPassword) {
     await db
+      .update(usersTable)
+      .set({ isAdmin: false })
+      .where(and(eq(usersTable.isAdmin, true), ne(usersTable.email, adminEmail)));
+
+    await db
       .insert(usersTable)
       .values({
         name: "Admin",
@@ -350,11 +355,6 @@ async function seedData() {
         target: usersTable.email,
         set: { isAdmin: true, name: "Admin", passwordHash: hashPassword(adminPassword), emailVerified: true },
       });
-
-    await db
-      .update(usersTable)
-      .set({ isAdmin: false })
-      .where(and(eq(usersTable.isAdmin, true), ne(usersTable.email, OWNER_ADMIN_EMAIL)));
   } else {
     console.warn("Admin seed skipped: ADMIN_EMAIL and ADMIN_PASSWORD are not configured as secrets");
   }
