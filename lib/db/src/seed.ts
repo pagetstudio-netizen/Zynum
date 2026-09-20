@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { db, usersTable, socialLinksTable, paymentProvidersTable, adminSettingsTable } from "./index.js";
+import { db, usersTable, socialLinksTable, paymentProvidersTable } from "./index.js";
 import { and, eq, ne } from "drizzle-orm";
 
 function hashPassword(password: string): string {
@@ -95,16 +95,6 @@ async function seed() {
   }
 
   console.log("Payment providers ready");
-
-  // Seed 5sim API key from env var if present and not already in DB
-  const fiveSimKey = process.env.FIVESIM_API_KEY;
-  if (fiveSimKey) {
-    await db
-      .insert(adminSettingsTable)
-      .values({ key: "fivesim_api_key", value: fiveSimKey })
-      .onConflictDoNothing();
-    console.log("5sim API key seeded");
-  }
 
   process.exit(0);
 }
