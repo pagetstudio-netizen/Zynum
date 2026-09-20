@@ -35,7 +35,7 @@ async function seed() {
       set: { isAdmin: true, name: "Admin", emailVerified: true },
     });
 
-  console.log(`Admin account ready: ${adminEmail}`);
+  console.log("Admin account ready");
 
   const socials = [
     { platform: "WhatsApp", url: "https://whatsapp.com/channel/0029Vb8MmTnHQbS8sEmxvd3z", icon: "whatsapp", isActive: true, sortOrder: 1 },

@@ -167,7 +167,9 @@ router.get("/v1/auth/verify-email-link", async (req, res): Promise<void> => {
   }
 
   const sessionToken = await createSession(user.id);
-  res.redirect(`https://zynum.net/dashboard?auth_token=${sessionToken}`);
+  const dashboardUrl = new URL("https://zynum.net/dashboard");
+  dashboardUrl.hash = new URLSearchParams({ auth_token: sessionToken }).toString();
+  res.status(303).setHeader("Location", dashboardUrl.toString()).end();
 });
 
 // ─── RESEND VERIFICATION ─────────────────────────────────────────────────────

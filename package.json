@@ -10,12 +10,32 @@
   },
   "private": true,
   "devDependencies": {
-    "typescript": "~5.9.2",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.3"
   },
   "pnpm": {
     "overrides": {
-      "websocket-driver@0.7.4": "0.7.5"
+      "axios": "1.18.0",
+      "brace-expansion@1": "1.1.18",
+      "brace-expansion@2": "2.1.4",
+      "browserslist": "4.28.7",
+      "fast-uri": "3.1.6",
+      "form-data": "4.0.6",
+      "immutable": "5.1.8",
+      "js-yaml": "4.3.2",
+      "linkify-it": "5.0.2",
+      "lodash": "4.18.0",
+      "lodash-es": "4.18.0",
+      "nanoid": "3.3.12",
+      "path-to-regexp": "8.4.0",
+      "picomatch@2": "2.3.2",
+      "picomatch@4": "4.0.4",
+      "postcss": "8.5.18",
+      "socket.io-parser": "4.2.7",
+      "undici": "7.29.0",
+      "uuid": "11.1.1",
+      "websocket-driver@0.7.4": "0.7.5",
+      "ws": "8.21.0"
     }
   }
 }

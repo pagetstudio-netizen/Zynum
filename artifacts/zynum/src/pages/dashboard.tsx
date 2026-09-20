@@ -566,14 +566,15 @@ export default function Dashboard() {
   });
 
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const authToken = params.get("auth_token");
+    const legacyParams = new URLSearchParams(window.location.search);
+    const fragmentParams = new URLSearchParams(window.location.hash.slice(1));
+    const authToken = fragmentParams.get("auth_token") ?? legacyParams.get("auth_token");
     if (authToken) {
       localStorage.setItem("zynum_token", authToken);
       queryClient.invalidateQueries();
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, []);
+  }, [queryClient]);
 
   React.useEffect(() => {
     const handler = (e: Event) => {
