@@ -97,6 +97,8 @@ artifacts-monorepo/
 ## Environment Variables
 
 - `FIVESIM_API_KEY` - Clé API 5SIM (secret)
+- `ASHTECH_API_KEY` - Clé Direct API AshTech Pay (`ak_...`)
+- `ASHTECH_WEBHOOK_SECRET` - Secret de signature webhook AshTech Pay (`whsec_...`)
 - `DATABASE_URL` - URL PostgreSQL (auto-provisionné)
 - `SESSION_SECRET` - Secret de session (auto-provisionné)
 - `PORT` - Port du serveur (auto-assigné)

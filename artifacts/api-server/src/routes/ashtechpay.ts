@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, usersTable, transactionsTable, operatorRoutesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
+import crypto from "node:crypto";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import { notifyDeposit } from "../lib/telegram.js";
@@ -8,8 +9,9 @@ import { tryAcquireRef, releaseRef } from "../lib/paymentLock.js";
 
 const router: IRouter = Router();
 
-const ATP_BASE    = "https://ashtechpay.top";
+const ATP_BASE     = "https://www.ashtechpay.com";
 const FCFA_PER_USD = 620;
+const WEBHOOK_MAX_AGE_SECONDS = 5 * 60;
 
 const CURRENCY_TO_USD: Record<string, number> = {
   XOF: 1 / 620,
@@ -89,6 +91,61 @@ function generateReference(userId: string | number): string {
   return `ZNUM${Date.now()}U${userId}`;
 }
 
+function getApiKey(): string {
+  return process.env.ASHTECH_API_KEY ?? process.env.ASHTECHPAY_API_KEY ?? "";
+}
+
+function getWebhookSecret(): string {
+  return process.env.ASHTECH_WEBHOOK_SECRET ?? process.env.ASHTECHPAY_WEBHOOK_SECRET ?? "";
+}
+
+function verifyWebhookSignature(
+  rawBody: Buffer,
+  timestamp: string,
+  signature: string,
+  secret: string,
+): boolean {
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isFinite(timestampSeconds)) return false;
+  if (Math.abs(Date.now() / 1000 - timestampSeconds) > WEBHOOK_MAX_AGE_SECONDS) return false;
+
+  const expected = "sha256=" + crypto
+    .createHmac("sha256", secret)
+    .update(`${timestamp}.${rawBody.toString("utf8")}`)
+    .digest("hex");
+
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+  return actualBuffer.length === expectedBuffer.length
+    && crypto.timingSafeEqual(actualBuffer, expectedBuffer);
+}
+
+async function resolveOperator(operatorId: string): Promise<ATPOperatorInfo | undefined> {
+  const [route] = await db
+    .select({
+      operator: operatorRoutesTable.operatorName,
+      countryCode: operatorRoutesTable.countryCode,
+      currency: operatorRoutesTable.currency,
+      prefix: operatorRoutesTable.prefix,
+      aggregator: operatorRoutesTable.aggregator,
+      isActive: operatorRoutesTable.isActive,
+    })
+    .from(operatorRoutesTable)
+    .where(eq(operatorRoutesTable.operatorKey, operatorId))
+    .limit(1);
+
+  if (route?.aggregator === "ashtechpay" && route.isActive) {
+    return {
+      operator: route.operator,
+      country_code: route.countryCode === "COD" ? "CD" : route.countryCode,
+      currency: route.currency,
+      prefix: route.prefix,
+    };
+  }
+
+  return ATP_OPERATORS[operatorId];
+}
+
 async function atpCollect(
   params: Record<string, unknown>,
   apiKey: string,
@@ -117,13 +174,13 @@ router.post("/v1/payments/ashtechpay/initiate", async (req: Request, res: Respon
       return;
     }
 
-    const opInfo = ATP_OPERATORS[operatorId as string];
+    const opInfo = await resolveOperator(String(operatorId));
     if (!opInfo) {
       res.status(400).json({ error: `Opérateur inconnu : ${operatorId}` });
       return;
     }
 
-    const apiKey = process.env.ASHTECHPAY_API_KEY ?? "";
+    const apiKey = getApiKey();
     if (!apiKey) {
       res.status(503).json({ error: "AshTechPay non configuré. Clé API manquante." });
       return;
@@ -174,10 +231,18 @@ router.post("/v1/payments/ashtechpay/initiate", async (req: Request, res: Respon
 
     if (status === 202) {
       const atpTxId = String(data.transaction_id ?? "");
-      if (atpTxId) {
-        const meta = { operatorId, phone: phoneFmt, currency: opInfo.currency, atpTransactionId: atpTxId, collectParams };
+      const providerReference = String(data.reference ?? reference);
+      if (atpTxId || providerReference !== reference) {
+        const meta = {
+          operatorId,
+          phone: phoneFmt,
+          currency: opInfo.currency,
+          atpTransactionId: atpTxId,
+          merchantReference: reference,
+          collectParams: { ...collectParams, reference: providerReference },
+        };
         await db.update(transactionsTable)
-          .set({ metadata: JSON.stringify(meta) })
+          .set({ reference: providerReference, metadata: JSON.stringify(meta) })
           .where(eq(transactionsTable.reference, reference))
           .catch(() => {});
       }
@@ -186,7 +251,7 @@ router.post("/v1/payments/ashtechpay/initiate", async (req: Request, res: Respon
       res.status(202).json({
         status:      "pending",
         transactionId: atpTxId,
-        reference,
+        reference:   providerReference,
         waveUrl:     isWave ? String(data.wave_url ?? "") : null,
         flow:        isWave ? "wave" : "push",
       });
@@ -195,11 +260,25 @@ router.post("/v1/payments/ashtechpay/initiate", async (req: Request, res: Respon
 
     if (status === 400 && String(data.error ?? "") === "otp_required") {
       const ussdCode = data.ussd_code ? String(data.ussd_code) : null;
+      const providerReference = String(data.reference ?? reference);
+      await db.update(transactionsTable)
+        .set({
+          reference: providerReference,
+          metadata: JSON.stringify({
+            operatorId,
+            phone: phoneFmt,
+            currency: opInfo.currency,
+            merchantReference: reference,
+            collectParams: { ...collectParams, reference: providerReference },
+          }),
+        })
+        .where(eq(transactionsTable.reference, reference))
+        .catch(() => {});
       res.json({
         needsOtp: true,
         otpType:  ussdCode ? "ussd" : "sms",
         ussdCode,
-        reference,
+        reference: providerReference,
         message:  String(data.message ?? "OTP requis pour cet opérateur."),
       });
       return;
@@ -224,7 +303,7 @@ router.post("/v1/payments/ashtechpay/confirm-otp", async (req: Request, res: Res
       return;
     }
 
-    const apiKey = process.env.ASHTECHPAY_API_KEY ?? "";
+    const apiKey = getApiKey();
     if (!apiKey) {
       res.status(503).json({ error: "AshTechPay non configuré." });
       return;
@@ -266,7 +345,11 @@ router.post("/v1/payments/ashtechpay/confirm-otp", async (req: Request, res: Res
             .where(eq(transactionsTable.reference, String(reference)));
         } catch { /* non-fatal */ }
       }
-      res.json({ status: "pending", transactionId: atpTxId, reference });
+      res.json({
+        status: "pending",
+        transactionId: atpTxId,
+        reference: String(data.reference ?? reference),
+      });
       return;
     }
 
@@ -325,7 +408,7 @@ router.post("/v1/payments/ashtechpay/confirm", async (req: Request, res: Respons
       return;
     }
 
-    const apiKey = process.env.ASHTECHPAY_API_KEY ?? "";
+    const apiKey = getApiKey();
     if (!apiKey) {
       res.status(503).json({ error: "AshTechPay non configuré" });
       return;
@@ -342,11 +425,16 @@ router.post("/v1/payments/ashtechpay/confirm", async (req: Request, res: Respons
       return;
     }
 
-    const statusRes = await fetch(`${ATP_BASE}/v1/transaction/${atpTransactionId}`, {
+    const statusRes = await fetch(`${ATP_BASE}/v1/transaction/${encodeURIComponent(atpTransactionId)}`, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
     const data = await statusRes.json() as Record<string, unknown>;
     console.log("[AshTechPay confirm] status:", JSON.stringify(data).slice(0, 300));
+
+    if (!statusRes.ok) {
+      res.status(502).json({ error: "ashtech_status_error", message: "Statut AshTech Pay indisponible" });
+      return;
+    }
 
     const txStatus = String(data.status ?? "").toLowerCase();
 
@@ -355,12 +443,16 @@ router.post("/v1/payments/ashtechpay/confirm", async (req: Request, res: Respons
       return;
     }
 
-    if (txStatus !== "success") {
+    if (txStatus !== "completed") {
       res.json({ credited: false, message: "En attente de confirmation" });
       return;
     }
 
     const rawAmount  = Number(data.credited_amount ?? data.amount ?? 0);
+    if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
+      res.status(502).json({ error: "invalid_credited_amount", message: "Montant confirmé invalide" });
+      return;
+    }
     const currency   = String(data.currency ?? "XOF").toUpperCase();
     const rate       = CURRENCY_TO_USD[currency] ?? CURRENCY_TO_USD.XOF;
     const amountUsd  = rawAmount * rate;
@@ -423,74 +515,134 @@ router.post("/v1/payments/ashtechpay/confirm", async (req: Request, res: Respons
 // ─── POST /v1/webhooks/ashtechpay ─────────────────────────────────────────────
 router.post("/v1/webhooks/ashtechpay", async (req: Request, res: Response): Promise<void> => {
   const body = req.body ?? {};
-  console.log("[AshTechPay webhook] Received:", JSON.stringify(body));
+  const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
+  const timestamp = String(req.headers["x-ashtech-timestamp"] ?? "");
+  const signature = String(req.headers["x-ashtech-signature"] ?? "");
+  const eventId = String(req.headers["x-ashtech-event-id"] ?? "");
+  const webhookSecret = getWebhookSecret();
 
-  res.status(200).json({ received: true });
+  if (webhookSecret) {
+    if (!rawBody || !verifyWebhookSignature(rawBody, timestamp, signature, webhookSecret)) {
+      console.warn("[AshTechPay webhook] Signature invalide ou expirée");
+      res.status(401).json({ error: "Invalid webhook signature" });
+      return;
+    }
+  }
+
+  console.log("[AshTechPay webhook] Received:", {
+    eventId,
+    event: body.event,
+    status: body.status,
+    reference: body.reference,
+    transactionId: body.transaction_id,
+  });
 
   try {
     const event = String(body.event ?? "");
+    const webhookStatus = String(body.status ?? "").toLowerCase();
     const reference = String(body.reference ?? "");
     const atpTxId   = String(body.transaction_id ?? "");
 
     if (!reference) {
       console.error("[AshTechPay webhook] Missing reference");
-      return;
-    }
-
-    // ── Paiement échoué ────────────────────────────────────────────────────────
-    if (event === "payment.failed") {
-      console.log("[AshTechPay webhook] payment.failed for reference:", reference);
-      await db.update(transactionsTable)
-        .set({ status: "failed" })
-        .where(eq(transactionsTable.reference, reference))
-        .catch(() => {});
+      res.status(400).json({ error: "Missing reference" });
       return;
     }
 
     // ── Payout events (retrait sortant) ────────────────────────────────────────
     if (event === "payout.completed" || event === "payout.failed") {
       console.log(`[AshTechPay webhook] ${event} — ignoré (payout)`);
+      res.status(200).json({ received: true, action: "ignored" });
       return;
     }
 
-    if (event !== "payment.completed") {
+    const isPaymentFinal = event === "payment.completed"
+      || event === "payment.failed"
+      || webhookStatus === "completed"
+      || webhookStatus === "failed";
+    if (!isPaymentFinal) {
       console.log("[AshTechPay webhook] Ignoring event:", event);
+      res.status(200).json({ received: true, action: "ignored" });
+      return;
+    }
+
+    const apiKey = getApiKey();
+    if (!apiKey || !atpTxId) {
+      console.error("[AshTechPay webhook] Cannot verify transaction without API key and transaction_id");
+      res.status(200).json({ received: true, action: "verification_deferred" });
+      return;
+    }
+
+    const statusRes = await fetch(`${ATP_BASE}/v1/transaction/${encodeURIComponent(atpTxId)}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    const verified = await statusRes.json() as Record<string, unknown>;
+    const verifiedStatus = String(verified.status ?? "").toLowerCase();
+    const paymentReference = String(verified.reference ?? reference);
+
+    if (!statusRes.ok) {
+      console.warn("[AshTechPay webhook] Transaction verification failed:", atpTxId, statusRes.status);
+      res.status(200).json({ received: true, action: "verification_pending" });
+      return;
+    }
+
+    if (verifiedStatus === "failed") {
+      console.log("[AshTechPay webhook] Confirmed failed payment:", paymentReference);
+      await db.update(transactionsTable)
+        .set({ status: "failed" })
+        .where(eq(transactionsTable.reference, paymentReference))
+        .catch(() => {});
+      res.status(200).json({ received: true, action: "failed" });
+      return;
+    }
+
+    if (verifiedStatus !== "completed") {
+      console.warn("[AshTechPay webhook] Transaction not completed according to API:", atpTxId);
+      res.status(200).json({ received: true, action: "verification_pending" });
       return;
     }
 
     const [existing] = await db
       .select({ id: transactionsTable.id, status: transactionsTable.status, userId: transactionsTable.userId })
       .from(transactionsTable)
-      .where(eq(transactionsTable.reference, reference))
+      .where(eq(transactionsTable.reference, paymentReference))
       .limit(1);
 
     if (existing?.status === "completed") {
-      console.log("[AshTechPay webhook] Duplicate, ignoring reference:", reference);
+      console.log("[AshTechPay webhook] Duplicate, ignoring reference:", paymentReference);
+      res.status(200).json({ received: true, action: "already_credited" });
       return;
     }
 
     // Anti double-credit: verrou en mémoire
-    if (!tryAcquireRef(reference)) {
-      console.log("[AshTechPay webhook] Already processing reference:", reference);
+    if (!tryAcquireRef(paymentReference)) {
+      console.log("[AshTechPay webhook] Already processing reference:", paymentReference);
+      res.status(200).json({ received: true, action: "already_processing" });
       return;
     }
     try {
 
     // amount = montant net crédité (après frais), total_amount = montant brut
-    const rawAmount  = Number(body.amount ?? 0);
-    const currency   = String(body.currency ?? "XOF").toUpperCase();
+    const rawAmount  = Number(verified.credited_amount ?? verified.amount ?? 0);
+    if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
+      console.error("[AshTechPay webhook] Invalid confirmed amount:", rawAmount);
+      res.status(200).json({ received: true, action: "invalid_amount" });
+      return;
+    }
+    const currency   = String(verified.currency ?? "XOF").toUpperCase();
     const rate       = CURRENCY_TO_USD[currency] ?? CURRENCY_TO_USD.XOF;
     const amountUsd  = rawAmount * rate;
     const amountFcfa = currency === "XOF" ? rawAmount : Math.round(amountUsd * FCFA_PER_USD);
 
     let userId: number | null = existing?.userId ?? null;
     if (!userId) {
-      const match = reference.match(/U(\d+)$/);
+      const match = paymentReference.match(/U(\d+)$/);
       if (match) userId = parseInt(match[1], 10);
     }
 
     if (!userId || isNaN(userId)) {
-      console.error("[AshTechPay webhook] Cannot resolve userId from reference:", reference);
+      console.error("[AshTechPay webhook] Cannot resolve userId from reference:", paymentReference);
+      res.status(200).json({ received: true, action: "user_unresolved" });
       return;
     }
 
@@ -498,6 +650,7 @@ router.post("/v1/webhooks/ashtechpay", async (req: Request, res: Response): Prom
       .where(eq(usersTable.id, userId)).limit(1);
     if (!user) {
       console.error("[AshTechPay webhook] User not found:", userId);
+      res.status(200).json({ received: true, action: "user_not_found" });
       return;
     }
 
@@ -508,7 +661,7 @@ router.post("/v1/webhooks/ashtechpay", async (req: Request, res: Response): Prom
     if (existing) {
       await db.update(transactionsTable)
         .set({ status: "completed", amountUsd, amountFcfa })
-        .where(eq(transactionsTable.reference, reference));
+        .where(eq(transactionsTable.reference, paymentReference));
     } else {
       await db.insert(transactionsTable).values({
         userId,
@@ -518,12 +671,13 @@ router.post("/v1/webhooks/ashtechpay", async (req: Request, res: Response): Prom
         method:     "ashtechpay",
         provider:   "ashtechpay",
         status:     "completed",
-        reference,
+        reference: paymentReference,
         metadata:   JSON.stringify({ webhookPayload: body, atpTransactionId: atpTxId }),
       });
     }
 
     console.log(`[AshTechPay webhook] Crédité $${amountUsd.toFixed(4)} → user #${userId}`);
+    res.status(200).json({ received: true, action: "credited" });
 
     db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, userId)).limit(1).then(([u]) => {
       notifyDeposit({
@@ -531,18 +685,21 @@ router.post("/v1/webhooks/ashtechpay", async (req: Request, res: Response): Prom
         userName:  u?.name ?? `User#${userId}`,
         amountFcfa,
         amountUsd,
-        reference,
+        reference: paymentReference,
         method:    "AshTechPay",
-        phone:     String(body.phone ?? ""),
-        operator:  String(body.operator ?? ""),
+        phone:     String(verified.phone ?? ""),
+        operator:  String(verified.operator ?? ""),
       }).catch(() => {});
     }).catch(() => {});
 
-    } finally { releaseRef(reference); }
+    } finally { releaseRef(paymentReference); }
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur webhook";
     console.error("[AshTechPay webhook] Error:", message);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "webhook_processing_error" });
+    }
   }
 });
 
@@ -584,7 +741,7 @@ const ATP_CANONICAL_KEY: Record<string, string> = Object.fromEntries(
 
 router.post("/v1/admin/ashtechpay/sync-countries", requireAuth, requireAdmin, async (_req: Request, res: Response): Promise<void> => {
   try {
-    const apiKey = process.env.ASHTECHPAY_API_KEY ?? "";
+    const apiKey = getApiKey();
     if (!apiKey) {
       res.status(503).json({ error: "Clé API AshTechPay manquante" });
       return;
@@ -649,7 +806,7 @@ router.post("/v1/admin/ashtechpay/sync-countries", requireAuth, requireAdmin, as
 // ─── Admin: frais en temps réel depuis AshTechPay /v1/fees ────────────────────
 router.get("/v1/admin/ashtechpay/fees", requireAuth, requireAdmin, async (_req: Request, res: Response): Promise<void> => {
   try {
-    const apiKey = process.env.ASHTECHPAY_API_KEY ?? "";
+    const apiKey = getApiKey();
     if (!apiKey) {
       res.status(503).json({ error: "Clé API AshTechPay manquante" });
       return;
