@@ -590,7 +590,7 @@ export async function initDb() {
     await seedData();
     console.log("Database ready.");
   } catch (err) {
-    console.error("Database initialization failed:", err);
+    console.error("Database initialization failed:", err instanceof Error ? err.name : "UnknownError");
     throw err;
   }
 }

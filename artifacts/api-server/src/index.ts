@@ -20,6 +20,6 @@ initDb()
     });
   })
   .catch((err) => {
-    console.error("Failed to initialize database:", err);
+    console.error("Failed to initialize database:", err instanceof Error ? err.name : "UnknownError");
     process.exit(1);
   });
