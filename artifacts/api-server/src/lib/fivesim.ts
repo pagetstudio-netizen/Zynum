@@ -47,6 +47,7 @@ async function fiveSimRequest<T>(path: string, method = "GET", body?: unknown): 
 
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
+    signal: AbortSignal.timeout(15_000),
     headers: {
       Authorization: `Bearer ${apiKey}`,
       Accept: "application/json",

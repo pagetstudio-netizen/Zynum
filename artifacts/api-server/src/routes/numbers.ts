@@ -6,7 +6,6 @@ import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js"
 import {
   buyNumber,
   checkOrder,
-  cancelOrder,
   finishOrder,
   getOperatorsForServiceCountry,
   getServiceName,
@@ -17,6 +16,7 @@ import {
 import { applyTieredPricing } from "../lib/pricing.js";
 import { applyDiscountCode } from "./discounts.js";
 import { notifyPurchase } from "../lib/telegram.js";
+import { refundOrder } from "../lib/orderRefund.js";
 
 const router: IRouter = Router();
 
@@ -160,35 +160,59 @@ router.get("/v1/check/:orderId", requireAuth, async (req: AuthRequest, res): Pro
     const SIX_MIN_MS = 6 * 60 * 1000;
     const orderAge = Date.now() - new Date(dbOrder.createdAt).getTime();
     if (orderAge > SIX_MIN_MS && !dbOrder.smsCode) {
-      try { await cancelOrder(parseInt(dbOrder.externalId, 10)); } catch { /* ignore 5sim error */ }
-      const [canceled] = await db.transaction(async (tx) => {
-        await tx
-          .update(usersTable)
-          .set({ balanceUsd: sql`${usersTable.balanceUsd} + ${dbOrder.priceUsd}` })
-          .where(eq(usersTable.id, dbOrder.userId));
-        return tx
-          .update(ordersTable)
-          .set({ status: "CANCELED" })
-          .where(eq(ordersTable.id, dbOrder.id))
-          .returning();
+      const result = await refundOrder(dbOrder.id);
+      if (result.status === "retry") {
+        res.status(503).json({
+          order: formatOrder(result.order),
+          refundPending: true,
+          message: "Remboursement 5SIM en attente. Le système réessaiera automatiquement.",
+        });
+        return;
+      }
+      res.json({
+        order: formatOrder(result.order),
+        autocanceled: result.status === "refunded" || result.status === "already_refunded",
+        refundPending: result.status === "in_progress",
       });
-      res.json({ order: formatOrder(canceled), autocanceled: true });
       return;
     }
 
     try {
       const fiveSimOrder = await checkOrder(parseInt(dbOrder.externalId, 10));
       const newStatus = mapFiveSimStatus(fiveSimOrder.status);
-      const smsCode = fiveSimOrder.sms?.[0]?.code ?? null;
-      const smsText = fiveSimOrder.sms?.[0]?.text ?? null;
+      const deliveredSms = fiveSimOrder.sms?.find((sms) => sms.code || sms.text);
+      const smsCode = deliveredSms?.code ?? null;
+      const smsText = deliveredSms?.text ?? null;
+
+      if (!deliveredSms && ["CANCELED", "TIMEOUT", "BANNED"].includes(newStatus)) {
+        const result = await refundOrder(dbOrder.id);
+        updatedOrder = result.order;
+        res.json({
+          order: formatOrder(updatedOrder),
+          autocanceled: result.status === "refunded" || result.status === "already_refunded",
+          refundPending: result.status === "retry" || result.status === "in_progress",
+        });
+        return;
+      }
 
       const [updated] = await db
         .update(ordersTable)
         .set({ status: newStatus, smsCode, smsText })
-        .where(eq(ordersTable.id, dbOrder.id))
+        .where(
+          and(
+            eq(ordersTable.id, dbOrder.id),
+            eq(ordersTable.status, dbOrder.status),
+            sql`${ordersTable.refundToken} IS NULL`,
+          ),
+        )
         .returning();
 
-      updatedOrder = updated;
+      if (updated) {
+        updatedOrder = updated;
+      } else {
+        const [current] = await db.select().from(ordersTable).where(eq(ordersTable.id, dbOrder.id)).limit(1);
+        updatedOrder = current ?? dbOrder;
+      }
     } catch {
       // Return existing data if 5SIM check fails
     }
@@ -219,28 +243,24 @@ router.post("/v1/cancel/:orderId", requireAuth, async (req: AuthRequest, res): P
     return;
   }
 
-  try {
-    await cancelOrder(parseInt(dbOrder.externalId, 10));
-  } catch {
-    // ignore 5SIM cancel error — update DB anyway
+  const result = await refundOrder(dbOrder.id);
+  if (result.status === "retry") {
+    res.status(503).json({
+      error: "Refund pending",
+      message: "5SIM n'a pas encore confirmé l'annulation. Le système réessaiera automatiquement.",
+      order: formatOrder(result.order),
+    });
+    return;
+  }
+  if (result.status === "not_refundable") {
+    res.status(409).json({ error: "Invalid", message: result.reason, order: formatOrder(result.order) });
+    return;
   }
 
-  // Cancel order + refund balance in one transaction
-  const [updated] = await db.transaction(async (tx) => {
-    // Refund user
-    await tx
-      .update(usersTable)
-      .set({ balanceUsd: sql`${usersTable.balanceUsd} + ${dbOrder.priceUsd}` })
-      .where(eq(usersTable.id, req.userId!));
-    // Mark order canceled
-    return tx
-      .update(ordersTable)
-      .set({ status: "CANCELED" })
-      .where(eq(ordersTable.id, dbOrder.id))
-      .returning();
+  res.json({
+    order: formatOrder(result.order),
+    refundPending: result.status === "in_progress",
   });
-
-  res.json({ order: formatOrder(updated) });
 });
 
 // ─── Finish/confirm order ─────────────────────────────────────────────────────
@@ -259,17 +279,54 @@ router.post("/v1/finish/:orderId", requireAuth, async (req: AuthRequest, res): P
     return;
   }
 
+  if (dbOrder.status !== "RECEIVED" || !dbOrder.smsCode) {
+    res.status(409).json({
+      error: "Invalid status",
+      message: "Seule une commande ayant reçu un SMS peut être terminée.",
+      order: formatOrder(dbOrder),
+    });
+    return;
+  }
+
+  let fiveSimFinished;
   try {
-    await finishOrder(parseInt(dbOrder.externalId, 10));
-  } catch {
-    // ignore
+    fiveSimFinished = await finishOrder(parseInt(dbOrder.externalId, 10));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "5SIM n'a pas confirmé la fin de la commande.";
+    res.status(502).json({ error: "5SIM finish failed", message, order: formatOrder(dbOrder) });
+    return;
+  }
+
+  if (mapFiveSimStatus(fiveSimFinished.status) !== "FINISHED") {
+    res.status(502).json({
+      error: "5SIM finish not confirmed",
+      message: `5SIM a retourné le statut ${fiveSimFinished.status}.`,
+      order: formatOrder(dbOrder),
+    });
+    return;
   }
 
   const [updated] = await db
     .update(ordersTable)
     .set({ status: "FINISHED" })
-    .where(eq(ordersTable.id, dbOrder.id))
+    .where(
+      and(
+        eq(ordersTable.id, dbOrder.id),
+        eq(ordersTable.status, dbOrder.status),
+        sql`${ordersTable.refundToken} IS NULL`,
+      ),
+    )
     .returning();
+
+  if (!updated) {
+    const [current] = await db.select().from(ordersTable).where(eq(ordersTable.id, dbOrder.id)).limit(1);
+    res.status(409).json({
+      error: "Order changed",
+      message: "La commande a changé pendant la confirmation.",
+      order: current ? formatOrder(current) : undefined,
+    });
+    return;
+  }
 
   res.json({ order: formatOrder(updated) });
 
@@ -281,18 +338,19 @@ router.post("/v1/finish/:orderId", requireAuth, async (req: AuthRequest, res): P
     .then(async ([buyer]) => {
       if (!buyer?.referredBy) return;
 
-      // Check this order hasn't already been commissioned
-      const existing = await db
-        .select({ id: affiliateCommissionsTable.id })
-        .from(affiliateCommissionsTable)
-        .where(eq(affiliateCommissionsTable.orderId, dbOrder.id))
-        .limit(1);
-      if (existing.length > 0) return;
-
       const commission = Math.round(dbOrder.priceUsd * 0.10 * 10000) / 10000;
       if (commission <= 0) return;
 
       await db.transaction(async (tx) => {
+        // Serialise la commission par commande, même entre plusieurs instances.
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(${dbOrder.id})`);
+        const [existing] = await tx
+          .select({ id: affiliateCommissionsTable.id })
+          .from(affiliateCommissionsTable)
+          .where(eq(affiliateCommissionsTable.orderId, dbOrder.id))
+          .limit(1);
+        if (existing) return;
+
         await tx.insert(affiliateCommissionsTable).values({
           userId: buyer.referredBy!,
           filleulId: userId,

@@ -12,6 +12,7 @@ export const ordersTable = pgTable("orders", {
   country: text("country").notNull(),
   countryName: text("country_name").notNull(),
   status: text("status").notNull().default("PENDING"),
+  refundToken: text("refund_token"),
   smsCode: text("sms_code"),
   smsText: text("sms_text"),
   priceUsd: real("price_usd").notNull().default(0),

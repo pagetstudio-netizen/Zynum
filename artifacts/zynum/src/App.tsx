@@ -54,7 +54,7 @@ function Router() {
         <Layout>
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/buy" component={BuyNumber} />
+            <Route path="/buy">{() => <BuyNumber />}</Route>
             <Route path="/history">{() => <Redirect to="/dashboard" />}</Route>
             <Route path="/aide" component={HelpCenter} />
             <Route path="/about" component={About} />

@@ -13,6 +13,8 @@ export interface Order {
   phone: string;
   service: string;
   serviceName: string;
+  serviceIcon: string;
+  serviceColor: string;
   country: string;
   countryName: string;
   status: OrderStatus;

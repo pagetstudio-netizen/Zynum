@@ -470,6 +470,10 @@ components:
           type: string
           enum: [USD, FCFA]
           default: USD
+        operator:
+          type: string
+        discountCode:
+          type: string
       required:
         - service
         - country
@@ -490,6 +494,10 @@ components:
         service:
           type: string
         serviceName:
+          type: string
+        serviceIcon:
+          type: string
+        serviceColor:
           type: string
         country:
           type: string
@@ -521,6 +529,8 @@ components:
         - phone
         - service
         - serviceName
+        - serviceIcon
+        - serviceColor
         - country
         - countryName
         - status

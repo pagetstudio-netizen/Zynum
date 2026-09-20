@@ -1,21 +1,31 @@
-import { db, ordersTable, usersTable } from "@workspace/db";
-import { eq, and, isNull, inArray, lt, sql } from "drizzle-orm";
-import { cancelOrder } from "./fivesim.js";
+import { db, ordersTable } from "@workspace/db";
+import { and, isNull, inArray, lt, or } from "drizzle-orm";
+import { refundOrder } from "./orderRefund.js";
 
 const SIX_MIN_MS = 6 * 60 * 1000;
+const STALE_REFUND_MS = 2 * 60 * 1000;
 
 async function cancelExpiredOrders() {
   try {
     const cutoff = new Date(Date.now() - SIX_MIN_MS);
+    const staleRefundCutoff = new Date(Date.now() - STALE_REFUND_MS);
 
     const expired = await db
       .select()
       .from(ordersTable)
       .where(
         and(
-          inArray(ordersTable.status, ["PENDING", "RECEIVED"]),
           isNull(ordersTable.smsCode),
-          lt(ordersTable.createdAt, cutoff),
+          or(
+            and(
+              inArray(ordersTable.status, ["PENDING", "RECEIVED", "TIMEOUT", "BANNED"]),
+              lt(ordersTable.createdAt, cutoff),
+            ),
+            and(
+              inArray(ordersTable.status, ["REFUNDING"]),
+              lt(ordersTable.updatedAt, staleRefundCutoff),
+            ),
+          ),
         ),
       );
 
@@ -25,24 +35,15 @@ async function cancelExpiredOrders() {
 
     for (const order of expired) {
       try {
-        await cancelOrder(parseInt(order.externalId, 10));
-      } catch {
-        // 5sim error ignored — still refund in DB
+        const result = await refundOrder(order.id);
+        if (result.status === "refunded") {
+          console.log(`[Scheduler] Commande ${order.id} annulée chez 5SIM + remboursement user ${order.userId}`);
+        } else if (result.status === "retry") {
+          console.warn(`[Scheduler] Commande ${order.id}: remboursement à réessayer — ${result.reason}`);
+        }
+      } catch (error) {
+        console.error(`[Scheduler] Commande ${order.id}: échec du remboursement`, error);
       }
-
-      await db.transaction(async (tx) => {
-        await tx
-          .update(usersTable)
-          .set({ balanceUsd: sql`${usersTable.balanceUsd} + ${order.priceUsd}` })
-          .where(eq(usersTable.id, order.userId));
-
-        await tx
-          .update(ordersTable)
-          .set({ status: "CANCELED" })
-          .where(eq(ordersTable.id, order.id));
-      });
-
-      console.log(`[Scheduler] Commande ${order.id} annulée + remboursement user ${order.userId}`);
     }
   } catch (err) {
     console.error("[Scheduler] Erreur auto-cancel:", err);

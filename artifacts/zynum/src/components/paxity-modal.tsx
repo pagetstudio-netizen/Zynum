@@ -66,7 +66,7 @@ const TMONEY_LOGO = imgTMoney;
 const VODACOM_LOGO = imgVodacom;
 const WIZALL_LOGO  = imgWizall;
 
-const COUNTRIES: CountryDef[] = [
+const COUNTRIES = ([
   {
     code: "SN", name: "Sénégal", flag: "🇸🇳", currency: "XOF", currencySymbol: "FCFA",
     operators: [
@@ -146,7 +146,7 @@ const COUNTRIES: CountryDef[] = [
       { id: "MOOVTG",   label: "Moov Money", logo: MOOV_LOGO,   type: "PUSH" },
     ],
   },
-].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+] satisfies CountryDef[]).sort((a, b) => a.name.localeCompare(b.name, "fr"));
 
 /* ── Country Picker View ────────────────────────────────────────── */
 function CountryPicker({

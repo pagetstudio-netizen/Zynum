@@ -11,4 +11,6 @@ export interface BuyNumberRequest {
   service: string;
   country: string;
   currency?: BuyNumberRequestCurrency;
+  operator?: string;
+  discountCode?: string;
 }

@@ -740,7 +740,7 @@ export default function Dashboard() {
         {/* Logout */}
         <div className="px-4 py-4 border-t border-gray-100">
           <button
-            onClick={() => logoutMutation.mutate({})}
+            onClick={() => logoutMutation.mutate()}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors font-medium"
           >
             <LogOut className="w-4 h-4" />
@@ -769,7 +769,7 @@ export default function Dashboard() {
               <img src={iconHelp} alt="Centre d'aide" className="w-4 h-4 object-contain" />
             </Link>
             {/* User widget */}
-            <UserWidget user={user} onProfileClick={() => setActiveTab("profile")} onLogout={() => logoutMutation.mutate({})} />
+            <UserWidget user={user} onProfileClick={() => setActiveTab("profile")} onLogout={() => logoutMutation.mutate()} />
           </div>
         </header>
 

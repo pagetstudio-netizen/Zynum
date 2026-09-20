@@ -83,6 +83,7 @@ export interface BuyNumberRequest {
   country: string;
   currency?: BuyNumberRequestCurrency;
   operator?: string;
+  discountCode?: string;
 }
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
@@ -102,6 +103,8 @@ export interface Order {
   phone: string;
   service: string;
   serviceName: string;
+  serviceIcon: string;
+  serviceColor: string;
   country: string;
   countryName: string;
   status: OrderStatus;

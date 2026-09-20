@@ -12,9 +12,13 @@ import type {
   QueryKey,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
+  UseQueryOptions as TanstackUseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
+
+type UseQueryOptions<TQueryFnData, TError, TData = TQueryFnData> = Partial<
+  TanstackUseQueryOptions<TQueryFnData, TError, TData>
+>;
 
 import type {
   ApiKeyResponse,

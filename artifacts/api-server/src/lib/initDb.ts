@@ -226,6 +226,16 @@ async function ensureSchema() {
     await db.execute(sql.raw(col)).catch(() => {});
   }
 
+  // Number refund idempotency and distributed lease (idempotent)
+  for (const statement of [
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS refund_token text`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS transactions_order_refund_unique
+      ON transactions(reference)
+      WHERE type = 'refund' AND reference IS NOT NULL`,
+  ]) {
+    await db.execute(sql.raw(statement));
+  }
+
   // Affiliate system columns (idempotent)
   for (const col of [
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code text`,
