@@ -101,6 +101,23 @@ artifacts-monorepo/
 - `SESSION_SECRET` - Secret de session (auto-provisionné)
 - `PORT` - Port du serveur (auto-assigné)
 
+Les services externes sont optionnels au démarrage. Sans leurs secrets, les
+fonctions correspondantes restent indisponibles : achat de numéros (5SIM),
+e-mail (Resend/SMTP), notifications Telegram et passerelles de paiement.
+
+## Exécution sur Replit
+
+- Workflow `Start application` : `PORT=5000 pnpm --filter @workspace/zynum run dev`
+- Workflow `API Server` : `PORT=8080 pnpm --filter @workspace/api-server run dev`
+- Le serveur Vite transmet `/api` à l’API locale sur le port 8080.
+- Vérification API : `GET /api/healthz`
+- Installation reproductible des services exécutables :
+  `pnpm install --filter '!@workspace/api-spec' --frozen-lockfile`
+
+Le module `@workspace/api-spec` n’est nécessaire que pour régénérer les clients
+OpenAPI. Son outil `orval` est actuellement refusé par le pare-feu de paquets
+Replit et n’est pas requis pour démarrer ou construire l’application existante.
+
 ## Admin Panel Features
 
 10 sections disponibles dans l'onglet "Administration" du dashboard :
@@ -147,6 +164,6 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. Run cod
 
 ## Root Scripts
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build`
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly`
+- `pnpm run build` — construit le frontend puis l’API
+- `pnpm run typecheck` — vérifie les bibliothèques, les artifacts et les scripts
 - `pnpm --filter @workspace/db run push` — push DB schema changes
