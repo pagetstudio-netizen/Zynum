@@ -238,7 +238,15 @@ router.post("/v1/admin/users/:id/balance", ...auth, async (req: any, res): Promi
   const amt = parseFloat(amount);
   if (!amt || amt <= 0) { res.status(400).json({ error: "amount must be a positive number" }); return; }
 
-  const [user] = await db.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  const [user] = await db
+    .select({
+      balanceUsd: usersTable.balanceUsd,
+      name: usersTable.name,
+      email: usersTable.email,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
 
   const current = user.balanceUsd ?? 0;
@@ -276,7 +284,7 @@ router.post("/v1/admin/users/:id/balance", ...auth, async (req: any, res): Promi
   });
 });
 
-router.delete("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => {
+router.delete("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void> => {
   const userId = parseInt(String(req.params.id));
   const [user] = await db
     .select({ id: usersTable.id, name: usersTable.name, email: usersTable.email, isBanned: usersTable.isBanned })
@@ -384,11 +392,21 @@ router.post("/v1/admin/transactions", ...auth, async (req: any, res): Promise<vo
   const amount = parseFloat(amountUsd);
 
   // Update user balance
-  const [user] = await db.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, parseInt(userId))).limit(1);
+  const [user] = await db
+    .select({
+      balanceUsd: usersTable.balanceUsd,
+      name: usersTable.name,
+      email: usersTable.email,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, parseInt(userId)))
+    .limit(1);
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
 
   const delta = (type === "debit") ? -amount : amount;
-  await db.update(usersTable).set({ balanceUsd: (user.balanceUsd ?? 0) + delta }).where(eq(usersTable.id, parseInt(userId)));
+  const previousBalance = user.balanceUsd ?? 0;
+  const newBalance = previousBalance + delta;
+  await db.update(usersTable).set({ balanceUsd: newBalance }).where(eq(usersTable.id, parseInt(userId)));
 
   const [tx] = await db.insert(transactionsTable).values({
     userId: parseInt(userId),
@@ -403,6 +421,17 @@ router.post("/v1/admin/transactions", ...auth, async (req: any, res): Promise<vo
   }).returning();
 
   res.json({ success: true, transaction: tx });
+  void notifyAdminBalanceChange({
+    adminId: req.userId,
+    userId: parseInt(userId),
+    userName: user.name,
+    userEmail: user.email,
+    previousBalanceUsd: previousBalance,
+    amountUsd: amount,
+    type: type === "debit" ? "debit" : "credit",
+    newBalanceUsd: newBalance,
+    note: note || (type === "debit" ? "Débit manuel" : "Crédit manuel"),
+  });
 });
 
 /* ─── PUBLIC: Active popup notifications (no auth) ───────────────────── */
