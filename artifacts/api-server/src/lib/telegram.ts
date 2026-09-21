@@ -30,16 +30,26 @@ export async function getChatId(): Promise<string | null> {
   return process.env.TELEGRAM_CHAT_ID ?? null;
 }
 
-// Keep the admin login challenge on its dedicated private chat. Never fall
-// back to the general notification chat, which may have a broader audience.
-export function getAdminChatId(): string | null {
-  return process.env.TELEGRAM_ADMIN_CHAT_ID ?? null;
+// The admin login challenge uses the Chat ID configured in Admin → Telegram.
+// Read the database value directly so MFA follows the panel configuration and
+// never falls back to an unrelated environment variable.
+export async function getAdminChatId(): Promise<string | null> {
+  try {
+    const [row] = await db
+      .select({ value: adminSettingsTable.value })
+      .from(adminSettingsTable)
+      .where(eq(adminSettingsTable.key, "telegram_chat_id"))
+      .limit(1);
+    return row?.value || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function sendAdminLoginCode(code: string): Promise<boolean> {
-  const chatId = getAdminChatId();
+  const chatId = await getAdminChatId();
   if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) {
-    console.error("Admin login verification is unavailable: Telegram secrets are not configured");
+    console.error("Admin login verification is unavailable: Telegram token or panel Chat ID is not configured");
     return false;
   }
   return sendMessage(
