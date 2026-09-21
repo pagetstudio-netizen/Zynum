@@ -7,8 +7,6 @@ servers:
   - url: /api
     description: Base API path
 tags:
-  - name: health
-    description: Health operations
   - name: auth
     description: Authentication operations
   - name: numbers
@@ -23,19 +21,6 @@ tags:
     description: Developer API endpoints
 
 paths:
-  /healthz:
-    get:
-      operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      responses:
-        "200":
-          description: Healthy
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HealthStatus"
-
   /v1/auth/register:
     post:
       operationId: registerUser
@@ -305,14 +290,6 @@ paths:
 
 components:
   schemas:
-    HealthStatus:
-      type: object
-      properties:
-        status:
-          type: string
-      required:
-        - status
-
     ErrorResponse:
       type: object
       properties:
