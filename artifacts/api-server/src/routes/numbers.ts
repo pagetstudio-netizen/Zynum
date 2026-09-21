@@ -84,7 +84,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
     if (isNumberUnavailableError(message)) {
       res.status(409).json({
         error: "NUMBER_UNAVAILABLE",
-        message: "Le numéro sélectionné n'est plus disponible pour l'achat.",
+        message: "Ce numéro n’est pas disponible à l’achat. Veuillez en choisir un autre.",
       });
       return;
     }

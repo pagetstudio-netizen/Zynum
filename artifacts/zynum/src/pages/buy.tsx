@@ -283,7 +283,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         const msg: string = errorData?.message ?? "";
         const isUnavailable =
           errorCode === "NUMBER_UNAVAILABLE"
-          || /no\s+free|no\s+(?:available\s+)?(?:phone|number)s?|not\s+available|unavailable|out\s+of\s+stock|sold\s+out|indisponible/i.test(msg);
+            || /no\s+free|no\s+(?:available\s+)?(?:phone|number)s?|not\s+available|no\s+longer\s+available|unavailable|out\s+of\s+stock|sold\s+out|indisponible|plus\s+disponible|n['’]?\s*est\s+plus\s+disponible/i.test(msg);
         const isBalance = /balance|no free|insufficient|solde/i.test(msg);
         toast({
           variant: "destructive",
