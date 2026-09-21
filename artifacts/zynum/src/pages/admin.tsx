@@ -3642,6 +3642,7 @@ const ADMIN_NAV: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
   { id: "messages",     label: "Messages",        icon: <MessageSquare className="w-4 h-4" /> },
   { id: "contact",      label: "Contacts",        icon: <Send className="w-4 h-4" /> },
   { id: "waitlist",     label: "Liste d'attente API", icon: <Bell className="w-4 h-4" /> },
+  { id: "email",        label: "Email Broadcast", icon: <Mail className="w-4 h-4" /> },
   { id: "settings",     label: "Paramètres",      icon: <Settings className="w-4 h-4" /> },
   { id: "payments",     label: "Paiements",       icon: <Wallet className="w-4 h-4" /> },
   { id: "operators",    label: "Opérateurs",      icon: <Globe2 className="w-4 h-4" /> },
@@ -3705,6 +3706,7 @@ export default function AdminPanel() {
           {activeTab === "messages"     && <AdminMessages />}
           {activeTab === "contact"      && <AdminContactMessages />}
           {activeTab === "waitlist"     && <AdminWaitlist />}
+          {activeTab === "email"        && <AdminEmailSection />}
           {activeTab === "settings"     && <AdminSettings />}
           {activeTab === "payments"     && <AdminPayments />}
           {activeTab === "operators"    && <AdminOperatorRoutes />}
