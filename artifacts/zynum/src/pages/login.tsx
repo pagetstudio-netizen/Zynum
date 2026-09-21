@@ -60,7 +60,8 @@ export default function Login() {
         setLocation(hasPendingBuy ? "/dashboard?tab=buy" : "/dashboard");
       },
       onError: (error: any) => {
-        const msg = error?.response?.data?.message || t("login_error_default");
+        const errorData = error?.data ?? error?.response?.data ?? {};
+        const msg = errorData?.message || t("login_error_default");
         setErrorMsg(msg);
       },
     },
