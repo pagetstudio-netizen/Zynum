@@ -223,7 +223,7 @@ function shouldAuditMutation(req: Request): boolean {
 
 export async function securityMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   const path = req.originalUrl.toLowerCase();
-  if (path.includes("/webhooks/") || path.endsWith("/health") || path.endsWith("/healthz")) {
+  if (path.includes("/webhooks/") || path.endsWith("/health")) {
     next();
     return;
   }
