@@ -2,7 +2,6 @@ import { Router, type IRouter } from "express";
 import { db, usersTable, affiliateCommissionsTable, affiliateWithdrawalsTable } from "@workspace/db";
 import { eq, sql, desc, count, sum } from "drizzle-orm";
 import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js";
-import { sendAffiliateWithdrawalEmail } from "../lib/email.js";
 import { notifyAffiliateWithdrawal } from "../lib/telegram.js";
 
 const router: IRouter = Router();
@@ -159,7 +158,6 @@ router.post("/v1/affiliate/withdraw", requireAuth, async (req: AuthRequest, res)
     phone,
     country,
   };
-  sendAffiliateWithdrawalEmail(notifOpts).catch(() => {});
   notifyAffiliateWithdrawal(notifOpts).catch(() => {});
 });
 

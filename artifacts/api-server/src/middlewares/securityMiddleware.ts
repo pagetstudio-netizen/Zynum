@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { db, ipBlocksTable, securityEventsTable } from "@workspace/db";
 import { and, eq, gt } from "drizzle-orm";
-import { sendDirectEmail } from "../lib/email.js";
+import { getChatId, sendMessage } from "../lib/telegram.js";
 import { getUserById } from "../lib/auth.js";
 import type { AuthRequest } from "./authMiddleware.js";
 import { OWNER_ADMIN_EMAIL } from "../lib/adminPolicy.js";
@@ -92,15 +92,28 @@ async function activeIpBlock(ip: string) {
   return block;
 }
 
-async function notifyOwner(subject: string, message: string, cacheKey: string): Promise<void> {
+function escapeTelegramHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function notifyAdminTelegram(subject: string, message: string, cacheKey: string): Promise<void> {
   const now = Date.now();
   const lastSent = notificationCache.get(cacheKey) ?? 0;
   if (now - lastSent < 60_000) return;
   notificationCache.set(cacheKey, now);
+
   try {
-    await sendDirectEmail({ to: OWNER_EMAIL, subject, message });
+    const chatId = await getChatId();
+    if (!chatId) {
+      console.error("[Security] Admin Telegram notification unavailable: chat ID is not configured");
+      return;
+    }
+    await sendMessage(
+      chatId,
+      `<b>${escapeTelegramHtml(subject)}</b>\n\n${escapeTelegramHtml(message)}`,
+    );
   } catch (error) {
-    console.error("[Security] Owner notification failed:", error);
+    console.error("[Security] Admin Telegram notification failed:", error);
   }
 }
 
@@ -132,7 +145,7 @@ export async function recordSecurityEvent(input: {
       details: input.details ?? null,
     });
     if (input.notify) {
-      await notifyOwner(
+      await notifyAdminTelegram(
         `[ZyNum] Alerte sécurité: ${input.eventType}`,
         [
           `Événement: ${input.eventType}`,
