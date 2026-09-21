@@ -375,7 +375,7 @@ export const translations = {
     buy_error_desc: "Rechargez votre solde ZyNum depuis votre tableau de bord.",
     buy_error_generic: "Impossible d'obtenir un numéro. Réessayez.",
     buy_unavailable_title: "Numéro indisponible",
-    buy_unavailable_desc: "Ce numéro n'est plus disponible à l'achat. Choisissez un autre opérateur ou réessayez dans quelques instants.",
+    buy_unavailable_desc: "Ce numéro n’est pas disponible à l’achat. Veuillez en choisir un autre.",
     buy_refunded: "✅ Remboursé",
     buy_refunded_desc: "Le montant a été recrédité sur votre solde.",
     buy_confirmed: "✅ Numéro confirmé",
