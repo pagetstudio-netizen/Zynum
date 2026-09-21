@@ -278,8 +278,9 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         refetchBalance();
       },
       onError: (error: any) => {
-        const errorCode = error?.response?.data?.error ?? "";
-        const msg: string = error?.response?.data?.message ?? "";
+        const errorData = error?.data ?? error?.response?.data ?? {};
+        const errorCode = errorData?.error ?? "";
+        const msg: string = errorData?.message ?? "";
         const isUnavailable =
           errorCode === "NUMBER_UNAVAILABLE"
           || /no\s+free|no\s+(?:available\s+)?(?:phone|number)s?|not\s+available|unavailable|out\s+of\s+stock|sold\s+out|indisponible/i.test(msg);
