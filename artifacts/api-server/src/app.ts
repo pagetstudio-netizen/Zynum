@@ -31,6 +31,9 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true }));
 
 app.set("trust proxy", 1);
+app.get("/api/healthz", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 app.use("/api", securityMiddleware);
 app.use("/api", router);
 
