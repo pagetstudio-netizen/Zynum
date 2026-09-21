@@ -16,7 +16,6 @@ export * from "./country";
 export * from "./errorResponse";
 export * from "./getCountriesParams";
 export * from "./getOrderHistoryParams";
-export * from "./healthStatus";
 export * from "./loginRequest";
 export * from "./order";
 export * from "./orderHistoryResponse";
