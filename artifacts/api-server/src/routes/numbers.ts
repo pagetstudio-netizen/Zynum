@@ -20,6 +20,10 @@ import { refundOrder } from "../lib/orderRefund.js";
 
 const router: IRouter = Router();
 
+function isNumberUnavailableError(message: string): boolean {
+  return /no\s+free|no\s+(?:available\s+)?(?:phone|number)s?|not\s+available|unavailable|out\s+of\s+stock|sold\s+out/i.test(message);
+}
+
 function formatOrder(order: typeof ordersTable.$inferSelect) {
   const { icon: serviceIcon, color: serviceColor } = getServiceInfo(order.service);
   return {
@@ -77,6 +81,13 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
     fiveSimOrder = await buyNumber(service, country, operator ?? "any");
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat du numéro";
+    if (isNumberUnavailableError(message)) {
+      res.status(409).json({
+        error: "NUMBER_UNAVAILABLE",
+        message: "Le numéro sélectionné n'est plus disponible pour l'achat.",
+      });
+      return;
+    }
     res.status(400).json({ error: "Purchase failed", message });
     return;
   }

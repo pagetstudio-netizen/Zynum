@@ -278,12 +278,24 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         refetchBalance();
       },
       onError: (error: any) => {
+        const errorCode = error?.response?.data?.error ?? "";
         const msg: string = error?.response?.data?.message ?? "";
+        const isUnavailable =
+          errorCode === "NUMBER_UNAVAILABLE"
+          || /no\s+free|no\s+(?:available\s+)?(?:phone|number)s?|not\s+available|unavailable|out\s+of\s+stock|sold\s+out|indisponible/i.test(msg);
         const isBalance = /balance|no free|insufficient|solde/i.test(msg);
         toast({
           variant: "destructive",
-          title: isBalance ? t("buy_insufficient") : t("buy_error_title"),
-          description: isBalance ? t("buy_error_desc") : msg || t("buy_error_generic"),
+          title: isUnavailable
+            ? t("buy_unavailable_title")
+            : isBalance
+              ? t("buy_insufficient")
+              : t("buy_error_title"),
+          description: isUnavailable
+            ? t("buy_unavailable_desc")
+            : isBalance
+              ? t("buy_error_desc")
+              : msg || t("buy_error_generic"),
         });
       },
     },
