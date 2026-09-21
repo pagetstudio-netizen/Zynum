@@ -8,6 +8,13 @@ function fmtDate(d: Date): string {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 function fmtNum(n: number): string { return n.toLocaleString("fr-FR"); }
+export function escapeTelegramHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function formatBalance(usd: number): string {
+  return `${fmtNum(Math.round(usd * 620))} FCFA ($${usd.toFixed(2)})`;
+}
 
 // ─── Chat ID resolution ───────────────────────────────────────────────────────
 
@@ -112,6 +119,35 @@ export async function answerCallbackQuery(callbackQueryId: string, text: string)
   } catch {}
 }
 
+export async function isAuthorizedAdminGroupMessage(
+  chatId: string,
+  chatType: string,
+  telegramUserId: number | null | undefined,
+): Promise<boolean> {
+  const configuredChatId = await getChatId();
+  if (!configuredChatId || String(configuredChatId) !== String(chatId)) return false;
+  if (chatType !== "group" && chatType !== "supergroup") return false;
+  if (!telegramUserId) return false;
+
+  const token = process.env.TELEGRAM_BOT_TOKEN ?? "";
+  if (!token) return false;
+  try {
+    const response = await fetch(`${TELEGRAM_API()}/getChatMember`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, user_id: telegramUserId }),
+    });
+    const data = await response.json() as {
+      ok: boolean;
+      result?: { status?: string };
+    };
+    return data.ok && ["creator", "administrator"].includes(data.result?.status ?? "");
+  } catch (error) {
+    console.error("[Telegram] Could not verify group administrator:", error);
+    return false;
+  }
+}
+
 export async function editMessageText(chatId: string, messageId: number, text: string): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN ?? "";
   if (!token) return;
@@ -191,7 +227,9 @@ export async function handleDebitCallback(opts: {
         `💵 Montant: <b>${fmtNum(amountFcfa)} XOF</b>`,
         `📅 Date: ${now}`,
         ``,
-        `🔴 <b>DÉBITÉ</b> par ${adminName} — Nouveau solde: ${fmtNum(newBalanceFcfa)} FCFA`,
+        `📊 Solde avant: <b>${formatBalance(user.balanceUsd)}</b>`,
+        `🔴 <b>DÉBITÉ</b> par ${escapeTelegramHtml(adminName)}`,
+        `📊 Nouveau solde: <b>${formatBalance(user.balanceUsd - amountUsd)}</b>`,
       ].join("\n")
     );
 
@@ -200,6 +238,82 @@ export async function handleDebitCallback(opts: {
     console.error("[Telegram debit] Error:", err);
     await answerCallbackQuery(callbackQueryId, `❌ Erreur lors du débit. Réessayez.`);
   }
+}
+
+export async function notifyAdminBalanceChange(opts: {
+  adminId?: number | null;
+  adminName?: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  previousBalanceUsd: number;
+  amountUsd: number;
+  type: "credit" | "debit";
+  newBalanceUsd: number;
+  note?: string | null;
+}): Promise<void> {
+  const chatId = await getChatId();
+  if (!chatId) return;
+  const adminName = opts.adminName ?? (opts.adminId ? `Admin #${opts.adminId}` : "Administrateur");
+  const isCredit = opts.type === "credit";
+  const text = [
+    `🛠️ <b>MODIFICATION DU SOLDE UTILISATEUR</b>`,
+    ``,
+    `👮 Administrateur: <b>${escapeTelegramHtml(adminName)}</b>`,
+    `👤 Utilisateur: <b>${escapeTelegramHtml(opts.userName)}</b> (#${opts.userId})`,
+    `📧 Email: <code>${escapeTelegramHtml(opts.userEmail)}</code>`,
+    ``,
+    `📊 Ancien solde: <b>${formatBalance(opts.previousBalanceUsd)}</b>`,
+    `${isCredit ? "➕ Montant ajouté" : "➖ Montant retiré"}: <b>${formatBalance(opts.amountUsd)}</b>`,
+    `📊 Nouveau solde: <b>${formatBalance(opts.newBalanceUsd)}</b>`,
+    `📝 Motif: ${escapeTelegramHtml(opts.note?.trim() || (isCredit ? "Crédit manuel" : "Débit manuel"))}`,
+    `📅 Date: ${fmtDate(new Date())}`,
+  ].join("\n");
+  await sendMessage(chatId, text).catch(() => {});
+}
+
+export async function notifyAdminUserChange(opts: {
+  adminId?: number | null;
+  adminName?: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  changes: string[];
+}): Promise<void> {
+  const chatId = await getChatId();
+  if (!chatId || opts.changes.length === 0) return;
+  const adminName = opts.adminName ?? (opts.adminId ? `Admin #${opts.adminId}` : "Administrateur");
+  const text = [
+    `🛠️ <b>MODIFICATION D'UN UTILISATEUR</b>`,
+    ``,
+    `👮 Administrateur: <b>${escapeTelegramHtml(adminName)}</b>`,
+    `👤 Utilisateur: <b>${escapeTelegramHtml(opts.userName)}</b> (#${opts.userId})`,
+    `📧 Email: <code>${escapeTelegramHtml(opts.userEmail)}</code>`,
+    ``,
+    ...opts.changes.map((change) => `• ${escapeTelegramHtml(change)}`),
+    ``,
+    `📅 Date: ${fmtDate(new Date())}`,
+  ].join("\n");
+  await sendMessage(chatId, text).catch(() => {});
+}
+
+export async function notifyAdminSecurityAction(opts: {
+  adminName?: string;
+  action: string;
+  target: string;
+  details: string[];
+}): Promise<void> {
+  const chatId = await getChatId();
+  if (!chatId) return;
+  const text = [
+    `🛡️ <b>${escapeTelegramHtml(opts.action)}</b>`,
+    ``,
+    `👮 Administrateur: <b>${escapeTelegramHtml(opts.adminName || "Administrateur")}</b>`,
+    `🎯 Cible: <b>${escapeTelegramHtml(opts.target)}</b>`,
+    ...opts.details.map((detail) => `• ${escapeTelegramHtml(detail)}`),
+    `📅 Date: ${fmtDate(new Date())}`,
+  ].join("\n");
+  await sendMessage(chatId, text).catch(() => {});
 }
 
 // ─── Bot updates / detect ─────────────────────────────────────────────────────

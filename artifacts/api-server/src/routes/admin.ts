@@ -9,6 +9,7 @@ import { invalidateCommissionCache } from "../lib/commission.js";
 import { sendBroadcastEmail, sendDirectEmail } from "../lib/email.js";
 import { OWNER_ADMIN_EMAIL } from "../lib/adminPolicy.js";
 import { blockIp, getClientIp, recordSecurityEvent } from "../middlewares/securityMiddleware.js";
+import { notifyAdminBalanceChange, notifyAdminSecurityAction, notifyAdminUserChange } from "../lib/telegram.js";
 
 const router = Router();
 const auth = [requireAuth, requireAdmin];
@@ -127,9 +128,11 @@ router.patch("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void
   // Fetch current user to compute balance delta
   const [current] = await db
     .select({
+      name: usersTable.name,
       balanceUsd: usersTable.balanceUsd,
       email: usersTable.email,
       isAdmin: usersTable.isAdmin,
+      isBanned: usersTable.isBanned,
     })
     .from(usersTable)
     .where(eq(usersTable.id, userId))
@@ -182,6 +185,48 @@ router.patch("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void
   }
 
   res.json({ success: true, user: { ...updated, passwordHash: undefined } });
+
+  const changes: string[] = [];
+  if (name !== undefined && String(name) !== current.name) {
+    changes.push(`Nom: ${current.name} → ${String(name)}`);
+  }
+  if (email !== undefined && String(email).trim().toLowerCase() !== current.email.trim().toLowerCase()) {
+    changes.push(`Email: ${current.email} → ${String(email)}`);
+  }
+  if (password !== undefined) changes.push("Mot de passe: modifié");
+  if (isAdmin !== undefined && Boolean(isAdmin) !== current.isAdmin) {
+    changes.push(`Droits administrateur: ${current.isAdmin ? "activés" : "désactivés"} → ${isAdmin ? "activés" : "désactivés"}`);
+  }
+  if (isBanned !== undefined && Boolean(isBanned) !== current.isBanned) {
+    changes.push(`Compte: ${current.isBanned ? "banni" : "actif"} → ${isBanned ? "banni" : "actif"}`);
+  }
+
+  if (balanceUsd !== undefined) {
+    const newBalance = parseFloat(balanceUsd);
+    const delta = newBalance - (current.balanceUsd ?? 0);
+    if (Math.abs(delta) > 0.001) {
+      void notifyAdminBalanceChange({
+        adminId: req.userId,
+        userId,
+        userName: updated.name,
+        userEmail: updated.email,
+        previousBalanceUsd: current.balanceUsd ?? 0,
+        amountUsd: Math.abs(delta),
+        type: delta >= 0 ? "credit" : "debit",
+        newBalanceUsd: newBalance,
+        note: "Ajustement manuel du solde",
+      });
+    }
+  }
+  if (changes.length > 0) {
+    void notifyAdminUserChange({
+      adminId: req.userId,
+      userId,
+      userName: updated.name,
+      userEmail: updated.email,
+      changes,
+    });
+  }
 });
 
 /* Ajustement de solde — crédit ou débit */
@@ -218,12 +263,39 @@ router.post("/v1/admin/users/:id/balance", ...auth, async (req: any, res): Promi
   });
 
   res.json({ success: true, previousBalance: current, newBalance: updated.balanceUsd, delta });
+  void notifyAdminBalanceChange({
+    adminId: req.userId,
+    userId,
+    userName: user.name,
+    userEmail: user.email,
+    previousBalanceUsd: current,
+    amountUsd: amt,
+    type,
+    newBalanceUsd: updated.balanceUsd ?? newBal,
+    note,
+  });
 });
 
 router.delete("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => {
   const userId = parseInt(String(req.params.id));
+  const [user] = await db
+    .select({ id: usersTable.id, name: usersTable.name, email: usersTable.email, isBanned: usersTable.isBanned })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
   await db.delete(usersTable).where(eq(usersTable.id, userId));
   res.json({ success: true });
+  void notifyAdminSecurityAction({
+    adminName: `Admin #${req.userId}`,
+    action: "SUPPRESSION D'UTILISATEUR",
+    target: `${user.name} (#${user.id})`,
+    details: [
+      `Email: ${user.email}`,
+      `État avant suppression: ${user.isBanned ? "banni" : "actif"}`,
+      "Compte et données associées supprimés.",
+    ],
+  });
 });
 
 /* ─── ORDERS ─────────────────────────────────────────────────────────── */
@@ -453,9 +525,19 @@ router.post("/v1/admin/security/blocked-ips", ...auth, async (req: any, res): Pr
     path: req.originalUrl,
     statusCode: 200,
     details: `IP ${ip} bloquée jusqu'au ${blockedUntil.toISOString()}`,
-    notify: true,
+    notify: false,
   });
   res.json({ success: true, ip, blockedUntil });
+  void notifyAdminSecurityAction({
+    adminName: `Admin #${req.userId}`,
+    action: "BLOCAGE D'ADRESSE IP",
+    target: ip,
+    details: [
+      `Motif: ${reason}`,
+      `Bloquée jusqu'au: ${blockedUntil.toISOString()}`,
+      "Origine: panneau d'administration",
+    ],
+  });
 });
 
 router.delete("/v1/admin/security/blocked-ips/:ip", ...auth, async (req: any, res): Promise<void> => {
@@ -470,9 +552,18 @@ router.delete("/v1/admin/security/blocked-ips/:ip", ...auth, async (req: any, re
     path: req.originalUrl,
     statusCode: 200,
     details: `IP ${ip} débloquée manuellement`,
-    notify: true,
+    notify: false,
   });
   res.json({ success: true });
+  void notifyAdminSecurityAction({
+    adminName: `Admin #${req.userId}`,
+    action: "DÉBLOCAGE D'ADRESSE IP",
+    target: ip,
+    details: [
+      "L'adresse IP peut de nouveau accéder à la plateforme.",
+      "Origine: panneau d'administration",
+    ],
+  });
 });
 
 /* ─── PUBLIC SETTINGS ────────────────────────────────────────────────── */

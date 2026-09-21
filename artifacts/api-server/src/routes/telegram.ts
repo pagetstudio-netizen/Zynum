@@ -1,12 +1,40 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { isIP } from "node:net";
+import { db, ipBlocksTable, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import {
   sendMessage, detectGroupChats, saveChatId, getChatId,
   getBotInfo, sendDailyReport, handleDebitCallback, answerCallbackQuery,
+  isAuthorizedAdminGroupMessage, notifyAdminSecurityAction,
 } from "../lib/telegram.js";
+import { blockIp, recordSecurityEvent } from "../middlewares/securityMiddleware.js";
 
 const router: IRouter = Router();
+
+function telegramAdminLabel(from: any): string {
+  if (from?.username) return `@${from.username}`;
+  return `${from?.first_name ?? ""} ${from?.last_name ?? ""}`.trim() || "Administrateur Telegram";
+}
+
+function parseTelegramCommand(rawText: string): { command: string; args: string } {
+  const match = rawText.trim().match(/^\/([a-z_]+)(?:@[a-z0-9_]+)?(?:\s+([\s\S]*))?$/i);
+  return {
+    command: (match?.[1] ?? "").toLowerCase(),
+    args: match?.[2]?.trim() ?? "",
+  };
+}
+
+function parseUserId(args: string): number | null {
+  const value = Number.parseInt(args.split(/\s+/, 1)[0] ?? "", 10);
+  return Number.isSafeInteger(value) && value > 0 ? value : null;
+}
+
+const GROUP_ADMIN_COMMANDS = new Set([
+  "ban", "bannir", "unban", "debannir",
+  "blockip", "bloquerip", "unblockip", "debloquerip",
+]);
 
 // ─── Webhook (bot commands + callback_query) ──────────────────────────────────
 
@@ -61,7 +89,151 @@ router.post("/v1/telegram/webhook", async (req: Request, res: Response): Promise
     if (!msg) { res.json({ ok: true }); return; }
 
     const chatId = String(msg.chat?.id ?? "");
-    const text   = String(msg.text ?? "").trim().toLowerCase();
+    const rawText = String(msg.text ?? "").trim();
+    const text = rawText.toLowerCase();
+    const { command, args } = parseTelegramCommand(rawText);
+
+    if (GROUP_ADMIN_COMMANDS.has(command)) {
+      const isAuthorized = await isAuthorizedAdminGroupMessage(
+        chatId,
+        String(msg.chat?.type ?? ""),
+        Number(msg.from?.id ?? 0) || null,
+      );
+      if (!isAuthorized) {
+        if (msg.chat?.type === "group" || msg.chat?.type === "supergroup") {
+          await sendMessage(chatId, "⛔ Cette commande est réservée aux administrateurs du groupe configuré.");
+        }
+        res.json({ ok: true });
+        return;
+      }
+
+      const adminName = telegramAdminLabel(msg.from);
+
+      if (command === "ban" || command === "bannir" || command === "unban" || command === "debannir") {
+        const userId = parseUserId(args);
+        if (!userId) {
+          await sendMessage(chatId, `⚠️ Utilisation: /${command} <id_utilisateur>`);
+          res.json({ ok: true });
+          return;
+        }
+
+        const [user] = await db
+          .select({
+            id: usersTable.id,
+            name: usersTable.name,
+            email: usersTable.email,
+            isAdmin: usersTable.isAdmin,
+            isBanned: usersTable.isBanned,
+          })
+          .from(usersTable)
+          .where(eq(usersTable.id, userId))
+          .limit(1);
+
+        if (!user) {
+          await sendMessage(chatId, `❌ Utilisateur #${userId} introuvable.`);
+          res.json({ ok: true });
+          return;
+        }
+        if (user.isAdmin) {
+          await sendMessage(chatId, "⛔ Un compte administrateur ne peut pas être banni depuis Telegram.");
+          res.json({ ok: true });
+          return;
+        }
+
+        const shouldBan = command === "ban" || command === "bannir";
+        if (user.isBanned === shouldBan) {
+          await sendMessage(chatId, `ℹ️ Le compte de ${user.name} est déjà ${shouldBan ? "banni" : "actif"}.`);
+          res.json({ ok: true });
+          return;
+        }
+
+        await db.update(usersTable).set({ isBanned: shouldBan }).where(eq(usersTable.id, user.id));
+        await recordSecurityEvent({
+          eventType: shouldBan ? "user_banned_telegram" : "user_unbanned_telegram",
+          severity: shouldBan ? "high" : "info",
+          ip: "telegram",
+          userId: user.id,
+          email: user.email,
+          method: "TELEGRAM",
+          path: `/${command}`,
+          statusCode: 200,
+          details: `${shouldBan ? "Bannissement" : "Débannissement"} par ${adminName}`,
+          notify: false,
+        });
+        await notifyAdminSecurityAction({
+          adminName,
+          action: shouldBan ? "BANNISSEMENT D'UTILISATEUR" : "DÉBANNISSEMENT D'UTILISATEUR",
+          target: `${user.name} (#${user.id})`,
+          details: [
+            `Email: ${user.email}`,
+            `Nouveau statut: ${shouldBan ? "banni" : "actif"}`,
+            "Origine: commande Telegram dans le groupe administrateur",
+          ],
+        });
+        await sendMessage(chatId, `✅ ${user.name} (#${user.id}) est maintenant ${shouldBan ? "banni" : "actif"}.`);
+        res.json({ ok: true });
+        return;
+      }
+
+      const ip = args.split(/\s+/, 1)[0] ?? "";
+      if (!ip || isIP(ip) === 0) {
+        await sendMessage(chatId, `⚠️ Utilisation: /${command} <adresse_ip> [motif]`);
+        res.json({ ok: true });
+        return;
+      }
+
+      if (command === "blockip" || command === "bloquerip") {
+        const reason = args.slice(ip.length).trim() || "Blocage demandé depuis Telegram";
+        const blockedUntil = await blockIp(ip, reason);
+        await recordSecurityEvent({
+          eventType: "ip_blocked_telegram",
+          severity: "high",
+          ip,
+          method: "TELEGRAM",
+          path: `/${command}`,
+          statusCode: 200,
+          details: `Blocage par ${adminName}: ${reason}`,
+          notify: false,
+        });
+        await notifyAdminSecurityAction({
+          adminName,
+          action: "BLOCAGE D'ADRESSE IP",
+          target: ip,
+          details: [
+            `Motif: ${reason}`,
+            `Bloquée jusqu'au: ${blockedUntil.toISOString()}`,
+            "Origine: commande Telegram dans le groupe administrateur",
+          ],
+        });
+        await sendMessage(chatId, `✅ Adresse IP ${ip} bloquée jusqu'au ${blockedUntil.toISOString()}.`);
+        res.json({ ok: true });
+        return;
+      }
+
+      await db.delete(ipBlocksTable).where(eq(ipBlocksTable.ip, ip));
+      await recordSecurityEvent({
+        eventType: "ip_unblocked_telegram",
+        severity: "info",
+        ip,
+        method: "TELEGRAM",
+        path: `/${command}`,
+        statusCode: 200,
+        details: `Déblocage par ${adminName}`,
+        notify: false,
+      });
+      await notifyAdminSecurityAction({
+        adminName,
+        action: "DÉBLOCAGE D'ADRESSE IP",
+        target: ip,
+        details: [
+          "L'adresse IP peut de nouveau accéder à la plateforme.",
+          "Origine: commande Telegram dans le groupe administrateur",
+        ],
+      });
+      await sendMessage(chatId, `✅ Adresse IP ${ip} débloquée.`);
+      res.json({ ok: true });
+      return;
+    }
 
     if (text.startsWith("/start")) {
       await sendMessage(chatId, [
@@ -84,6 +256,12 @@ router.post("/v1/telegram/webhook", async (req: Request, res: Response): Promise
         `/rapport — Envoyer le rapport maintenant`,
         `/chatid — Afficher l'ID de ce chat`,
         `/ping — Tester la connexion`,
+        ``,
+        `<b>Commandes de sécurité — groupe admin uniquement</b>`,
+        `/ban &lt;id&gt; — Bannir un utilisateur`,
+        `/unban &lt;id&gt; — Débannir un utilisateur`,
+        `/blockip &lt;ip&gt; [motif] — Bloquer une adresse IP`,
+        `/unblockip &lt;ip&gt; — Débloquer une adresse IP`,
       ].join("\n"));
     } else if (text.startsWith("/chatid")) {
       await sendMessage(chatId, `🆔 <b>Chat ID :</b> <code>${chatId}</code>\n\nCopiez cet ID et collez-le dans la section Telegram du panneau admin.`);

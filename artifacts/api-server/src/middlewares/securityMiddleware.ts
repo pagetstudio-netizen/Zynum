@@ -234,6 +234,12 @@ function shouldAuditMutation(req: Request): boolean {
     || path.includes("/withdraw");
 }
 
+function hasDedicatedAdminNotification(req: Request): boolean {
+  const path = req.originalUrl.toLowerCase();
+  return path.includes("/admin/users/")
+    || path.includes("/admin/security/blocked-ips");
+}
+
 export async function securityMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   const path = req.originalUrl.toLowerCase();
   if (path.includes("/webhooks/") || path.endsWith("/health")) {
@@ -326,7 +332,7 @@ export async function securityMiddleware(req: Request, res: Response, next: Next
           path: req.originalUrl,
           statusCode: res.statusCode,
           details: "Action sensible réussie",
-          notify: true,
+          notify: !hasDedicatedAdminNotification(req),
         });
       }
     })();
