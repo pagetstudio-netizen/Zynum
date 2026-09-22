@@ -747,6 +747,22 @@
   object-fit: contain;
 }
 
+.dashboard-help-center-icon,
+.dashboard-support-client-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.dashboard-help-center-icon {
+  filter: brightness(0) saturate(100%) invert(43%) sepia(98%) saturate(1929%)
+    hue-rotate(176deg) brightness(91%) contrast(94%);
+}
+
+.dashboard-support-client-icon {
+  border-radius: 999px;
+}
+
 .dashboard-sidebar nav > div[class*="border-t"] {
   border-top-color: #f0f1f4 !important;
 }

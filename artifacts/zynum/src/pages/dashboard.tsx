@@ -8,7 +8,7 @@ import {
   Package, ChevronRight,
   Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Globe2,
-  LayoutDashboard, History, WalletCards, UsersRound, MessageSquare,
+  LayoutDashboard, History, WalletCards, UsersRound,
 } from "lucide-react";
 import iconCardSolde   from "@assets/internet_15229770_1774888657109.png";
 import iconAchat       from "@assets/freepik__icônes_produits_ou_achat_1774888657188.png";
@@ -18,6 +18,9 @@ import iconMenuRecharge from "@assets/icons8-argent-mobile-53_1774828244252.png"
 import iconProfile     from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
 import iconAffiliateStats from "@assets/statss_1790062014731.png";
+import iconAffiliateMenu from "@assets/téléchargement_(97)_1790085870730.png";
+import iconSupportClient from "@assets/téléchargement_(95)_1790085871155.png";
+import iconHelpCenter from "@assets/téléchargement_(67)_1790085975534.png";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -606,7 +609,7 @@ export default function Dashboard() {
     { id: "buy",        label: t("dash_tab_buy"),      icon: ShoppingCart, image: iconMenuBuy },
     { id: "history",    label: t("dash_tab_history"),  icon: History,       image: iconMenuHistory },
     { id: "recharge",   label: t("dash_tab_recharge"), icon: WalletCards,   image: iconMenuRecharge },
-    { id: "affiliate",  label: "Affiliation",          icon: UsersRound,    image: iconAffiliateStats },
+    { id: "affiliate",  label: "Affiliation",          icon: UsersRound,    image: iconAffiliateMenu },
     { id: "profile",    label: t("dash_tab_profile"),  icon: User,          image: iconProfile },
     ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", icon: Shield }] : []),
   ];
@@ -700,15 +703,15 @@ export default function Dashboard() {
                className="dashboard-sidebar-nav-item w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all"
               onClick={() => setSidebarOpen(false)}
             >
-              <HelpCircle className="w-[18px] h-[18px] shrink-0" />
+              <img src={iconHelpCenter} alt="" className="dashboard-help-center-icon shrink-0" />
               {t("dash_help_center")}
             </Link>
             <button
               onClick={() => openWhatsAppSupport(WHATSAPP_SUPPORT_NUMBER)}
                className="dashboard-sidebar-nav-item w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all"
             >
-              <MessageSquare className="w-[18px] h-[18px] shrink-0" />
-              WhatsApp
+              <img src={iconSupportClient} alt="" className="dashboard-support-client-icon shrink-0" />
+              Support client
             </button>
           </div>
         </nav>
