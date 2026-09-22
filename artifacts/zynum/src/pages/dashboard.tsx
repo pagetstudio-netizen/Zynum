@@ -8,7 +8,7 @@ import {
   Package, ChevronRight,
   Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Globe2,
-  LayoutDashboard, History, WalletCards, UsersRound,
+  LayoutDashboard, History, WalletCards, UsersRound, MessageSquare,
 } from "lucide-react";
 import iconCardSolde   from "@assets/internet_15229770_1774888657109.png";
 import iconAchat       from "@assets/freepik__icônes_produits_ou_achat_1774888657188.png";
@@ -643,7 +643,7 @@ export default function Dashboard() {
       )}
 
       {/* Sidebar */}
-      <aside className={`
+      <aside className={`dashboard-sidebar
         fixed inset-y-0 left-0 z-30 w-72 border-r border-white/10
         flex flex-col transition-transform duration-300
         lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
@@ -657,8 +657,8 @@ export default function Dashboard() {
               <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
             </div>
             <div>
-              <span className="block font-bold text-white text-lg leading-tight">ZyNum</span>
-              <span className="block text-[10px] uppercase tracking-[0.16em] text-white/35 mt-0.5">Dashboard</span>
+              <span className="block font-bold text-lg leading-tight" style={{ color: "#ffffff" }}>ZyNum</span>
+              <span className="block text-[10px] uppercase tracking-[0.16em] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>Dashboard</span>
             </div>
           </div>
           <button
@@ -681,15 +681,15 @@ export default function Dashboard() {
               {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-              <p className="text-xs text-white/45 truncate mt-0.5">{user.email}</p>
+              <p className="text-sm font-semibold truncate" style={{ color: "#ffffff" }}>{user.name}</p>
+              <p className="text-xs truncate mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>{user.email}</p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 py-5 px-3 overflow-y-auto">
-          <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">Navigation</p>
+          <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.35)" }}>Navigation</p>
           <div className="space-y-1">
           {NAV.map((item) => {
             const active = activeTab === item.id;
@@ -717,7 +717,7 @@ export default function Dashboard() {
 
           {/* Separator */}
           <div className="pt-5 mt-5 border-t border-white/10 space-y-1">
-            <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">Aide & support</p>
+            <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.35)" }}>Aide & support</p>
             <Link
               href="/aide"
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/[0.07]"
@@ -740,15 +740,16 @@ export default function Dashboard() {
 
         {/* Currency toggle */}
         <div className="px-4 py-4 border-t border-white/10">
-          <p className="px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">Devise</p>
+          <p className="px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.35)" }}>Devise</p>
           <div className="flex bg-white/[0.06] border border-white/10 rounded-xl p-1 gap-1">
             {(["USD", "FCFA"] as const).map((c) => (
               <button
                 key={c}
                 onClick={() => setCurrency(c)}
                 className={`flex-1 py-1.5 rounded text-xs font-semibold transition-all ${
-                  currency === c ? "bg-orange-500 text-white shadow-md shadow-orange-950/20" : "text-white/45 hover:text-white/80"
+                  currency === c ? "bg-orange-500 shadow-md shadow-orange-950/20" : "hover:bg-white/[0.07]"
                 }`}
+                style={{ color: currency === c ? "#ffffff" : "rgba(255,255,255,0.45)" }}
               >
                 {c}
               </button>
@@ -786,7 +787,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Centre d'aide">
-              <img src={iconHelp} alt="Centre d'aide" className="w-4 h-4 object-contain" />
+              <HelpCircle className="w-4 h-4" />
             </Link>
             {/* User widget */}
             <UserWidget user={user} onProfileClick={() => setActiveTab("profile")} onLogout={() => logoutMutation.mutate()} />
