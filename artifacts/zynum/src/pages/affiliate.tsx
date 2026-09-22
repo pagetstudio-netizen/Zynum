@@ -60,24 +60,21 @@ export default function AffiliatePage() {
   const [withdrawCountry, setWithdrawCountry] = useState("Sénégal");
   const [submitting, setSubmitting] = useState(false);
 
-  // Format a USD amount in the active currency
   const fmt = (usd: number) =>
     currency === "FCFA"
       ? `${Math.round(usd * RATE).toLocaleString("fr-FR")} FCFA`
       : `$${usd.toFixed(2)}`;
 
-  // Convert the form input (in active currency) to USD for the API
+  const statAmount = (usd: number) =>
+    currency === "FCFA"
+      ? `${Math.round(usd * RATE).toLocaleString("fr-FR")} FCFA`
+      : `${usd.toFixed(0)}$`;
+
   const toUsd = (val: string) => {
     const n = parseFloat(val);
     if (!n || n <= 0) return 0;
     return currency === "FCFA" ? n / RATE : n;
   };
-
-  // Current balance in display currency
-  const balanceDisplay = (usd: number) =>
-    currency === "FCFA"
-      ? Math.round(usd * RATE)
-      : usd;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -93,7 +90,7 @@ export default function AffiliatePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -119,12 +116,11 @@ export default function AffiliatePage() {
           url: referralLink,
         });
       } catch {
-        // L'utilisateur peut fermer la feuille de partage sans erreur visible.
+        // La fermeture de la feuille de partage ne doit pas afficher d'erreur.
       }
       return;
     }
     copyLink();
-    toast({ title: "Lien copié !", description: "Le partage natif n'est pas disponible sur cet appareil." });
   };
 
   const handleWithdraw = async (e: React.FormEvent) => {
@@ -174,243 +170,140 @@ export default function AffiliatePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="affiliate-reference">
+      <section className="affiliate-reference-intro">
+        <p>Partagez votre lien pour obtenir un bonus de 10%<br />sur chaque achat de vos filleuls.</p>
+      </section>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Programme d'affiliation</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Gagnez 10% de commission sur chaque achat de vos filleuls</p>
+      <section className="affiliate-reference-link-card">
+        <div className="affiliate-reference-link-row">
+          <span className="affiliate-reference-link" title={referralLink ?? undefined}>
+            {referralLink ?? "Lien de parrainage indisponible"}
+          </span>
+          <button
+            type="button"
+            onClick={copyLink}
+            disabled={!referralLink}
+            className="affiliate-reference-copy"
+          >
+            {copied ? <Check /> : <Copy />}
+            <span>{copied ? "Copié" : "Copier"}</span>
+          </button>
         </div>
-        <button onClick={load} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-          <RefreshCw className="w-4 h-4" />
+      </section>
+
+      <div className="affiliate-reference-actions">
+        <button
+          type="button"
+          onClick={shareLink}
+          disabled={!referralLink}
+          className="affiliate-reference-share"
+        >
+          <Share2 />
+          Partager
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowWithdrawForm(true)}
+          disabled={(stats?.affiliateBalance ?? 0) <= 0}
+          className="affiliate-reference-withdraw"
+        >
+          <ArrowDownToLine />
+          {stats?.affiliateBalance ? "Retirer les gains" : "Aucun gain à encaisser"}
         </button>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Mes filleuls */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/20 flex items-start gap-4"
-        >
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <Users className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-sm text-white/70 mb-1">Mes filleuls</p>
-            <p className="text-3xl font-bold">{stats?.filleulCount ?? 0}</p>
-            <p className="text-xs text-white/60 mt-1">Personnes inscrites via votre lien</p>
-          </div>
-        </motion.div>
-
-        {/* Commissions gagnées */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="rounded-2xl p-5 bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 flex items-start gap-4"
-        >
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <DollarSign className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-sm text-white/70 mb-1">Commissions gagnées</p>
-            <p className="text-3xl font-bold">{fmt(stats?.totalEarned ?? 0)}</p>
-            <p className="text-xs text-white/60 mt-1">
-              Solde disponible : <span className="font-bold">{fmt(stats?.affiliateBalance ?? 0)}</span>
-            </p>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Referral link */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <ChevronRight className="w-4 h-4 text-primary" />
-          Votre lien d'invitation
-        </h3>
-        {referralLink ? (
-          <div className="flex gap-2">
-            <div className="flex-1 rounded-xl bg-gray-50 border border-gray-200 px-4 py-2.5 text-sm text-gray-700 font-mono truncate">
-              {referralLink}
-            </div>
-            <button
-              onClick={copyLink}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-primary text-white text-sm font-semibold hover:opacity-90 transition-all shadow-sm shrink-0"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Copié !" : "Copier"}
+      {showWithdrawForm && (
+        <section className="affiliate-reference-withdraw-panel">
+          <div className="affiliate-reference-panel-heading">
+            <h3>Retirer les gains</h3>
+            <button type="button" onClick={() => setShowWithdrawForm(false)} aria-label="Fermer">
+              <X />
             </button>
           </div>
-        ) : (
-          <p className="text-sm text-gray-500">Code de parrainage non disponible.</p>
-        )}
-        <p className="text-xs text-gray-400 mt-2">
-          Code : <span className="font-bold text-gray-600">{stats?.referralCode ?? "—"}</span>
-        </p>
-      </div>
-
-      {/* Withdrawal section */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <ArrowDownToLine className="w-4 h-4 text-primary" />
-            Retrait des commissions
-          </h3>
-          {!showWithdrawForm && (
-            <button
-              onClick={() => setShowWithdrawForm(true)}
-              disabled={(stats?.affiliateBalance ?? 0) <= 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-primary text-white text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ArrowDownToLine className="w-3.5 h-3.5" />
-              Demander un retrait
-            </button>
-          )}
-        </div>
-
-        {(stats?.affiliateBalance ?? 0) <= 0 && !showWithdrawForm && (
-          <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            Votre solde d'affiliation est de {fmt(0)}. Invitez des filleuls pour commencer à gagner !
-          </div>
-        )}
-
-        {showWithdrawForm && (
-          <form onSubmit={handleWithdraw} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Montant ({currency}) <span className="text-red-500">*</span>
-                  <span className="ml-1 text-gray-400 font-normal">
-                    Disponible : {fmt(stats?.affiliateBalance ?? 0)}
-                  </span>
-                </label>
-                <input
-                  type="number"
-                  step={currency === "FCFA" ? "1" : "0.01"}
-                  min={currency === "FCFA" ? "620" : "1"}
-                  max={maxInput}
-                  placeholder={currency === "FCFA" ? "Ex: 3100" : "Ex: 5.00"}
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  required
-                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white"
-                />
-                {currency === "FCFA" && withdrawAmount && parseFloat(withdrawAmount) > 0 && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    ≈ ${(parseFloat(withdrawAmount) / RATE).toFixed(2)} USD
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Pays <span className="text-red-500">*</span></label>
-                <select
-                  value={withdrawCountry}
-                  onChange={(e) => setWithdrawCountry(e.target.value)}
-                  required
-                  className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white"
-                >
-                  {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Numéro Mobile Money / Téléphone <span className="text-red-500">*</span>
-              </label>
+          <form onSubmit={handleWithdraw} className="affiliate-reference-form">
+            <label>
+              Montant ({currency})
+              <input
+                type="number"
+                step={currency === "FCFA" ? "1" : "0.01"}
+                min={currency === "FCFA" ? "620" : "1"}
+                max={maxInput}
+                placeholder={currency === "FCFA" ? "Ex : 3100" : "Ex : 5.00"}
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Pays
+              <select value={withdrawCountry} onChange={(e) => setWithdrawCountry(e.target.value)} required>
+                {COUNTRIES.map((country) => <option key={country}>{country}</option>)}
+              </select>
+            </label>
+            <label className="affiliate-reference-form-wide">
+              Numéro Mobile Money / Téléphone
               <input
                 type="tel"
-                placeholder="Ex: +221 77 123 45 67"
+                placeholder="Ex : +221 77 123 45 67"
                 value={withdrawPhone}
                 onChange={(e) => setWithdrawPhone(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white"
               />
-            </div>
-
-            <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2">
-              <Clock className="w-3.5 h-3.5 shrink-0" />
-              Les retraits sont traités dans un délai de 48h ouvrables.
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setShowWithdrawForm(false)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-all"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-primary text-white text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 shadow-sm"
-              >
+            </label>
+            <p className="affiliate-reference-withdraw-note">
+              <Clock /> Les retraits sont traités sous 48h ouvrables.
+            </p>
+            <div className="affiliate-reference-form-actions">
+              <button type="button" onClick={() => setShowWithdrawForm(false)}>Annuler</button>
+              <button type="submit" disabled={submitting}>
                 {submitting ? "Envoi..." : "Confirmer le retrait"}
               </button>
             </div>
           </form>
-        )}
+        </section>
+      )}
 
-        {/* Withdrawal history */}
-        {withdrawals.length > 0 && (
-          <div className="mt-5 pt-4 border-t border-gray-100">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Historique des retraits</h4>
-            <div className="space-y-2">
-              {withdrawals.map((w) => (
-                <div key={w.id} className="flex items-center justify-between py-2 px-3 rounded-xl bg-gray-50 border border-gray-100">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{fmt(w.amountUsd)}</p>
-                    <p className="text-xs text-gray-400">{w.phone} · {w.country}</p>
-                    {w.note && <p className="text-xs text-gray-500 mt-0.5">{w.note}</p>}
-                  </div>
-                  <div className="text-right">
-                    {statusBadge(w.status)}
-                    <p className="text-xs text-gray-400 mt-1">{new Date(w.createdAt).toLocaleDateString("fr-FR")}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+      <section className="affiliate-reference-stats">
+        <div className="affiliate-reference-stat-card">
+          <div className="affiliate-reference-stat-icon affiliate-reference-stat-icon-users">
+            <Users />
           </div>
-        )}
-      </div>
-
-      {/* Referrals list */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-            <Users className="w-4 h-4 text-violet-500" />
-            Mes filleuls ({referrals.length})
-          </h3>
+          <p>Affiliés</p>
+          <strong>{stats?.filleulCount ?? 0}</strong>
         </div>
+        <div className="affiliate-reference-stat-card">
+          <div className="affiliate-reference-stat-icon affiliate-reference-stat-icon-money">
+            <WalletCards />
+          </div>
+          <p>Mes Gains</p>
+          <strong>{statAmount(stats?.affiliateBalance ?? 0)}</strong>
+        </div>
+      </section>
 
+      <section className="affiliate-reference-referrals">
+        <h2>Mes affiliés</h2>
         {referrals.length === 0 ? (
-          <div className="py-12 text-center">
-            <Users className="w-10 h-10 mx-auto mb-3 text-gray-200" />
-            <p className="text-sm text-gray-400 font-medium">Aucun filleul pour l'instant</p>
-            <p className="text-xs text-gray-400 mt-1">Partagez votre lien pour commencer à gagner !</p>
+          <div className="affiliate-reference-empty">
+            <Users />
+            <p>Aucun affilié pour l'instant</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
-            {referrals.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 px-5 py-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center font-bold text-white text-sm shrink-0">
-                  {r.name.charAt(0).toUpperCase()}
+          <div className="affiliate-reference-referral-list">
+            {referrals.map((referral) => (
+              <div key={referral.id} className="affiliate-reference-referral-row">
+                <div className="affiliate-reference-referral-avatar">
+                  {referral.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{r.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{r.email}</p>
+                <div>
+                  <strong>{referral.name}</strong>
+                  <span>{new Date(referral.createdAt).toLocaleDateString("fr-FR")}</span>
                 </div>
-                <p className="text-xs text-gray-400 shrink-0">{new Date(r.createdAt).toLocaleDateString("fr-FR")}</p>
               </div>
             ))}
           </div>
         )}
-      </div>
-
+      </section>
     </div>
   );
 }

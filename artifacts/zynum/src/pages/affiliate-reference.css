@@ -1,0 +1,514 @@
+.affiliate-reference {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 0 2px 34px;
+  color: #20242b;
+}
+
+.affiliate-reference-intro {
+  padding: 16px 8px 22px;
+  text-align: center;
+}
+
+.affiliate-reference-intro p {
+  margin: 0;
+  color: #30343b;
+  font-size: clamp(18px, 3.2vw, 24px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.45;
+}
+
+.affiliate-reference-link-card {
+  padding: 22px 31px;
+  border-radius: 19px;
+  background: #ededed;
+}
+
+.affiliate-reference-link-row {
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+  gap: 12px;
+  padding: 0 18px;
+  border: 1px solid #eeeeee;
+  border-radius: 13px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(26, 34, 45, 0.03);
+}
+
+.affiliate-reference-link {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: #24272c;
+  font-size: clamp(14px, 2.6vw, 18px);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.affiliate-reference-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: #30343a;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.affiliate-reference-copy svg {
+  width: 23px;
+  height: 23px;
+  stroke-width: 1.8;
+}
+
+.affiliate-reference-copy:disabled,
+.affiliate-reference-share:disabled,
+.affiliate-reference-withdraw:disabled {
+  cursor: not-allowed;
+}
+
+.affiliate-reference-copy:disabled {
+  opacity: 0.45;
+}
+
+.affiliate-reference-actions {
+  display: grid;
+  gap: 18px;
+  margin-top: 31px;
+}
+
+.affiliate-reference-share,
+.affiliate-reference-withdraw {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  gap: 9px;
+  border-radius: 30px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.affiliate-reference-share {
+  border: 0;
+  background: #217af2;
+  color: #ffffff;
+  box-shadow: 0 4px 9px rgba(33, 122, 242, 0.22);
+}
+
+.affiliate-reference-withdraw {
+  border: 1px solid #d8dce2;
+  background: #ffffff;
+  color: #9da1a6;
+}
+
+.affiliate-reference-withdraw:not(:disabled) {
+  border-color: #217af2;
+  color: #217af2;
+}
+
+.affiliate-reference-share:not(:disabled):hover {
+  filter: brightness(1.04);
+}
+
+.affiliate-reference-share:active,
+.affiliate-reference-withdraw:active {
+  transform: translateY(1px);
+}
+
+.affiliate-reference-share svg,
+.affiliate-reference-withdraw svg {
+  width: 21px;
+  height: 21px;
+  stroke-width: 2;
+}
+
+.affiliate-reference-withdraw-panel {
+  margin-top: 18px;
+  padding: 19px;
+  border: 1px solid #e5e9ef;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(31, 45, 61, 0.07);
+}
+
+.affiliate-reference-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.affiliate-reference-panel-heading h3 {
+  margin: 0;
+  color: #20242b;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.affiliate-reference-panel-heading button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #f3f5f8;
+  color: #737981;
+}
+
+.affiliate-reference-panel-heading svg {
+  width: 16px;
+  height: 16px;
+}
+
+.affiliate-reference-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.affiliate-reference-form label {
+  display: grid;
+  gap: 6px;
+  color: #5c626a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.affiliate-reference-form input,
+.affiliate-reference-form select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 43px;
+  padding: 0 12px;
+  border: 1px solid #dfe3e9;
+  border-radius: 10px;
+  background: #f8f9fb;
+  color: #20242b;
+  font-size: 14px;
+  outline: none;
+}
+
+.affiliate-reference-form input:focus,
+.affiliate-reference-form select:focus {
+  border-color: #217af2;
+  box-shadow: 0 0 0 3px rgba(33, 122, 242, 0.12);
+}
+
+.affiliate-reference-form-wide {
+  grid-column: 1 / -1;
+}
+
+.affiliate-reference-withdraw-note {
+  display: flex;
+  align-items: center;
+  grid-column: 1 / -1;
+  gap: 6px;
+  margin: 0;
+  color: #6c86a8;
+  font-size: 12px;
+}
+
+.affiliate-reference-withdraw-note svg {
+  width: 14px;
+  height: 14px;
+}
+
+.affiliate-reference-form-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 10px;
+}
+
+.affiliate-reference-form-actions button {
+  flex: 1;
+  min-height: 42px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.affiliate-reference-form-actions button:first-child {
+  border: 1px solid #dfe3e9;
+  background: #ffffff;
+  color: #59616b;
+}
+
+.affiliate-reference-form-actions button:last-child {
+  border: 0;
+  background: #217af2;
+  color: #ffffff;
+}
+
+.affiliate-reference-form-actions button:disabled {
+  opacity: 0.55;
+}
+
+.affiliate-reference-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 42px;
+}
+
+.affiliate-reference-stat-card {
+  min-height: 190px;
+  padding: 22px 30px 19px;
+  box-sizing: border-box;
+  border-radius: 13px;
+  background: #eeeeee;
+}
+
+.affiliate-reference-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+}
+
+.affiliate-reference-stat-icon svg {
+  width: 36px;
+  height: 36px;
+  stroke-width: 1.6;
+}
+
+.affiliate-reference-stat-icon-users {
+  color: #2469e8;
+}
+
+.affiliate-reference-stat-icon-money {
+  color: #40a66d;
+}
+
+.affiliate-reference-stat-card p {
+  margin: 0 0 7px;
+  color: #666b72;
+  font-size: 17px;
+}
+
+.affiliate-reference-stat-card strong {
+  display: block;
+  color: #272b31;
+  font-size: 31px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.affiliate-reference-referrals {
+  margin-top: 43px;
+}
+
+.affiliate-reference-referrals h2 {
+  margin: 0 0 18px;
+  color: #30343a;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.affiliate-reference-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 2px;
+  color: #a4a8ad;
+  font-size: 14px;
+}
+
+.affiliate-reference-empty svg {
+  width: 22px;
+  height: 22px;
+}
+
+.affiliate-reference-empty p {
+  margin: 0;
+}
+
+.affiliate-reference-referral-list {
+  overflow: hidden;
+  border: 1px solid #edf0f4;
+  border-radius: 15px;
+  background: #ffffff;
+}
+
+.affiliate-reference-referral-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 0 16px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.affiliate-reference-referral-row:last-child {
+  border-bottom: 0;
+}
+
+.affiliate-reference-referral-avatar {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #217af2;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.affiliate-reference-referral-row strong,
+.affiliate-reference-referral-row span {
+  display: block;
+}
+
+.affiliate-reference-referral-row strong {
+  color: #30343a;
+  font-size: 14px;
+}
+
+.affiliate-reference-referral-row span {
+  margin-top: 3px;
+  color: #9ca1a8;
+  font-size: 12px;
+}
+
+.affiliate-reference-loading {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+}
+
+.affiliate-reference-loader {
+  width: 25px;
+  height: 25px;
+  border: 3px solid #dce8fb;
+  border-top-color: #217af2;
+  border-radius: 50%;
+  animation: affiliate-reference-spin 0.75s linear infinite;
+}
+
+@keyframes affiliate-reference-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 639px) {
+  .affiliate-reference {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .affiliate-reference-intro {
+    padding-top: 12px;
+  }
+
+  .affiliate-reference-link-card {
+    padding: 17px 16px;
+  }
+
+  .affiliate-reference-link-row {
+    min-height: 64px;
+    padding: 0 13px;
+    gap: 7px;
+  }
+
+  .affiliate-reference-copy {
+    gap: 5px;
+    font-size: 14px;
+  }
+
+  .affiliate-reference-copy svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .affiliate-reference-actions {
+    gap: 14px;
+    margin-top: 25px;
+  }
+
+  .affiliate-reference-share,
+  .affiliate-reference-withdraw {
+    min-height: 55px;
+    font-size: 18px;
+  }
+
+  .affiliate-reference-stats {
+    gap: 20px;
+    margin-top: 34px;
+  }
+
+  .affiliate-reference-stat-card {
+    min-height: 170px;
+    padding: 19px 20px 17px;
+  }
+
+  .affiliate-reference-stat-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 12px;
+  }
+
+  .affiliate-reference-stat-icon svg {
+    width: 31px;
+    height: 31px;
+  }
+
+  .affiliate-reference-stat-card p {
+    font-size: 15px;
+  }
+
+  .affiliate-reference-stat-card strong {
+    font-size: 27px;
+  }
+
+  .affiliate-reference-referrals {
+    margin-top: 35px;
+  }
+
+  .affiliate-reference-referrals h2 {
+    font-size: 23px;
+  }
+}
+
+@media (max-width: 390px) {
+  .affiliate-reference-link {
+    font-size: 13px;
+  }
+
+  .affiliate-reference-copy span {
+    display: none;
+  }
+
+  .affiliate-reference-stats {
+    gap: 12px;
+  }
+
+  .affiliate-reference-stat-card {
+    min-height: 158px;
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
+  .affiliate-reference-stat-card strong {
+    font-size: 24px;
+  }
+
+  .affiliate-reference-form {
+    grid-template-columns: 1fr;
+  }
+}
