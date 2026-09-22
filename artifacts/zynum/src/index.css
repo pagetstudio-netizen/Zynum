@@ -386,6 +386,11 @@ html.light .bg-clip-text.from-white {
   background-image: linear-gradient(to bottom, hsl(222,47%,8%), hsl(222,47%,30%)) !important;
 }
 
+/* Auth screens use white foregrounds on their blue avatar, buttons, and controls. */
+html.light .auth-shell .text-white {
+  color: #ffffff !important;
+}
+
 @layer base {
   * {
     @apply border-border;

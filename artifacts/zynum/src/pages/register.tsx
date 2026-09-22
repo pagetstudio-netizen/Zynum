@@ -162,14 +162,14 @@ export default function Register() {
                      <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Prénom <span className="text-[#3157d5]">*</span></label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input type="text" placeholder="Jean" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
+                      <input type="text" autoComplete="given-name" placeholder="Jean" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
                     </div>
                   </div>
                   <div>
                      <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Nom <span className="text-[#3157d5]">*</span></label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input type="text" placeholder="Dupont" value={lastName} onChange={(e) => setLastName(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
+                      <input type="text" autoComplete="family-name" placeholder="Dupont" value={lastName} onChange={(e) => setLastName(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
                     </div>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ export default function Register() {
                    <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Adresse email <span className="text-[#3157d5]">*</span></label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
+                    <input type="email" autoComplete="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
                   </div>
                 </div>
 
@@ -186,7 +186,7 @@ export default function Register() {
                    <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Mot de passe <span className="text-[#3157d5]">*</span></label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
+                    <input type={showPassword ? "text" : "password"} autoComplete="new-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
                        className={`${authInputClass} pl-11 pr-11`}
                       style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }}
                     />
@@ -206,6 +206,7 @@ export default function Register() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
+                      autoComplete="new-password"
                       className={`w-full pl-11 pr-11 rounded-xl text-gray-900 text-[15px] outline-none transition-all placeholder:text-gray-400 ${
                          !pwdMatch ? "border border-red-300 bg-red-50 focus:border-red-400 focus:ring-4 focus:ring-red-500/10"
                            : authInputClass
@@ -288,6 +289,7 @@ export default function Register() {
                       ref={(el) => { codeRefs.current[i] = el; }}
                       type="text"
                       inputMode="numeric"
+                       autoComplete="one-time-code"
                       maxLength={1}
                       value={d}
                       onChange={(e) => handleCodeChange(i, e.target.value)}

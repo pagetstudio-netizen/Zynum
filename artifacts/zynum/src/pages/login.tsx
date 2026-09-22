@@ -239,7 +239,7 @@ export default function Login() {
                    <label className="block text-[13px] font-semibold text-[#30394d] mb-2">Adresse email <span className="text-[#3157d5]">*</span></label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
-                    <input type="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }} />
+                    <input type="email" autoComplete="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }} />
                   </div>
                 </div>
 
@@ -258,6 +258,7 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                       autoComplete="current-password"
                        className={`${authInputClass} pl-12 pr-12`}
                       style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }}
                     />
@@ -301,7 +302,7 @@ export default function Login() {
                        <label className="block text-[13px] font-semibold text-[#30394d] mb-2">Adresse email <span className="text-[#3157d5]">*</span></label>
                       <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
-                        <input type="email" placeholder="votre@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required className={inputClass} style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }} />
+                        <input type="email" autoComplete="email" placeholder="votre@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required className={inputClass} style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }} />
                       </div>
                     </div>
                     <button
@@ -372,6 +373,7 @@ export default function Login() {
                       ref={(el) => { codeRefs.current[i] = el; }}
                       type="text"
                       inputMode="numeric"
+                       autoComplete="one-time-code"
                       maxLength={1}
                       value={d}
                       onChange={(e) => handleCodeChange(i, e.target.value)}

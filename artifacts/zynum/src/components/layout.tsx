@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   Menu, X, Phone,
   MessageSquare, Globe2, Shield, HelpCircle,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useGetCurrentUser } from "@workspace/api-client-react";
@@ -17,6 +18,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading: isLoadingUser } = useGetCurrentUser({
     query: { retry: false, staleTime: 5 * 60 * 1000 },
   });
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMobileMenuOpen(false);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
 
   const navLinks = [
     { href: "/login",   label: t("nav_services"), icon: <Phone         className="w-4 h-4 mr-2" /> },
@@ -173,9 +191,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <button
                 className="md:hidden"
                 onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Ouvrir le menu"
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="mobile-navigation-menu"
                 style={{ background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "8px 10px", cursor: "pointer", color: "rgba(255,255,255,0.75)", display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                <Menu style={{ width: 18, height: 18 }} />
+                <motion.span
+                  animate={{ rotate: isMobileMenuOpen ? 90 : 0, scale: isMobileMenuOpen ? 0.9 : 1 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  style={{ display: "flex" }}
+                >
+                  <Menu style={{ width: 18, height: 18 }} />
+                </motion.span>
               </button>
             </div>
           </div>
@@ -183,32 +210,51 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ── Mobile menu — dark sidebar overlay ─────────────────────────────── */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden">
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="md:hidden">
           {/* Backdrop */}
-          <div
+          <motion.div
             className="fixed inset-0 z-40"
-            style={{ background: "rgba(0,0,0,0.5)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)" }}
             onClick={() => setIsMobileMenuOpen(false)}
           />
           {/* Dark sidebar */}
-          <div
+          <motion.div
+            id="mobile-navigation-menu"
             className="fixed top-0 right-0 bottom-0 z-50 w-72 flex flex-col overflow-hidden"
-            style={{ background: "#2b2d32", color: "#ffffff" }}
+            initial={{ x: "100%", opacity: 0.7 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0.7 }}
+            transition={{ type: "spring", stiffness: 360, damping: 34, mass: 0.8 }}
+            style={{ background: "linear-gradient(160deg, #30343d 0%, #24272d 100%)", color: "#ffffff", boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", borderLeft: "1px solid rgba(255,255,255,0.1)" }}
           >
             {/* Close button */}
             <div className="flex items-center justify-end px-5 py-4">
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Fermer le menu"
                 style={{ color: "rgba(255,255,255,0.7)" }}
-                className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-white/10 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Nav items */}
-            <nav className="flex-1 overflow-y-auto">
+            <motion.nav
+              className="flex-1 overflow-y-auto"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { delayChildren: 0.08, staggerChildren: 0.045 } },
+              }}
+            >
               {[
                 { href: "/", label: t("nav_home") },
                 ...navLinks,
@@ -219,29 +265,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   { href: "/dashboard", label: t("nav_dashboard") },
                 ]),
               ].map((link) => (
-                <Link
+                <motion.div
                   key={link.label}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "16px 28px",
-                    borderBottom: "1px solid rgba(255,255,255,0.1)",
-                    color: "#ffffff",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    textDecoration: "none",
+                  variants={{
+                    hidden: { opacity: 0, x: 18 },
+                    visible: { opacity: 1, x: 0, transition: { duration: 0.28, ease: "easeOut" } },
                   }}
                 >
-                  {link.label}
-                </Link>
+                  <Link
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "16px 28px",
+                      borderBottom: "1px solid rgba(255,255,255,0.1)",
+                      color: "#ffffff",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                </motion.div>
               ))}
 
               {/* Language & Currency */}
-              <div style={{ padding: "32px 28px 16px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 12 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.28, ease: "easeOut" } },
+                }}
+                style={{ padding: "32px 28px 16px", display: "flex", flexDirection: "column", gap: "20px" }}
+              >
                 <button
                   onClick={() => setLang(lang === "fr" ? "en" : "fr")}
                   style={{ display: "flex", alignItems: "center", gap: "12px", color: "rgba(255,255,255,0.7)", background: "none", border: "none", cursor: "pointer" }}
@@ -256,11 +315,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <span style={{ fontSize: "20px" }}>🇺🇸</span>
                   <span style={{ fontSize: "14px", fontWeight: 500 }}>{currency}</span>
                 </button>
-              </div>
-            </nav>
-          </div>
+              </motion.div>
+            </motion.nav>
+          </motion.div>
         </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Main content */}
       <main className="flex-1 relative z-10 flex flex-col">

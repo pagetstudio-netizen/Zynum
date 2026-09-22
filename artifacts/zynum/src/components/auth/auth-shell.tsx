@@ -25,7 +25,7 @@ export function AuthAvatar() {
 
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen w-full bg-[#f5f7fb] px-4 py-6 sm:px-6 sm:py-10">
+    <div className="auth-shell min-h-screen w-full bg-[#f5f7fb] px-4 py-6 sm:px-6 sm:py-10">
       <div className="mx-auto w-full max-w-[560px] overflow-hidden rounded-[28px] border border-[#e7ebf3] bg-white shadow-[0_20px_60px_rgba(36,52,88,0.12)]">
         <div className="relative h-36 overflow-visible bg-gradient-to-b from-[#eaf0fb] via-[#f1f5fc] to-[#f8faff]">
           <div className="absolute inset-0 opacity-60" style={{ backgroundImage: "linear-gradient(135deg, rgba(49,87,213,0.06), transparent 45%), radial-gradient(circle at 82% 20%, rgba(49,87,213,0.12), transparent 26%)" }} />

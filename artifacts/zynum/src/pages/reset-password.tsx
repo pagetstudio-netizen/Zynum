@@ -123,7 +123,7 @@ export default function ResetPassword() {
                    <label className="block text-[13px] font-semibold text-[#30394d] mb-2">Adresse email <span className="text-[#3157d5]">*</span></label>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
-                      <input type="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }} />
+                      <input type="email" autoComplete="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }} />
                     </div>
                   </div>
                 )}
@@ -138,6 +138,7 @@ export default function ResetPassword() {
                           ref={(el) => { codeRefs.current[i] = el; }}
                           type="text"
                           inputMode="numeric"
+                           autoComplete="one-time-code"
                           maxLength={1}
                           value={d}
                           onChange={(e) => handleCodeChange(i, e.target.value)}
@@ -161,6 +162,7 @@ export default function ResetPassword() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
                       minLength={8}
+                       autoComplete="new-password"
                        className={`${authInputClass} pl-12 pr-12`}
                       style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }}
                     />
@@ -180,6 +182,7 @@ export default function ResetPassword() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
+                      autoComplete="new-password"
                       className={`w-full pl-12 pr-12 rounded-xl text-gray-900 text-[15px] outline-none transition-all placeholder:text-gray-400 ${
                          !pwdMatch ? "border border-red-300 bg-red-50 focus:border-red-400 focus:ring-4 focus:ring-red-500/10"
                            : authInputClass
