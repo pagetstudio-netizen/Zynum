@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Loader2, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -130,8 +130,8 @@ export default function ResetPassword() {
 
                 {!verifiedFromLink && (
                   <div>
-                    <label className="block text-[13px] font-semibold text-gray-700 mb-2">Code de vérification <span className="text-red-500">*</span></label>
-                     <div className="flex flex-wrap gap-2 justify-center" onPaste={handleCodePaste}>
+                    <label className="block text-[13px] font-semibold text-[#30394d] mb-2">Code de vérification <span className="text-[#3157d5]">*</span></label>
+                     <div className="flex justify-center gap-1.5 sm:gap-2" onPaste={handleCodePaste}>
                       {codeDigits.map((d, i) => (
                         <input
                           key={i}
@@ -142,7 +142,7 @@ export default function ResetPassword() {
                           value={d}
                           onChange={(e) => handleCodeChange(i, e.target.value)}
                           onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                           className="h-14 w-12 rounded-xl border-2 bg-[#f1f3f7] text-center text-2xl font-bold text-[#172033] outline-none transition-all focus:border-[#3157d5] focus:bg-white focus:ring-4 focus:ring-[#3157d5]/10"
+                           className="h-12 w-10 rounded-xl border-2 bg-[#f1f3f7] text-center text-xl font-bold text-[#172033] outline-none transition-all focus:border-[#3157d5] focus:bg-white focus:ring-4 focus:ring-[#3157d5]/10 sm:h-14 sm:w-12 sm:text-2xl"
                            style={{ borderColor: d ? authBlue : undefined }}
                         />
                       ))}

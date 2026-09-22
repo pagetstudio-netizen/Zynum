@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, User, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Loader2, User, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
 import { useRegisterUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
@@ -281,7 +281,7 @@ export default function Register() {
               )}
 
               <form onSubmit={handleVerify}>
-                <div className="flex gap-2 justify-center mb-6" onPaste={handleCodePaste}>
+                 <div className="flex justify-center gap-1.5 mb-6 sm:gap-2" onPaste={handleCodePaste}>
                   {codeDigits.map((d, i) => (
                     <input
                       key={i}
@@ -292,7 +292,7 @@ export default function Register() {
                       value={d}
                       onChange={(e) => handleCodeChange(i, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                       className="h-14 w-12 rounded-xl border-2 bg-[#f1f3f7] text-center text-2xl font-bold text-[#172033] outline-none transition-all focus:border-[#3157d5] focus:bg-white focus:ring-4 focus:ring-[#3157d5]/10"
+                       className="h-12 w-10 rounded-xl border-2 bg-[#f1f3f7] text-center text-xl font-bold text-[#172033] outline-none transition-all focus:border-[#3157d5] focus:bg-white focus:ring-4 focus:ring-[#3157d5]/10 sm:h-14 sm:w-12 sm:text-2xl"
                        style={{ borderColor: d ? authBlue : undefined }}
                     />
                   ))}

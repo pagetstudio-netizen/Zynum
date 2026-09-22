@@ -258,7 +258,7 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="w-full pl-12 pr-12 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white placeholder:text-gray-400"
+                       className={`${authInputClass} pl-12 pr-12`}
                       style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }}
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -365,7 +365,7 @@ export default function Login() {
               )}
 
                <form onSubmit={step === "verify_2fa" ? handleVerify2FA : step === "verify_admin_2fa" ? handleVerifyAdmin2FA : handleVerifyEmail}>
-                <div className="flex gap-2 justify-center mb-6" onPaste={handleCodePaste}>
+                 <div className="flex justify-center gap-1.5 mb-6 sm:gap-2" onPaste={handleCodePaste}>
                   {codeDigits.map((d, i) => (
                     <input
                       key={i}
@@ -376,7 +376,7 @@ export default function Login() {
                       value={d}
                       onChange={(e) => handleCodeChange(i, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                       className="h-14 w-12 rounded-xl border-2 bg-[#f1f3f7] text-center text-2xl font-bold text-[#172033] outline-none transition-all focus:border-[#3157d5] focus:bg-white focus:ring-4 focus:ring-[#3157d5]/10"
+                       className="h-12 w-10 rounded-xl border-2 bg-[#f1f3f7] text-center text-xl font-bold text-[#172033] outline-none transition-all focus:border-[#3157d5] focus:bg-white focus:ring-4 focus:ring-[#3157d5]/10 sm:h-14 sm:w-12 sm:text-2xl"
                        style={{ borderColor: d ? authBlue : undefined }}
                     />
                   ))}
