@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
-  Copy, Check, Users, DollarSign, Clock,
-  ArrowDownToLine, RefreshCw, ChevronRight, AlertCircle,
+  Copy, Check, Users, WalletCards, Clock,
+  ArrowDownToLine, Share2, X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/hooks/use-currency";
+import "./affiliate-reference.css";
 
 const API = "/api";
 const RATE = 620;
@@ -38,15 +38,6 @@ type Stats = {
 };
 
 type Referral = { id: number; name: string; email: string; createdAt: string };
-type Withdrawal = {
-  id: number;
-  amountUsd: number;
-  phone: string;
-  country: string;
-  status: string;
-  note: string | null;
-  createdAt: string;
-};
 
 const COUNTRIES = [
   "Sénégal", "Côte d'Ivoire", "Cameroun", "Mali", "Burkina Faso",
@@ -61,7 +52,6 @@ export default function AffiliatePage() {
   const { currency } = useCurrency();
   const [stats, setStats] = useState<Stats | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
@@ -92,14 +82,12 @@ export default function AffiliatePage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [s, r, w] = await Promise.all([
+      const [s, r] = await Promise.all([
         apiFetch("/v1/affiliate/stats"),
         apiFetch("/v1/affiliate/referrals"),
-        apiFetch("/v1/affiliate/withdrawals"),
       ]);
       setStats(s);
       setReferrals(r.referrals ?? []);
-      setWithdrawals(w.withdrawals ?? []);
     } catch {
       toast({ variant: "destructive", title: "Erreur de chargement" });
     } finally {
@@ -119,6 +107,24 @@ export default function AffiliatePage() {
     setCopied(true);
     toast({ title: "Lien copié !", description: "Partagez-le avec vos contacts." });
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareLink = async () => {
+    if (!referralLink) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Mon lien ZyNum",
+          text: "Partagez mon lien et profitez de ZyNum.",
+          url: referralLink,
+        });
+      } catch {
+        // L'utilisateur peut fermer la feuille de partage sans erreur visible.
+      }
+      return;
+    }
+    copyLink();
+    toast({ title: "Lien copié !", description: "Le partage natif n'est pas disponible sur cet appareil." });
   };
 
   const handleWithdraw = async (e: React.FormEvent) => {
@@ -155,32 +161,14 @@ export default function AffiliatePage() {
     }
   };
 
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      validated: "bg-green-100 text-green-700 border-green-200",
-      rejected: "bg-red-100 text-red-700 border-red-200",
-    };
-    const labels: Record<string, string> = {
-      pending: "En attente",
-      validated: "Validé",
-      rejected: "Rejeté",
-    };
-    return (
-      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${map[status] ?? "bg-gray-100 text-gray-600 border-gray-200"}`}>
-        {labels[status] ?? status}
-      </span>
-    );
-  };
-
   const maxInput = stats
     ? (currency === "FCFA" ? Math.round(stats.affiliateBalance * RATE) : stats.affiliateBalance)
     : 0;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+      <div className="affiliate-reference affiliate-reference-loading">
+        <div className="affiliate-reference-loader" />
       </div>
     );
   }
