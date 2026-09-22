@@ -121,8 +121,8 @@ function Overview({ currency }: { currency: string }) {
           </button>
         </div>
         {orders.length === 0 ? (
-          <div className="py-12 text-center text-muted-foreground text-sm">
-            <img src={iconEmpty} alt="Aucune commande" className="w-20 h-20 mx-auto mb-3 object-contain opacity-60" />
+          <div className="zynum-recent-empty">
+            <img src={iconEmpty} alt="Aucune commande" />
             <p className="text-gray-500">{t("dash_no_orders")}</p>
             <button
               type="button"

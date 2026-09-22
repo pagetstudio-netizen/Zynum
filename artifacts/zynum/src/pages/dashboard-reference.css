@@ -165,11 +165,11 @@
 }
 
 .zynum-recent-card {
-  width: calc(100% + 10px);
-  margin: 31px -5px 0;
+  width: 100%;
+  margin: 28px 0 0;
   overflow: hidden;
   border: 1px solid #edf0f4;
-  border-radius: 29px;
+  border-radius: 24px;
   background: #ffffff;
   box-shadow: 0 2px 12px rgba(31, 45, 61, 0.07);
 }
@@ -178,15 +178,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 70px;
-  padding: 0 25px;
+  min-height: 60px;
+  padding: 0 20px;
   border-bottom: 1px solid #f0f1f3;
 }
 
 .zynum-recent-header h3 {
   margin: 0;
   color: #1c2026;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.035em;
 }
@@ -222,9 +222,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 80px;
-  padding: 0 25px;
+  min-height: 70px;
+  padding: 0 20px;
   border-bottom: 1px solid #f0f1f3;
+}
+
+.zynum-recent-empty {
+  padding: 24px 16px 20px;
+  color: #6b7280;
+  font-size: 14px;
+  text-align: center;
+}
+
+.zynum-recent-empty img {
+  display: block;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 7px;
+  object-fit: contain;
+  opacity: 0.6;
+}
+
+.zynum-recent-empty p {
+  margin: 0;
+}
+
+.zynum-recent-empty button {
+  margin-top: 10px;
 }
 
 .zynum-recent-row:last-child {
@@ -386,6 +410,6 @@
   }
 
   .zynum-recent-row {
-    padding: 0 17px;
+    padding: 0 16px;
   }
 }
