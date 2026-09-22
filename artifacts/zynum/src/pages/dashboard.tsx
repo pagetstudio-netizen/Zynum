@@ -4,14 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import {
   LogOut, ShoppingCart, HelpCircle,
-  MessageSquare, User, PlusCircle,
+  User, PlusCircle,
   Package, ChevronRight,
   Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Globe2,
 } from "lucide-react";
 import iconCardSolde   from "@assets/internet_15229770_1774888657109.png";
 import iconAchat       from "@assets/freepik__icônes_produits_ou_achat_1774888657188.png";
-import iconSms         from "@assets/freepik__icônes_sms_ou_message_1774888657216.png";
 import iconOverview  from "@assets/1239292_1774829368223.png";
 import iconBuy       from "@assets/84426_1774829368186.png";
 import iconHistory   from "@assets/5708960_1774829436660.png";
@@ -24,7 +23,6 @@ import iconEmpty     from "@assets/no_1774828481941.png";
 import iconAffiliateStats from "@assets/statss_1790062014731.png";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/hooks/use-currency";
 import {
@@ -631,9 +629,6 @@ export default function Dashboard() {
     { id: "profile",    label: t("dash_tab_profile"),  imgSrc: iconProfile },
     ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", isLucide: true }] : []),
   ];
-
-  const formatPrice = (v: number) =>
-    currency === "FCFA" ? `${Math.round(v * 620).toLocaleString()} FCFA` : `$${v.toFixed(2)}`;
 
   return (
     <div className="min-h-screen flex bg-background">
