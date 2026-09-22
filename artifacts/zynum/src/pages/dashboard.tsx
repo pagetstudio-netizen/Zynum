@@ -535,7 +535,6 @@ export default function Dashboard() {
   const { t } = useLanguage();
   const { data: rawUser, isLoading } = useGetCurrentUser({ query: { retry: false } });
   const user = rawUser as UserWithAdmin | undefined;
-  const adminReloadHandled = React.useRef(false);
   const logoutMutation = useLogoutUser({
     mutation: {
       onSuccess: () => {
@@ -593,29 +592,6 @@ export default function Dashboard() {
       setLocation("/login");
     }
   }, [isLoading, user, setLocation]);
-
-  React.useEffect(() => {
-    if (isLoading || !user?.isAdmin || adminReloadHandled.current) return;
-    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    if (navigation?.type !== "reload") return;
-
-    adminReloadHandled.current = true;
-    const token = localStorage.getItem("zynum_token");
-    void (async () => {
-      try {
-        if (token) {
-          await fetch("/api/v1/auth/logout", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-      } finally {
-        localStorage.removeItem("zynum_token");
-        queryClient.clear();
-        setLocation("/login");
-      }
-    })();
-  }, [isLoading, user, queryClient, setLocation]);
 
   if (isLoading || !user) {
     return (
