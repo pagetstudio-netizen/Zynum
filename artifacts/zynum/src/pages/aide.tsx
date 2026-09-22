@@ -126,22 +126,22 @@ function ArticleView({ article, category, onBack }: { article: Article; category
   const [feedback, setFeedback] = useState<"yes" | "no" | null>(null);
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto">
-      <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-6 transition-colors">
+      <button onClick={onBack} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> {t("aide_back_to")} {category.title}
       </button>
       <div className={`inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full border mb-5 ${category.color} ${category.bgColor}`}>
         {category.icon} <span>{category.title}</span>
       </div>
-      <h1 className="text-3xl font-display font-bold text-white mb-3">{article.title}</h1>
-      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-8">
+      <h1 className="text-3xl font-display font-bold text-gray-900 mb-3">{article.title}</h1>
+      <div className="flex items-center gap-3 text-xs text-gray-500 mb-8">
         <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {article.readTime} {t("aide_read_time")}</span>
         <span>·</span>
         <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-400" /> {t("aide_up_to_date")}</span>
       </div>
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 space-y-5 text-muted-foreground leading-relaxed">
-        <p>{t("aide_article_intro")} <strong className="text-white">{article.title.toLowerCase()}</strong>. {t("aide_follow_steps")}</p>
+      <div className="rounded-2xl border border-gray-200 bg-white p-8 space-y-5 text-gray-600 leading-relaxed shadow-sm">
+        <p>{t("aide_article_intro")} <strong className="text-gray-900">{article.title.toLowerCase()}</strong>. {t("aide_follow_steps")}</p>
         <div>
-          <h3 className="text-white font-bold text-lg mb-3">{t("aide_step1_title")}</h3>
+          <h3 className="text-gray-900 font-bold text-lg mb-3">{t("aide_step1_title")}</h3>
           <ul className="space-y-2 list-none">
             {[t("aide_step1_i1"), t("aide_step1_i2"), t("aide_step1_i3")].map((item) => (
               <li key={item} className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-400 mt-0.5 shrink-0" /><span>{item}</span></li>
@@ -149,7 +149,7 @@ function ArticleView({ article, category, onBack }: { article: Article; category
           </ul>
         </div>
         <div>
-          <h3 className="text-white font-bold text-lg mb-3">{t("aide_step2_title")}</h3>
+          <h3 className="text-gray-900 font-bold text-lg mb-3">{t("aide_step2_title")}</h3>
           <p>{article.desc} {t("aide_step2_cta")}</p>
         </div>
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
@@ -157,12 +157,12 @@ function ArticleView({ article, category, onBack }: { article: Article; category
           <p className="text-sm">{t("aide_tip_desc")}</p>
         </div>
       </div>
-      <div className="mt-8 p-5 rounded-2xl border border-white/10 bg-white/[0.02]">
+      <div className="mt-8 p-5 rounded-2xl border border-gray-200 bg-white shadow-sm">
         {feedback === null ? (
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-white font-semibold mb-1">{t("aide_helpful")}</p>
-              <p className="text-sm text-muted-foreground">{t("aide_feedback")}</p>
+              <p className="text-gray-900 font-semibold mb-1">{t("aide_helpful")}</p>
+              <p className="text-sm text-gray-500">{t("aide_feedback")}</p>
             </div>
             <div className="flex gap-2 shrink-0">
               <Button
@@ -177,7 +177,7 @@ function ArticleView({ article, category, onBack }: { article: Article; category
                 variant="outline"
                 size="sm"
                 onClick={() => setFeedback("no")}
-                className="border-white/20 text-muted-foreground hover:bg-white/5 hover:text-white hover:border-white/40 transition-all"
+                className="border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all"
               >
                 👎 {t("aide_no")}
               </Button>
@@ -189,8 +189,8 @@ function ArticleView({ article, category, onBack }: { article: Article; category
               <CheckCircle className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <p className="text-white font-semibold">Merci pour votre retour !</p>
-              <p className="text-sm text-muted-foreground">Nous sommes ravis que cet article vous ait aidé.</p>
+              <p className="text-gray-900 font-semibold">Merci pour votre retour !</p>
+              <p className="text-sm text-gray-500">Nous sommes ravis que cet article vous ait aidé.</p>
             </div>
           </div>
         ) : (
@@ -200,8 +200,8 @@ function ArticleView({ article, category, onBack }: { article: Article; category
                 <MessageSquare className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-white font-semibold">Nous allons améliorer cet article</p>
-                <p className="text-sm text-muted-foreground">Merci de nous aider à mieux vous aider.</p>
+                <p className="text-gray-900 font-semibold">Nous allons améliorer cet article</p>
+                <p className="text-sm text-gray-500">Merci de nous aider à mieux vous aider.</p>
               </div>
             </div>
             <Link href="/contact">
@@ -212,11 +212,11 @@ function ArticleView({ article, category, onBack }: { article: Article; category
           </div>
         )}
       </div>
-      <div className="mt-6 p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+      <div className="mt-6 p-5 rounded-2xl border border-gray-200 bg-white shadow-sm flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
         <MessageSquare className="w-10 h-10 text-primary shrink-0" />
         <div className="flex-1">
-          <p className="text-white font-semibold">{t("aide_more_help")}</p>
-          <p className="text-sm text-muted-foreground">{t("aide_more_help_desc")}</p>
+          <p className="text-gray-900 font-semibold">{t("aide_more_help")}</p>
+          <p className="text-sm text-gray-500">{t("aide_more_help_desc")}</p>
         </div>
         <Link href="/contact">
           <Button className="bg-primary hover:bg-primary/90 text-white font-semibold shrink-0">{t("aide_contact_btn")}</Button>
@@ -230,24 +230,24 @@ function CategoryView({ category, onBack, onArticle }: { category: Category; onB
   const { t } = useLanguage();
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white mb-6 transition-colors">
+      <button onClick={onBack} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> {t("aide_back_help")}
       </button>
       <div className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border mb-6 ${category.color} ${category.bgColor}`}>
         {category.icon} <span>{category.title}</span>
       </div>
-      <h1 className="text-3xl font-display font-bold text-white mb-2">{category.title}</h1>
-      <p className="text-muted-foreground mb-8">{category.desc}</p>
+      <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">{category.title}</h1>
+      <p className="text-gray-500 mb-8">{category.desc}</p>
       <div className="space-y-2">
         {category.articles.map((article, i) => (
-          <motion.button key={article.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }} onClick={() => onArticle(article)} className="w-full flex items-center justify-between gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 text-left transition-all group">
+          <motion.button key={article.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }} onClick={() => onArticle(article)} className="w-full flex items-center justify-between gap-4 p-5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all group shadow-sm">
             <div>
-              <p className="font-semibold text-white mb-1 group-hover:text-primary transition-colors">{article.title}</p>
-              <p className="text-sm text-muted-foreground">{article.desc}</p>
+              <p className="font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors">{article.title}</p>
+              <p className="text-sm text-gray-500">{article.desc}</p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" />{article.readTime}</span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span className="text-xs text-gray-500 flex items-center gap-1"><Clock className="w-3 h-3" />{article.readTime}</span>
+              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" />
             </div>
           </motion.button>
         ))}
@@ -276,7 +276,7 @@ export default function HelpCenter() {
 
   if (selectedArticle && selectedCategory) {
     return (
-      <div className="w-full py-10">
+      <div className="w-full bg-[#f8fafc] py-10">
         <div className="container max-w-4xl mx-auto px-4">
           <ArticleView article={selectedArticle} category={selectedCategory} onBack={() => setSelectedArticle(null)} />
         </div>
@@ -286,7 +286,7 @@ export default function HelpCenter() {
 
   if (selectedCategory) {
     return (
-      <div className="w-full py-10">
+      <div className="w-full bg-[#f8fafc] py-10">
         <div className="container max-w-4xl mx-auto px-4">
           <CategoryView category={selectedCategory} onBack={() => setSelectedCategory(null)} onArticle={(a) => setSelectedArticle(a)} />
         </div>
@@ -295,8 +295,8 @@ export default function HelpCenter() {
   }
 
   return (
-    <div className="w-full">
-      <section className="relative overflow-hidden py-20">
+    <div className="w-full bg-[#f8fafc] text-gray-900">
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50 via-white to-[#f8fafc] py-20">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 blur-[100px] rounded-full" />
           <div className="absolute inset-0 grid-overlay-50" />
@@ -304,11 +304,11 @@ export default function HelpCenter() {
         <div className="container max-w-4xl mx-auto px-4 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-4">{t("aide_badge")}</p>
-            <h1 className="text-4xl md:text-5xl font-display font-extrabold text-white mb-5">{t("aide_title")}</h1>
-            <p className="text-muted-foreground mb-10">{t("aide_sub")}</p>
+            <h1 className="text-4xl md:text-5xl font-display font-extrabold text-gray-900 mb-5">{t("aide_title")}</h1>
+            <p className="text-gray-500 mb-10">{t("aide_sub")}</p>
             <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("aide_search_placeholder")} className="h-14 pl-12 pr-5 text-base rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-primary/50 focus:ring-primary/20" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("aide_search_placeholder")} className="h-14 pl-12 pr-5 text-base rounded-2xl bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-primary/50 focus:ring-primary/20" />
             </div>
           </motion.div>
         </div>
@@ -317,15 +317,15 @@ export default function HelpCenter() {
       <div className="container max-w-6xl mx-auto px-4 pb-24">
         {search && searchResults.length > 0 && (
           <div className="mb-12">
-            <p className="text-sm text-muted-foreground mb-4">{searchResults.length} {t("aide_results")} "{search}"</p>
+            <p className="text-sm text-gray-500 mb-4">{searchResults.length} {t("aide_results")} "{search}"</p>
             <div className="space-y-2">
               {searchResults.map((r) => (
-                <button key={r.id} onClick={() => { setSelectedCategory(r.category); setSelectedArticle(r); }} className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] text-left transition-all group">
+                <button key={r.id} onClick={() => { setSelectedCategory(r.category); setSelectedArticle(r); }} className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-left transition-all group shadow-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">{r.category.title}</p>
-                    <p className="font-semibold text-white group-hover:text-primary transition-colors">{r.title}</p>
+                    <p className="text-xs text-gray-500 mb-1">{r.category.title}</p>
+                    <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{r.title}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
                 </button>
               ))}
             </div>
@@ -334,8 +334,8 @@ export default function HelpCenter() {
 
         {search && searchResults.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-muted-foreground mb-2">{t("aide_no_results")} "{search}"</p>
-            <Link href="/contact"><Button variant="outline" className="border-white/20 text-white hover:bg-white/10 mt-4">{t("aide_contact_btn")}</Button></Link>
+            <p className="text-gray-500 mb-2">{t("aide_no_results")} "{search}"</p>
+            <Link href="/contact"><Button variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50 mt-4">{t("aide_contact_btn")}</Button></Link>
           </div>
         )}
 
@@ -343,11 +343,11 @@ export default function HelpCenter() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
               {CATEGORIES.map((cat, i) => (
-                <motion.button key={cat.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }} onClick={() => setSelectedCategory(cat)} className="flex flex-col items-start p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10 text-left transition-all group">
+                <motion.button key={cat.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }} onClick={() => setSelectedCategory(cat)} className="flex flex-col items-start p-6 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all group shadow-sm">
                   <div className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-4 ${cat.bgColor} ${cat.color} group-hover:scale-110 transition-transform`}>{cat.icon}</div>
-                  <h3 className="font-bold text-white text-lg mb-1.5 group-hover:text-primary transition-colors">{cat.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{cat.desc}</p>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 mt-auto">
+                  <h3 className="font-bold text-gray-900 text-lg mb-1.5 group-hover:text-primary transition-colors">{cat.title}</h3>
+                  <p className="text-sm text-gray-500 mb-4 leading-relaxed">{cat.desc}</p>
+                  <span className="text-xs text-gray-500 flex items-center gap-1 mt-auto">
                     <CheckCircle className="w-3 h-3" /> {cat.count} {t("aide_articles")}
                     <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
                   </span>
@@ -356,7 +356,7 @@ export default function HelpCenter() {
             </div>
 
             <div className="mb-16">
-              <h2 className="text-xl font-bold text-white mb-5 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-400" /> {t("aide_popular_title")}
               </h2>
               <div className="space-y-2">
@@ -364,13 +364,13 @@ export default function HelpCenter() {
                   const cat = CATEGORIES.find((c) => c.title === art.cat) ?? CATEGORIES[0];
                   const article = cat.articles.find((a) => a.title === art.title) ?? cat.articles[0];
                   return (
-                    <button key={i} onClick={() => { setSelectedCategory(cat); setSelectedArticle(article); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] text-left transition-all group">
+                    <button key={i} onClick={() => { setSelectedCategory(cat); setSelectedArticle(article); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-left transition-all group shadow-sm">
                       <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${cat.bgColor} ${cat.color}`}>{cat.icon}</div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground mb-0.5">{art.cat}</p>
-                        <p className="font-medium text-white truncate group-hover:text-primary transition-colors">{art.title}</p>
+                        <p className="text-xs text-gray-500 mb-0.5">{art.cat}</p>
+                        <p className="font-medium text-gray-900 truncate group-hover:text-primary transition-colors">{art.title}</p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 shrink-0 text-xs text-gray-500">
                         <Clock className="w-3 h-3" />{art.readTime}
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </div>
@@ -380,12 +380,12 @@ export default function HelpCenter() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0d1a35] to-[#060d1f] p-8 md:p-12 text-center relative overflow-hidden">
+            <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-8 md:p-12 text-center relative overflow-hidden shadow-sm">
               <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[60px] rounded-full pointer-events-none" />
               <div className="relative z-10">
                 <MessageSquare className="w-12 h-12 text-primary mx-auto mb-5" />
-                <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">{t("aide_contact_cta_title")}</h2>
-                <p className="text-muted-foreground mb-8 max-w-lg mx-auto">{t("aide_contact_cta_desc")}</p>
+                <h2 className="text-2xl md:text-3xl font-display font-bold text-gray-900 mb-3">{t("aide_contact_cta_title")}</h2>
+                <p className="text-gray-500 mb-8 max-w-lg mx-auto">{t("aide_contact_cta_desc")}</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                   <Link href="/contact">
                     <Button size="lg" className="h-12 px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-xl shadow-primary/25">
