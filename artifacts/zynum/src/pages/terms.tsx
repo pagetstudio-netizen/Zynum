@@ -377,7 +377,12 @@ export default function Terms() {
             <FileText className="h-6 w-6" />
           </div>
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">{content.badge}</p>
-          <h1 className="mb-4 text-3xl font-display font-extrabold md:text-5xl">{content.title}</h1>
+          <h1
+            className="mb-4 text-3xl font-display font-extrabold md:text-5xl"
+            style={{ color: "#ffffff" }}
+          >
+            {content.title}
+          </h1>
           <p className="mb-5 max-w-3xl text-sm leading-7 text-slate-300">{content.intro}</p>
           <p className="text-xs font-medium text-slate-400">{content.updated}</p>
         </header>
