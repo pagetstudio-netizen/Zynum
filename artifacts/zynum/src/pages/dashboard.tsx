@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import iconCardSolde   from "@assets/internet_15229770_1774888657109.png";
 import iconAchat       from "@assets/freepik__icônes_produits_ou_achat_1774888657188.png";
-import iconProfile   from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
+import defaultAvatar from "@assets/default_1790073334022.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
 import iconAffiliateStats from "@assets/statss_1790062014731.png";
 import { useLanguage } from "@/hooks/use-language";
@@ -29,6 +29,7 @@ import {
   WHATSAPP_SUPPORT_NUMBER,
   openWhatsAppSupport,
 } from "@/hooks/use-public-settings";
+import { NotificationBanner } from "@/components/notification-banner";
 import BuyNumber from "./buy";
 import OrderHistory from "./history";
 import Recharge from "./recharge";
@@ -451,12 +452,12 @@ function UserWidget({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 rounded-xl px-2 py-1.5 transition-all ${
-          open ? "bg-gray-100" : "hover:bg-gray-100"
+        className={`dashboard-user-widget-trigger flex items-center gap-2 rounded-xl px-2 py-1.5 transition-all ${
+          open ? "is-open" : ""
         }`}
       >
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/20 to-primary/15 border border-red-200 flex items-center justify-center shrink-0 overflow-hidden">
-          <img src={iconProfile} alt="Profil" className="w-5 h-5 object-contain" />
+        <div className="dashboard-user-widget-avatar">
+          <img src={defaultAvatar} alt="Profil" />
         </div>
         <div className="hidden sm:block text-left">
           <p className="text-xs font-semibold text-gray-900 leading-none">{user.name}</p>
@@ -477,8 +478,8 @@ function UserWidget({
             {/* User info */}
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
-                  {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
+                <div className="dashboard-user-widget-menu-avatar">
+                  <img src={defaultAvatar} alt="" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
@@ -631,7 +632,9 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <>
+      <NotificationBanner />
+      <div className="min-h-screen flex bg-background">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -647,10 +650,10 @@ export default function Dashboard() {
         flex flex-col transition-transform duration-300
         lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `} style={{ background: "linear-gradient(180deg, #15171c 0%, #101216 100%)", color: "#ffffff", boxShadow: "12px 0 40px rgba(0,0,0,0.16)" }}>
+      `}>
 
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+        <div className="dashboard-sidebar-brand flex items-center justify-between px-5 py-5">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-orange-500/20 ring-1 ring-white/15">
               <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
@@ -670,25 +673,17 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* User info */}
-        <div className="px-4 py-4 border-b border-white/10">
-          <div className="flex items-center gap-3 rounded-2xl px-3 py-3 border border-white/10 bg-white/[0.06]">
-            <div
-              className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-md shadow-orange-500/20"
-              style={{ color: "#ffffff" }}
-            >
-              {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold truncate" style={{ color: "#ffffff" }}>{user.name}</p>
-              <p className="text-xs truncate mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>{user.email}</p>
-            </div>
-          </div>
+         {/* User profile banner */}
+         <div className="dashboard-sidebar-profile">
+           <div className="dashboard-sidebar-profile-avatar">
+             <img src={defaultAvatar} alt="Profil" />
+           </div>
+           <div className="dashboard-sidebar-profile-name">{user.name}</div>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 py-5 px-3 overflow-y-auto">
-          <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.35)" }}>Navigation</p>
+           <p className="dashboard-sidebar-section-title px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]">Navigation</p>
           <div className="space-y-1">
           {NAV.map((item) => {
             const active = activeTab === item.id;
@@ -697,14 +692,9 @@ export default function Dashboard() {
               <button
                 key={item.id}
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-                className={`
-                  group w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all
-                  ${active ? "shadow-lg shadow-orange-950/20" : "hover:bg-white/[0.07]"}
-                `}
-                style={{
-                  color: active ? "#ffffff" : "rgba(255,255,255,0.58)",
-                  background: active ? "linear-gradient(135deg, #f97316 0%, #ea580c 100%)" : "transparent",
-                }}
+                 className={`dashboard-sidebar-nav-item group w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${
+                   active ? "dashboard-sidebar-nav-active" : ""
+                 }`}
               >
                 <ItemIcon className={`w-[18px] h-[18px] shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`} />
                 <span className="flex-1 text-left">{item.label}</span>
@@ -716,11 +706,10 @@ export default function Dashboard() {
 
           {/* Separator */}
           <div className="pt-5 mt-5 border-t border-white/10 space-y-1">
-            <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.35)" }}>Aide & support</p>
+             <p className="dashboard-sidebar-section-title px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]">Aide & support</p>
             <Link
               href="/aide"
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/[0.07]"
-              style={{ color: "rgba(255,255,255,0.58)" }}
+               className="dashboard-sidebar-nav-item w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all"
               onClick={() => setSidebarOpen(false)}
             >
               <HelpCircle className="w-[18px] h-[18px] shrink-0" />
@@ -728,8 +717,7 @@ export default function Dashboard() {
             </Link>
             <button
               onClick={() => openWhatsAppSupport(WHATSAPP_SUPPORT_NUMBER)}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all hover:bg-[#25D366]/10"
-              style={{ color: "rgba(255,255,255,0.58)" }}
+               className="dashboard-sidebar-nav-item w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all"
             >
               <MessageSquare className="w-[18px] h-[18px] shrink-0" />
               WhatsApp
@@ -739,16 +727,16 @@ export default function Dashboard() {
 
         {/* Currency toggle */}
         <div className="px-4 py-4 border-t border-white/10">
-          <p className="px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.35)" }}>Devise</p>
+           <p className="dashboard-sidebar-section-title px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]">Devise</p>
           <div className="flex bg-white/[0.06] border border-white/10 rounded-xl p-1 gap-1">
             {(["USD", "FCFA"] as const).map((c) => (
               <button
                 key={c}
                 onClick={() => setCurrency(c)}
                 className={`flex-1 py-1.5 rounded text-xs font-semibold transition-all ${
-                  currency === c ? "bg-orange-500 shadow-md shadow-orange-950/20" : "hover:bg-white/[0.07]"
+                   currency === c ? "bg-[#2298e3] shadow-md shadow-blue-950/20" : "hover:bg-white/[0.07]"
                 }`}
-                style={{ color: currency === c ? "#ffffff" : "rgba(255,255,255,0.45)" }}
+             style={{ color: currency === c ? "#ffffff" : "rgba(255,255,255,0.65)" }}
               >
                 {c}
               </button>
@@ -758,10 +746,9 @@ export default function Dashboard() {
 
         {/* Logout */}
         <div className="px-4 py-4 border-t border-white/10">
-          <button
+           <button
             onClick={() => logoutMutation.mutate()}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-colors font-medium hover:bg-red-500/10"
-            style={{ color: "rgba(248,113,113,0.9)" }}
+             className="dashboard-sidebar-logout w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-colors font-medium"
           >
             <LogOut className="w-4 h-4" />
             {logoutMutation.isPending ? t("loading") : t("nav_logout")}
@@ -772,17 +759,17 @@ export default function Dashboard() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="dashboard-topbar sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-gray-200 bg-white/90">
-          <button className="lg:hidden text-muted-foreground hover:text-gray-700 p-1" onClick={() => setSidebarOpen(true)}>
+         <header className="dashboard-topbar sticky top-0 z-40 flex items-center gap-3 px-4 py-3">
+           <button className="dashboard-topbar-menu lg:hidden p-1" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h1 className="text-base font-semibold text-gray-900">
+             <h1 className="dashboard-topbar-title text-base font-semibold">
               {NAV.find((n) => n.id === activeTab)?.label ?? "Dashboard"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/aide" className="p-2 rounded-lg text-muted-foreground hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Centre d'aide">
+             <Link href="/aide" className="dashboard-topbar-action p-2 rounded-lg transition-colors" title="Centre d'aide">
               <HelpCircle className="w-4 h-4" />
             </Link>
             {/* User widget */}
@@ -813,6 +800,7 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

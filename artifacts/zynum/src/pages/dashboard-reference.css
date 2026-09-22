@@ -448,3 +448,197 @@
     font-size: 11px;
   }
 }
+
+/* ── Dashboard navigation theme ─────────────────────────────────────────── */
+.dashboard-sidebar {
+  background: #303746 !important;
+  color: #f7f9fc;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 12px 0 40px rgba(17, 24, 39, 0.2);
+}
+
+.dashboard-sidebar-brand {
+  min-height: 72px;
+  background: #2298e3;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.dashboard-sidebar-brand span:first-child {
+  color: #ffffff !important;
+}
+
+.dashboard-sidebar-brand span:last-child {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.dashboard-sidebar-profile {
+  position: relative;
+  display: flex;
+  min-height: 164px;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  padding: 18px 18px 0;
+  background:
+    linear-gradient(180deg, rgba(18, 29, 43, 0.08) 10%, rgba(24, 33, 48, 0.78) 100%),
+    url("/images/hero-bg.png") center / cover;
+}
+
+.dashboard-sidebar-profile-avatar {
+  position: absolute;
+  top: 17px;
+  left: 50%;
+  width: 78px;
+  height: 78px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: #e5e7eb;
+  box-shadow: 0 4px 15px rgba(13, 23, 39, 0.25);
+}
+
+.dashboard-sidebar-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dashboard-sidebar-profile-name {
+  position: relative;
+  z-index: 1;
+  width: calc(100% + 36px);
+  margin: 0 -18px;
+  padding: 8px 20px 9px;
+  overflow: hidden;
+  background: rgba(22, 31, 45, 0.56);
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-sidebar-section-title {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.dashboard-sidebar-nav-item {
+  color: rgba(240, 244, 250, 0.78);
+}
+
+.dashboard-sidebar-nav-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+}
+
+.dashboard-sidebar-nav-active {
+  background: #f0f2f4 !important;
+  color: #3c4452 !important;
+  box-shadow: 0 3px 10px rgba(10, 16, 28, 0.12);
+}
+
+.dashboard-sidebar-nav-active:hover {
+  background: #ffffff !important;
+  color: #303746 !important;
+}
+
+.dashboard-sidebar-nav-active > span:last-child {
+  background: #2298e3;
+  box-shadow: none;
+}
+
+.dashboard-sidebar-logout {
+  color: rgba(255, 210, 210, 0.9);
+}
+
+.dashboard-sidebar-logout:hover {
+  background: rgba(239, 68, 68, 0.14);
+  color: #ffffff;
+}
+
+.dashboard-topbar {
+  min-height: 64px;
+  background: #2298e3;
+  border-bottom: 1px solid rgba(13, 75, 124, 0.18);
+  box-shadow: 0 2px 8px rgba(22, 94, 145, 0.16);
+}
+
+.dashboard-topbar-title {
+  color: #ffffff;
+}
+
+.dashboard-topbar-menu,
+.dashboard-topbar-action {
+  color: #ffffff;
+}
+
+.dashboard-topbar-menu:hover,
+.dashboard-topbar-action:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.dashboard-user-widget-trigger {
+  color: #ffffff;
+}
+
+.dashboard-user-widget-trigger:hover,
+.dashboard-user-widget-trigger.is-open {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.dashboard-user-widget-trigger p:first-child {
+  color: #ffffff !important;
+}
+
+.dashboard-user-widget-trigger p:last-child {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.dashboard-user-widget-trigger > svg {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dashboard-user-widget-avatar {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  background: #e5e7eb;
+  box-shadow: 0 2px 8px rgba(10, 48, 79, 0.2);
+}
+
+.dashboard-user-widget-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dashboard-user-widget-menu-avatar {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.dashboard-user-widget-menu-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-sidebar {
+    top: 64px !important;
+    height: calc(100vh - 64px) !important;
+  }
+}
