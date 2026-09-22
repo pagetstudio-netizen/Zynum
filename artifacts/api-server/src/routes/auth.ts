@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { RegisterUserBody, LoginUserBody } from "@workspace/api-zod";
-import { hashPassword, verifyPassword, createSession, deleteSession, getUserById, generateApiKey } from "../lib/auth.js";
+import { hashPassword, verifyPassword, createSession, deleteSession, getUserById, validateToken, generateApiKey } from "../lib/auth.js";
 import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js";
 import { createEmailCode, verifyEmailCode, verifyEmailToken } from "../lib/emailCodes.js";
 import {
@@ -24,6 +24,21 @@ function generateReferralCode(): string {
   let code = "ZYN";
   for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
+}
+
+function getSessionToken(req: Request): string | null {
+  const authorization = req.headers.authorization;
+  const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  const cookieToken = req.cookies?.zynum_session;
+  return bearerToken || cookieToken || null;
+}
+
+async function getActiveSessionToken(req: Request, userId: number): Promise<string | null> {
+  const token = getSessionToken(req);
+  if (!token || token.startsWith("zyn_")) return null;
+
+  const sessionUserId = await validateToken(token);
+  return sessionUserId === userId ? token : null;
 }
 
 // ─── REGISTER ────────────────────────────────────────────────────────────────
@@ -273,6 +288,16 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
   }
 
   if (isOwnerAdmin(user)) {
+    const activeSessionToken = await getActiveSessionToken(req, user.id);
+    if (activeSessionToken) {
+      await db.update(usersTable).set({ lastLoginAt: new Date() }).where(eq(usersTable.id, user.id));
+      res.json({
+        token: activeSessionToken,
+        user: { id: user.id, name: user.name, email: user.email, isAdmin: true, isBanned: user.isBanned, createdAt: user.createdAt },
+      });
+      return;
+    }
+
     const { code } = await createEmailCode({
       email,
       userId: user.id,
