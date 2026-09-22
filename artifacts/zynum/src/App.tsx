@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { LanguageProvider } from "@/hooks/use-language";
 import { Layout } from "@/components/layout";
+import { RouteSeo } from "@/components/seo";
 
 import Home from "@/pages/home";
 import Login from "@/pages/login";
@@ -43,9 +44,12 @@ function ThemeByRoute() {
 }
 
 function Router() {
+  const [location] = useLocation();
+
   return (
     <>
       <ThemeByRoute />
+      <RouteSeo path={location} />
       <Switch>
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/login" component={Login} />
