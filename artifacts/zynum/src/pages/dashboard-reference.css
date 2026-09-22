@@ -166,10 +166,10 @@
 
 .zynum-recent-card {
   width: 100%;
-  margin: 28px 0 0;
+  margin: 22px 0 0;
   overflow: hidden;
   border: 1px solid #edf0f4;
-  border-radius: 24px;
+  border-radius: 18px;
   background: #ffffff;
   box-shadow: 0 2px 12px rgba(31, 45, 61, 0.07);
 }
@@ -178,15 +178,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 60px;
-  padding: 0 20px;
+  min-height: 52px;
+  padding: 0 18px;
   border-bottom: 1px solid #f0f1f3;
 }
 
 .zynum-recent-header h3 {
   margin: 0;
   color: #1c2026;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.035em;
 }
@@ -222,8 +222,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 70px;
-  padding: 0 20px;
+  min-height: 60px;
+  padding: 0 18px;
   border-bottom: 1px solid #f0f1f3;
 }
 
@@ -259,24 +259,24 @@
   display: flex;
   align-items: center;
   min-width: 0;
-  gap: 14px;
+  gap: 10px;
 }
 
 .zynum-order-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
   border: 1px solid #e4e8ef;
   border-radius: 50%;
   background: #fbf4f5;
 }
 
 .zynum-order-icon svg {
-  width: 21px;
-  height: 21px;
+  width: 18px;
+  height: 18px;
   color: #4784d8;
   stroke-width: 1.7;
 }
@@ -285,7 +285,7 @@
   margin: 0;
   overflow: hidden;
   color: #222831;
-  font-size: 19px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.05;
@@ -295,11 +295,11 @@
 
 .zynum-order-meta span {
   display: block;
-  margin-top: 4px;
+  margin-top: 3px;
   overflow: hidden;
   color: #a2a6ac;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 15px;
+  font-size: 12px;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -309,13 +309,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 115px;
-  height: 32px;
+  width: 96px;
+  height: 27px;
   padding: 0 7px;
   border: 1px solid #e4e7eb;
   border-radius: 18px;
   color: #7f858d;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
@@ -411,6 +411,40 @@
   }
 
   .zynum-recent-row {
-    padding: 0 16px;
+    min-height: 56px;
+    padding: 0 14px;
+  }
+
+  .zynum-recent-card {
+    margin-top: 20px;
+    border-radius: 16px;
+  }
+
+  .zynum-recent-header {
+    min-height: 48px;
+    padding: 0 14px;
+  }
+
+  .zynum-recent-header h3 {
+    font-size: 16px;
+  }
+
+  .zynum-recent-header button {
+    font-size: 12px;
+  }
+
+  .zynum-order-meta p {
+    font-size: 15px;
+  }
+
+  .zynum-order-meta span {
+    font-size: 11px;
+  }
+
+  .zynum-status-badge {
+    width: 82px;
+    height: 24px;
+    padding: 0 4px;
+    font-size: 11px;
   }
 }
