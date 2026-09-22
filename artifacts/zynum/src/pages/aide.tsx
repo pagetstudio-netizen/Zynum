@@ -9,7 +9,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
-import { usePublicSettings, openWhatsAppSupport } from "@/hooks/use-public-settings";
+import {
+  WHATSAPP_SUPPORT_NUMBER,
+  openWhatsAppSupport,
+} from "@/hooks/use-public-settings";
 
 interface Article { id: string; title: string; desc: string; readTime: string; }
 interface Category { id: string; icon: React.ReactNode; color: string; bgColor: string; title: string; desc: string; count: number; articles: Article[]; }
@@ -255,7 +258,6 @@ function CategoryView({ category, onBack, onArticle }: { category: Category; onB
 
 export default function HelpCenter() {
   const { t, lang } = useLanguage();
-  const { settings } = usePublicSettings();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -390,9 +392,9 @@ export default function HelpCenter() {
                       <MessageSquare className="w-4 h-4 mr-2" /> {t("aide_contact_btn")}
                     </Button>
                   </Link>
-                  {settings.whatsapp_button_enabled === "true" && settings.whatsapp_button_link && (
+                  {(
                     <button
-                      onClick={() => openWhatsAppSupport(settings.whatsapp_button_link!)}
+                      onClick={() => openWhatsAppSupport(WHATSAPP_SUPPORT_NUMBER)}
                       className="h-12 inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-white font-bold px-8 rounded-xl shadow-xl shadow-[#25D366]/25 transition-all hover:scale-105 active:scale-95"
                     >
                       <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current shrink-0" aria-hidden="true">

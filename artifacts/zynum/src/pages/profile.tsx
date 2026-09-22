@@ -7,7 +7,10 @@ import {
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { usePublicSettings, openTelegramSupport } from "@/hooks/use-public-settings";
+import {
+  WHATSAPP_SUPPORT_NUMBER,
+  openWhatsAppSupport,
+} from "@/hooks/use-public-settings";
 import "./profile-reference.css";
 
 type ProfileUser = {
@@ -52,7 +55,6 @@ function PasswordInput({
 export default function ProfilePage({ user }: { user: ProfileUser }) {
   const { toast } = useToast();
   const { lang, setLang, t } = useLanguage();
-  const { settings: publicSettings } = usePublicSettings();
   const [profileTab, setProfileTab] = useState<"personal" | "security">("personal");
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
@@ -290,12 +292,10 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
             {t("profile_help_center")}
           </Link>
           <Button
-            className="profile-reference-telegram"
-            onClick={() => publicSettings.support_telegram
-              ? openTelegramSupport(publicSettings.support_telegram)
-              : window.open("/contact", "_self")}
+            className="profile-reference-whatsapp"
+            onClick={() => openWhatsAppSupport(WHATSAPP_SUPPORT_NUMBER)}
           >
-            {t("profile_contact_support")}
+            WhatsApp
           </Button>
         </div>
       </div>

@@ -54,9 +54,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isHome = false;
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden" style={{ paddingTop: 88 }}>
       {/* ── Navbar flottante style CardsPro ───────────────────────────────── */}
-      <div className="sticky top-0 z-50 w-full" style={{ padding: "12px 16px" }}>
+      <div className="fixed top-3 left-1/2 z-50 w-[calc(100%-2rem)] -translate-x-1/2 md:top-4 md:w-[calc(100%-3rem)]">
         <header
           style={{
             background: "#1c1f26",

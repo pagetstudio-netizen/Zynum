@@ -1403,7 +1403,7 @@ function AdminSettings() {
         support_email: data.settings.support_email ?? "",
         support_telegram: data.settings.support_telegram ?? "",
         support_whatsapp: data.settings.support_whatsapp ?? "",
-        support_channel: data.settings.support_channel ?? "telegram",
+         support_channel: data.settings.support_channel ?? "whatsapp",
         maintenance_mode: data.settings.maintenance_mode ?? "false",
         maintenance_buy: data.settings.maintenance_buy ?? "false",
         crypto_recharge_enabled: data.settings.crypto_recharge_enabled ?? "true",
@@ -1493,14 +1493,12 @@ function AdminSettings() {
         <h3 className="font-bold text-white flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" /> Contacts & Support</h3>
         <div>
           <label className="text-xs text-muted-foreground block mb-1">Canal principal de support</label>
-          <select value={form.support_channel ?? "telegram"} onChange={(e) => setForm({ ...form, support_channel: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
-            <option value="telegram">Telegram</option>
+           <select value={form.support_channel ?? "whatsapp"} onChange={(e) => setForm({ ...form, support_channel: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
             <option value="whatsapp">WhatsApp</option>
             <option value="email">Email</option>
             <option value="other">Autre</option>
           </select>
         </div>
-        <Field k="support_telegram" label="Lien Telegram" />
         <Field k="support_whatsapp" label="Lien WhatsApp" />
       </div>
 

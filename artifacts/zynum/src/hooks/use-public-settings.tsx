@@ -16,6 +16,8 @@ export interface PublicSettings {
   appstore_url?: string;
 }
 
+export const WHATSAPP_SUPPORT_NUMBER = "+228 92299772";
+
 export function usePublicSettings() {
   const { data, isLoading } = useQuery<PublicSettings>({
     queryKey: ["public-settings"],
