@@ -21,6 +21,7 @@ import iconAffiliate from "@assets/20260228_002918_1772238747293_1782945047044.p
 import iconHelp      from "@assets/images_(12)_1774828482000.png";
 import iconSupport   from "@assets/3430127_1774831941357.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
+import iconAffiliateStats from "@assets/statss_1790061994731.png";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ import Recharge from "./recharge";
 import AdminPanel from "./admin";
 import AffiliatePage from "./affiliate";
 import { NotificationBanner } from "@/components/notification-banner";
+import "./dashboard-reference.css";
 
 type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "affiliate" | "admin";
 type UserWithAdmin = { id: number; name: string; email: string; isAdmin?: boolean; isBanned?: boolean; createdAt: string };
@@ -52,7 +54,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 
-function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v: number) => string }) {
+function Overview({ currency }: { currency: string }) {
   const { data: balanceData } = useGetBalance({ query: { retry: false } });
   const { data: history } = useGetOrderHistory(
     { page: 1, limit: 5 },
@@ -62,74 +64,78 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
 
   const balance = balanceData?.balance ?? 0;
   const orders = history?.orders ?? [];
-  const received = orders.filter((o) => o.status === "RECEIVED" || o.status === "FINISHED").length;
-  const spent = orders.reduce((sum, o) => sum + o.priceUsd, 0);
 
   return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Solde */}
-        <div className="rounded-2xl p-5 bg-gradient-to-br from-red-500 to-primary text-white shadow-lg shadow-red-500/20 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <img src={iconCardSolde} alt="solde" className="w-6 h-6" style={{ filter: "brightness(0) invert(1)" }} />
-          </div>
-          <div>
-            <p className="text-sm text-white/70 mb-1">{t("dash_balance")}</p>
-            <p className="text-2xl font-bold">{currency === "FCFA" ? `${Math.round(balance * 620).toLocaleString()} FCFA` : `$${balance.toFixed(2)}`}</p>
-            <p className="text-xs text-white/60 mt-1">{balance === 0 ? t("dash_balance_low") : t("dash_balance_available")}</p>
+    <div className="zynum-overview">
+      <div className="zynum-stats">
+        <div className="zynum-stat-card">
+          <h2>{t("dash_balance")}</h2>
+          <div className="zynum-stat-value-row">
+            <div className="zynum-stat-icon">
+              <img src={iconCardSolde} alt="Solde" />
+            </div>
+            <p>{currency === "FCFA" ? `${Math.round(balance * 620).toLocaleString()} FCFA` : `$${balance.toFixed(2)}`}</p>
           </div>
         </div>
-        {/* Commandes */}
-        <div className="rounded-2xl p-5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <img src={iconAchat} alt="commandes" className="w-6 h-6" style={{ filter: "brightness(0) invert(1)" }} />
-          </div>
-          <div>
-            <p className="text-sm text-white/70 mb-1">{t("dash_orders_total")}</p>
-            <p className="text-2xl font-bold">{history?.total ?? 0}</p>
-            <p className="text-xs text-white/60 mt-1">{t("dash_orders_sub")}</p>
-          </div>
-        </div>
-        {/* SMS reçus */}
-        <div className="rounded-2xl p-5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <img src={iconSms} alt="sms" className="w-6 h-6" style={{ filter: "brightness(0) invert(1)" }} />
-          </div>
-          <div>
-            <p className="text-sm text-white/70 mb-1">{t("dash_sms_received")}</p>
-            <p className="text-2xl font-bold">{received}</p>
-            <p className="text-xs text-white/60 mt-1">{currency === "FCFA" ? `${Math.round(spent * 620).toLocaleString()} FCFA` : `$${spent.toFixed(2)}`} {t("dash_orders_sub")}</p>
+
+        <div className="zynum-stat-card">
+          <h2>{t("dash_orders_total")}</h2>
+          <div className="zynum-stat-value-row zynum-orders-row">
+            <div className="zynum-stat-icon">
+              <img src={iconAchat} alt="Commandes" />
+            </div>
+            <p>{history?.total ?? 0}</p>
+            <button
+              type="button"
+              className="zynum-buy-number-button"
+              onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
+            >
+              obtenez un numéro
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Recent orders */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="font-semibold text-gray-900 text-sm">{t("dash_recent_orders")}</h3>
+      <button
+        type="button"
+        className="zynum-affiliate-banner"
+        onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "affiliate" }))}
+      >
+        <span className="zynum-affiliate-icon">
+          <img src={iconAffiliateStats} alt="" />
+        </span>
+        <span className="zynum-affiliate-copy">
+          Partagez votre lien unique<br />
+          et obtenez 10% sur chaque<br />
+          dépôt de vos filleuls.
+        </span>
+        <span className="zynum-affiliate-button">allez</span>
+      </button>
+
+      <div className="zynum-recent-card">
+        <div className="zynum-recent-header">
+          <h3>{t("dash_recent_orders")}</h3>
           <button
+            type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "history" }))}
-            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors font-medium"
           >
-            {t("dash_view_all")} <ChevronRight className="w-3 h-3" />
+            {t("dash_view_all")} <ChevronRight />
           </button>
         </div>
         {orders.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-sm">
             <img src={iconEmpty} alt="Aucune commande" className="w-20 h-20 mx-auto mb-3 object-contain opacity-60" />
             <p className="text-gray-500">{t("dash_no_orders")}</p>
-            <div className="mt-4">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
-                className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 text-sm font-semibold bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-xl transition-all"
-              >
-                <ShoppingCart className="w-4 h-4" /> {t("dash_buy_action")}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
+              className="mt-4 inline-flex items-center gap-1.5 text-primary text-sm font-semibold bg-primary/5 px-4 py-2 rounded-xl"
+            >
+              <ShoppingCart className="w-4 h-4" /> {t("dash_buy_action")}
+            </button>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="zynum-recent-list">
             {orders.map((order) => {
               const STATUS_LIGHT: Record<string, string> = {
                 PENDING:  "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -140,14 +146,14 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
                 CANCELED: "bg-gray-100 text-gray-500 border-gray-200",
               };
               return (
-                <div key={order.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/80 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500/10 to-primary/10 border border-primary/10 flex items-center justify-center shrink-0">
-                      <Package className="w-4 h-4 text-primary" />
+                <div key={order.id} className="zynum-recent-row">
+                  <div className="zynum-order-meta">
+                    <div className="zynum-order-icon">
+                      <Package />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{order.serviceName}</p>
-                      <p className="text-xs text-gray-400 font-mono truncate">{order.phone}</p>
+                      <p>{order.serviceName}</p>
+                      <span>{order.phone}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -156,7 +162,7 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
                         {order.smsCode}
                       </span>
                     )}
-                    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${STATUS_LIGHT[order.status] ?? "bg-gray-100 text-gray-500 border-gray-200"}`}>
+                    <span className={`zynum-status-badge ${STATUS_LIGHT[order.status] ?? "bg-gray-100 text-gray-500 border-gray-200"}`}>
                       {order.status}
                     </span>
                   </div>
@@ -165,34 +171,6 @@ function Overview({ currency, formatPrice }: { currency: string; formatPrice: (v
             })}
           </div>
         )}
-      </div>
-
-      {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button
-          onClick={() => window.dispatchEvent(new CustomEvent("zynum:tab", { detail: "buy" }))}
-          className="rounded-2xl bg-gradient-to-br from-red-500 to-primary p-5 flex items-center gap-4 text-left transition-all group hover:shadow-lg hover:shadow-red-500/20 shadow-md shadow-red-500/10"
-        >
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-            <ShoppingCart className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <p className="font-semibold text-white">{t("dash_buy_number")}</p>
-            <p className="text-xs text-white/70">{t("dash_countries")}</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-white/80 ml-auto group-hover:translate-x-1 transition-transform" />
-        </button>
-
-        <Link href="/aide" className="rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 p-5 flex items-center gap-4 text-left transition-all group shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-            <HelpCircle className="w-5 h-5 text-gray-500" />
-          </div>
-          <div>
-            <p className="font-semibold text-gray-900">{t("dash_help_center")}</p>
-            <p className="text-xs text-muted-foreground">{t("dash_guides")}</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto group-hover:translate-x-1 transition-transform" />
-        </Link>
       </div>
     </div>
   );
@@ -780,7 +758,7 @@ export default function Dashboard() {
         <NotificationBanner />
 
         {/* Top bar */}
-        <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-gray-200 bg-white/90">
+        <header className="dashboard-topbar sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-gray-200 bg-white/90">
           <button className="lg:hidden text-muted-foreground hover:text-gray-700 p-1" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
@@ -800,7 +778,7 @@ export default function Dashboard() {
 
         {/* Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 md:p-6">
+          <div className="dashboard-content p-4 md:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -809,7 +787,7 @@ export default function Dashboard() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === "overview"   && <Overview currency={currency} formatPrice={formatPrice} />}
+              {activeTab === "overview"   && <Overview currency={currency} />}
               {activeTab === "buy"        && <BuyNumber isEmbedded={true} />}
               {activeTab === "history"    && <OrderHistory />}
               {activeTab === "recharge"   && <Recharge />}

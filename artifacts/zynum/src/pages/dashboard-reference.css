@@ -1,0 +1,391 @@
+.zynum-overview {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  color: #0b0b0d;
+}
+
+.zynum-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.zynum-stat-card {
+  box-sizing: border-box;
+  min-height: 145px;
+  padding: 23px 27px 20px;
+  overflow: hidden;
+  border: 2px solid #111216;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.zynum-stat-card h2 {
+  margin: 0;
+  color: #050507;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.zynum-stat-value-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+  margin-top: 10px;
+}
+
+.zynum-stat-value-row p {
+  margin: 0;
+  color: #050507;
+  font-size: 45px;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.zynum-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+  border-radius: 5px;
+  background: #050507;
+}
+
+.zynum-stat-icon img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: invert(1);
+}
+
+.zynum-orders-row {
+  gap: 14px;
+}
+
+.zynum-buy-number-button {
+  width: 217px;
+  height: 36px;
+  margin-left: auto;
+  padding: 0 8px;
+  overflow: hidden;
+  border: 1px solid #0b5d39;
+  border-radius: 0;
+  background: #00efa8;
+  color: #030b08;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 34px;
+  white-space: nowrap;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.zynum-buy-number-button:hover {
+  filter: brightness(0.96);
+}
+
+.zynum-buy-number-button:active {
+  transform: translateY(1px);
+}
+
+.zynum-affiliate-banner {
+  display: flex;
+  align-items: center;
+  width: calc(100% + 14px);
+  height: 111px;
+  margin: 42px -7px 0;
+  padding: 0 20px 0 31px;
+  gap: 11px;
+  border: 0;
+  border-radius: 34px;
+  background: #217af2;
+  color: #ffffff;
+  text-align: left;
+  box-shadow: none;
+  cursor: pointer;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.zynum-affiliate-banner:hover {
+  filter: brightness(1.03);
+}
+
+.zynum-affiliate-banner:active {
+  transform: scale(0.995);
+}
+
+.zynum-affiliate-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 65px;
+  height: 65px;
+  flex: 0 0 65px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #2b91f5;
+}
+
+.zynum-affiliate-icon img {
+  width: 49px;
+  height: 49px;
+  object-fit: contain;
+}
+
+.zynum-affiliate-copy {
+  flex: 1 1 auto;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.zynum-affiliate-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 121px;
+  height: 42px;
+  flex: 0 0 121px;
+  border: 2px solid #00efa8;
+  border-radius: 24px;
+  color: #ffffff;
+  font-size: 31px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.zynum-recent-card {
+  width: calc(100% + 10px);
+  margin: 31px -5px 0;
+  overflow: hidden;
+  border: 1px solid #edf0f4;
+  border-radius: 29px;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(31, 45, 61, 0.07);
+}
+
+.zynum-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  padding: 0 25px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.zynum-recent-header h3 {
+  margin: 0;
+  color: #1c2026;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.zynum-recent-header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: #4d83cb;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.zynum-recent-header button:hover {
+  color: #2166b6;
+}
+
+.zynum-recent-header button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.zynum-recent-list {
+  width: 100%;
+}
+
+.zynum-recent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 80px;
+  padding: 0 25px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.zynum-recent-row:last-child {
+  border-bottom: 0;
+}
+
+.zynum-order-meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 14px;
+}
+
+.zynum-order-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border: 1px solid #e4e8ef;
+  border-radius: 50%;
+  background: #fbf4f5;
+}
+
+.zynum-order-icon svg {
+  width: 21px;
+  height: 21px;
+  color: #4784d8;
+  stroke-width: 1.7;
+}
+
+.zynum-order-meta p {
+  margin: 0;
+  overflow: hidden;
+  color: #222831;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zynum-order-meta span {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #a2a6ac;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 15px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zynum-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 115px;
+  height: 32px;
+  padding: 0 7px;
+  border: 1px solid #e4e7eb;
+  border-radius: 18px;
+  color: #7f858d;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.dashboard-topbar {
+  min-height: 64px;
+}
+
+.dashboard-content {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .dashboard-topbar {
+    height: 88px;
+    min-height: 88px;
+    gap: 18px;
+    padding: 0 28px !important;
+  }
+
+  .dashboard-topbar h1 {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .dashboard-content {
+    padding: 8px 20px 32px !important;
+  }
+
+  .zynum-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .zynum-stat-card {
+    width: 100%;
+    min-height: 145px;
+    height: 145px;
+  }
+
+  .zynum-stat-value-row p {
+    font-size: 45px;
+  }
+
+  .zynum-buy-number-button {
+    width: 217px;
+    flex: 0 0 217px;
+  }
+}
+
+@media (max-width: 470px) {
+  .zynum-stat-card {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+
+  .zynum-stat-card h2 {
+    font-size: 28px;
+  }
+
+  .zynum-stat-value-row {
+    gap: 11px;
+  }
+
+  .zynum-stat-value-row p {
+    font-size: 38px;
+  }
+
+  .zynum-buy-number-button {
+    width: 169px;
+    flex-basis: 169px;
+    padding: 0 4px;
+    font-size: 17px;
+  }
+
+  .zynum-affiliate-banner {
+    padding-left: 18px;
+    padding-right: 12px;
+    gap: 8px;
+  }
+
+  .zynum-affiliate-copy {
+    font-size: 13px;
+  }
+
+  .zynum-affiliate-button {
+    width: 102px;
+    flex-basis: 102px;
+    font-size: 27px;
+  }
+
+  .zynum-recent-row {
+    padding: 0 17px;
+  }
+}
