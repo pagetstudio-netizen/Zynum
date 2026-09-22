@@ -12,7 +12,10 @@ import {
 } from "lucide-react";
 import iconCardSolde   from "@assets/internet_15229770_1774888657109.png";
 import iconAchat       from "@assets/freepik__icônes_produits_ou_achat_1774888657188.png";
-import defaultAvatar from "@assets/default_1790073334022.png";
+import iconMenuBuy     from "@assets/freepik__icônes_produits_ou_achat_1774887558159.png";
+import iconMenuHistory from "@assets/freepik__icônes_sms_ou_message_1774887558125.png";
+import iconMenuRecharge from "@assets/icons8-argent-mobile-53_1774828244252.png";
+import iconProfile     from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
 import iconAffiliateStats from "@assets/statss_1790062014731.png";
 import { useLanguage } from "@/hooks/use-language";
@@ -44,6 +47,7 @@ type DashboardNavItem = {
   id: Tab;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  image?: string;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -457,7 +461,7 @@ function UserWidget({
         }`}
       >
         <div className="dashboard-user-widget-avatar">
-          <img src={defaultAvatar} alt="Profil" />
+           <img src={iconProfile} alt="Profil" />
         </div>
         <div className="hidden sm:block text-left">
           <p className="text-xs font-semibold text-gray-900 leading-none">{user.name}</p>
@@ -479,7 +483,7 @@ function UserWidget({
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
                 <div className="dashboard-user-widget-menu-avatar">
-                  <img src={defaultAvatar} alt="" />
+                   <img src={iconProfile} alt="" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
@@ -623,11 +627,11 @@ export default function Dashboard() {
 
   const NAV: DashboardNavItem[] = [
     { id: "overview",   label: t("dash_tab_overview"), icon: LayoutDashboard },
-    { id: "buy",        label: t("dash_tab_buy"),      icon: ShoppingCart },
-    { id: "history",    label: t("dash_tab_history"),  icon: History },
-    { id: "recharge",   label: t("dash_tab_recharge"), icon: WalletCards },
-    { id: "affiliate",  label: "Affiliation",          icon: UsersRound },
-    { id: "profile",    label: t("dash_tab_profile"),  icon: User },
+    { id: "buy",        label: t("dash_tab_buy"),      icon: ShoppingCart, image: iconMenuBuy },
+    { id: "history",    label: t("dash_tab_history"),  icon: History,       image: iconMenuHistory },
+    { id: "recharge",   label: t("dash_tab_recharge"), icon: WalletCards,   image: iconMenuRecharge },
+    { id: "affiliate",  label: "Affiliation",          icon: UsersRound,    image: iconAffiliateStats },
+    { id: "profile",    label: t("dash_tab_profile"),  icon: User,          image: iconProfile },
     ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", icon: Shield }] : []),
   ];
 
@@ -676,7 +680,7 @@ export default function Dashboard() {
          {/* User profile banner */}
          <div className="dashboard-sidebar-profile">
            <div className="dashboard-sidebar-profile-avatar">
-             <img src={defaultAvatar} alt="Profil" />
+             <img src={iconProfile} alt="Profil" />
            </div>
            <div className="dashboard-sidebar-profile-name">{user.name}</div>
         </div>
@@ -696,7 +700,15 @@ export default function Dashboard() {
                    active ? "dashboard-sidebar-nav-active" : ""
                  }`}
               >
-                <ItemIcon className={`w-[18px] h-[18px] shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`} />
+                 {item.image ? (
+                   <img
+                     src={item.image}
+                     alt=""
+                     className={`dashboard-nav-icon shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`}
+                   />
+                 ) : (
+                   <ItemIcon className={`w-[18px] h-[18px] shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`} />
+                 )}
                 <span className="flex-1 text-left">{item.label}</span>
                 {active && <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" />}
               </button>
@@ -726,7 +738,7 @@ export default function Dashboard() {
         </nav>
 
         {/* Currency toggle */}
-        <div className="px-4 py-4 border-t border-white/10">
+        <div className="dashboard-currency-toggle px-4 py-4 border-t border-white/10">
            <p className="dashboard-sidebar-section-title px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.18em]">Devise</p>
           <div className="flex bg-white/[0.06] border border-white/10 rounded-xl p-1 gap-1">
             {(["USD", "FCFA"] as const).map((c) => (
@@ -734,7 +746,7 @@ export default function Dashboard() {
                 key={c}
                 onClick={() => setCurrency(c)}
                 className={`flex-1 py-1.5 rounded text-xs font-semibold transition-all ${
-                   currency === c ? "bg-[#2298e3] shadow-md shadow-blue-950/20" : "hover:bg-white/[0.07]"
+                    currency === c ? "dashboard-currency-active shadow-md shadow-blue-950/20" : "hover:bg-gray-100"
                 }`}
              style={{ color: currency === c ? "#ffffff" : "rgba(255,255,255,0.65)" }}
               >
