@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import {
-  Check, Eye, EyeOff, Globe2, HelpCircle, KeyRound, Lock, Shield, User,
+  Check, Eye, EyeOff, Globe2, Lock, User,
 } from "lucide-react";
+import iconCustomerSupport from "@assets/mine-mod-cs-DtBQ0Sp0_1790066990139.png";
+import iconChangePassword from "@assets/mine-mod-change-pwd-D4tL_Aft_1790066990157.png";
+import iconAboutAccount from "@assets/mine-mod-aboutus-xnaBhqOq_1790066990174.png";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -206,7 +209,12 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
           <section className="profile-reference-security-card">
             <div className="profile-reference-section-heading">
               <div className="profile-reference-section-icon">
-                <KeyRound />
+                <img
+                  src={iconChangePassword}
+                  alt=""
+                  aria-hidden="true"
+                  className="profile-reference-asset-icon"
+                />
               </div>
               <div>
                 <h3>{t("profile_change_pwd")}</h3>
@@ -269,7 +277,12 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
           </section>
 
           <div className="profile-reference-security-status">
-            <Shield />
+            <img
+              src={iconAboutAccount}
+              alt=""
+              aria-hidden="true"
+              className="profile-reference-asset-icon profile-reference-status-icon"
+            />
             <div>
               <strong>{t("profile_secure")}</strong>
               <p>{t("profile_secure_desc")}</p>
@@ -281,7 +294,12 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
 
       <div className="profile-reference-help">
         <div>
-          <HelpCircle />
+          <img
+            src={iconCustomerSupport}
+            alt=""
+            aria-hidden="true"
+            className="profile-reference-asset-icon profile-reference-help-icon"
+          />
           <div>
             <h3>{t("profile_need_help")}</h3>
             <p>{t("profile_help_desc")}</p>
