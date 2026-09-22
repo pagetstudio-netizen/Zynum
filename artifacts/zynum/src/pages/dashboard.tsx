@@ -35,7 +35,6 @@ import Recharge from "./recharge";
 import AdminPanel from "./admin";
 import AffiliatePage from "./affiliate";
 import ProfilePage from "./profile";
-import { NotificationBanner } from "@/components/notification-banner";
 import "./dashboard-reference.css";
 
 type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "affiliate" | "admin";
@@ -772,9 +771,6 @@ export default function Dashboard() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Announcement banner — full-width, above everything */}
-        <NotificationBanner />
-
         {/* Top bar */}
         <header className="dashboard-topbar sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md border-b border-gray-200 bg-white/90">
           <button className="lg:hidden text-muted-foreground hover:text-gray-700 p-1" onClick={() => setSidebarOpen(true)}>

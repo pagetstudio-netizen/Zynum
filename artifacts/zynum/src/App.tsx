@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { NotificationBanner } from "@/components/notification-banner";
 
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { LanguageProvider } from "@/hooks/use-language";
@@ -87,6 +88,7 @@ function App() {
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
               <Router />
             </WouterRouter>
+            <NotificationBanner />
             <Toaster />
           </CurrencyProvider>
         </LanguageProvider>
