@@ -563,11 +563,6 @@ export function OmnipayModal({
   const isForm = state === "idle" || state === "loading" || state === "error";
   const inputCls = "w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-500/15 transition";
 
-  const aggLabel = operator.aggregator === "sendavapay" ? "SendavaPay"
-    : operator.aggregator === "paxity"     ? "Paxity"
-    : operator.aggregator === "ashtechpay" ? "AshTechPay"
-    : "OmniPay";
-
   return (
     <AnimatePresence>
       {open && (
@@ -924,7 +919,7 @@ export function OmnipayModal({
                     </Button>
 
                     <p className="text-center text-xs text-gray-400 pb-1">
-                      Paiement sécurisé · Powered by <span className="text-gray-700 font-semibold">{aggLabel}</span>
+                      Paiement sécurisé · Powered by <span className="text-gray-700 font-semibold">Drimpay</span>
                     </p>
                   </div>
                 )}
