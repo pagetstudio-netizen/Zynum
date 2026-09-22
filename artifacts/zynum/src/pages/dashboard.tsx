@@ -8,17 +8,11 @@ import {
   Package, ChevronRight,
   Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Globe2,
+  LayoutDashboard, History, WalletCards, UsersRound,
 } from "lucide-react";
 import iconCardSolde   from "@assets/internet_15229770_1774888657109.png";
 import iconAchat       from "@assets/freepik__icônes_produits_ou_achat_1774888657188.png";
-import iconOverview  from "@assets/1239292_1774829368223.png";
-import iconBuy       from "@assets/84426_1774829368186.png";
-import iconHistory   from "@assets/5708960_1774829436660.png";
-import iconRecharge  from "@assets/2534215_1774829355101.png";
 import iconProfile   from "@assets/avatar.227e595e234f4d53f478_1774828482017.png";
-import iconAffiliate from "@assets/20260228_002918_1772238747293_1782945047044.png";
-import iconHelp      from "@assets/images_(12)_1774828482000.png";
-import iconSupport   from "@assets/3430127_1774831941357.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
 import iconAffiliateStats from "@assets/statss_1790062014731.png";
 import { useLanguage } from "@/hooks/use-language";
@@ -46,6 +40,11 @@ import "./dashboard-reference.css";
 
 type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "affiliate" | "admin";
 type UserWithAdmin = { id: number; name: string; email: string; isAdmin?: boolean; isBanned?: boolean; createdAt: string };
+type DashboardNavItem = {
+  id: Tab;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING:  "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -622,111 +621,133 @@ export default function Dashboard() {
     );
   }
 
-  const NAV: { id: Tab; label: string; imgSrc?: string; isLucide?: boolean; emoji?: string }[] = [
-    { id: "overview",   label: t("dash_tab_overview"), imgSrc: iconOverview },
-    { id: "buy",        label: t("dash_tab_buy"),      imgSrc: iconBuy },
-    { id: "history",    label: t("dash_tab_history"),  imgSrc: iconHistory },
-    { id: "recharge",   label: t("dash_tab_recharge"), imgSrc: iconRecharge },
-    { id: "affiliate",  label: "Affiliation",            imgSrc: iconAffiliate },
-    { id: "profile",    label: t("dash_tab_profile"),  imgSrc: iconProfile },
-    ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", isLucide: true }] : []),
+  const NAV: DashboardNavItem[] = [
+    { id: "overview",   label: t("dash_tab_overview"), icon: LayoutDashboard },
+    { id: "buy",        label: t("dash_tab_buy"),      icon: ShoppingCart },
+    { id: "history",    label: t("dash_tab_history"),  icon: History },
+    { id: "recharge",   label: t("dash_tab_recharge"), icon: WalletCards },
+    { id: "affiliate",  label: "Affiliation",          icon: UsersRound },
+    { id: "profile",    label: t("dash_tab_profile"),  icon: User },
+    ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", icon: Shield }] : []),
   ];
 
   return (
     <div className="min-h-screen flex bg-background">
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/60 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-20 lg:hidden"
+          style={{ background: "rgba(0,0,0,0.62)", backdropFilter: "blur(3px)" }}
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-30 w-64 border-r border-white/[0.06] backdrop-blur-xl
+        fixed inset-y-0 left-0 z-30 w-72 border-r border-white/10
         flex flex-col transition-transform duration-300
         lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `} style={{ background: "hsl(var(--surface))" }}>
+      `} style={{ background: "linear-gradient(180deg, #15171c 0%, #101216 100%)", color: "#ffffff", boxShadow: "12px 0 40px rgba(0,0,0,0.16)" }}>
 
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-red-100 bg-gradient-to-r from-red-500/8 to-primary/5">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-md shadow-red-500/20">
+            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-orange-500/20 ring-1 ring-white/15">
               <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
             </div>
-            <span className="font-bold text-gray-900 text-lg">ZyNum</span>
+            <div>
+              <span className="block font-bold text-white text-lg leading-tight">ZyNum</span>
+              <span className="block text-[10px] uppercase tracking-[0.16em] text-white/35 mt-0.5">Dashboard</span>
+            </div>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-gray-600 p-1">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Fermer le menu"
+            className="lg:hidden p-2 rounded-lg transition-colors hover:bg-white/10"
+            style={{ color: "rgba(255,255,255,0.65)" }}
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* User info */}
-        <div className="px-4 py-3 border-b border-gray-100">
-          <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-primary flex items-center justify-center font-bold text-white text-sm shrink-0">
+        <div className="px-4 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3 rounded-2xl px-3 py-3 border border-white/10 bg-white/[0.06]">
+            <div
+              className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-md shadow-orange-500/20"
+              style={{ color: "#ffffff" }}
+            >
               {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
-              <p className="text-xs text-gray-400 truncate">{user.email}</p>
+              <p className="text-sm font-semibold text-white truncate">{user.name}</p>
+              <p className="text-xs text-white/45 truncate mt-0.5">{user.email}</p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-5 px-3 overflow-y-auto">
+          <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">Navigation</p>
+          <div className="space-y-1">
           {NAV.map((item) => {
             const active = activeTab === item.id;
+            const ItemIcon = item.icon;
             return (
               <button
                 key={item.id}
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                  ${active
-                    ? "bg-gradient-to-r from-red-500/15 to-primary/10 text-red-600 font-semibold border-l-2 border-red-500"
-                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"}
+                  group w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all
+                  ${active ? "shadow-lg shadow-orange-950/20" : "hover:bg-white/[0.07]"}
                 `}
+                style={{
+                  color: active ? "#ffffff" : "rgba(255,255,255,0.58)",
+                  background: active ? "linear-gradient(135deg, #f97316 0%, #ea580c 100%)" : "transparent",
+                }}
               >
-                {item.imgSrc
-                  ? <img src={item.imgSrc} alt={item.label} className="w-5 h-5 shrink-0 object-contain" />
-                  : item.emoji
-                    ? <span className="text-base shrink-0">{item.emoji}</span>
-                    : <Shield className="w-4 h-4 shrink-0" />
-                }
-                {item.label}
+                <ItemIcon className={`w-[18px] h-[18px] shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`} />
+                <span className="flex-1 text-left">{item.label}</span>
+                {active && <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" />}
               </button>
             );
           })}
+          </div>
 
           {/* Separator */}
-          <div className="pt-3 mt-3 border-t border-gray-100 space-y-1">
+          <div className="pt-5 mt-5 border-t border-white/10 space-y-1">
+            <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">Aide & support</p>
             <Link
               href="/aide"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/[0.07]"
+              style={{ color: "rgba(255,255,255,0.58)" }}
+              onClick={() => setSidebarOpen(false)}
             >
-              <img src={iconHelp} alt="Centre d'aide" className="w-5 h-5 shrink-0 object-contain" />
+              <HelpCircle className="w-[18px] h-[18px] shrink-0" />
               {t("dash_help_center")}
             </Link>
             <button
               onClick={() => openWhatsAppSupport(WHATSAPP_SUPPORT_NUMBER)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-[#25D366] hover:bg-[#25D366]/10 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all hover:bg-[#25D366]/10"
+              style={{ color: "rgba(255,255,255,0.58)" }}
             >
-              <img src={iconSupport} alt="Support" className="w-5 h-5 shrink-0 object-contain" />
+              <MessageSquare className="w-[18px] h-[18px] shrink-0" />
               WhatsApp
             </button>
           </div>
         </nav>
 
         {/* Currency toggle */}
-        <div className="px-4 py-3 border-t border-gray-100">
-          <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
+        <div className="px-4 py-4 border-t border-white/10">
+          <p className="px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">Devise</p>
+          <div className="flex bg-white/[0.06] border border-white/10 rounded-xl p-1 gap-1">
             {(["USD", "FCFA"] as const).map((c) => (
               <button
                 key={c}
                 onClick={() => setCurrency(c)}
                 className={`flex-1 py-1.5 rounded text-xs font-semibold transition-all ${
-                  currency === c ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  currency === c ? "bg-orange-500 text-white shadow-md shadow-orange-950/20" : "text-white/45 hover:text-white/80"
                 }`}
               >
                 {c}
@@ -736,10 +757,11 @@ export default function Dashboard() {
         </div>
 
         {/* Logout */}
-        <div className="px-4 py-4 border-t border-gray-100">
+        <div className="px-4 py-4 border-t border-white/10">
           <button
             onClick={() => logoutMutation.mutate()}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors font-medium"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-colors font-medium hover:bg-red-500/10"
+            style={{ color: "rgba(248,113,113,0.9)" }}
           >
             <LogOut className="w-4 h-4" />
             {logoutMutation.isPending ? t("loading") : t("nav_logout")}
