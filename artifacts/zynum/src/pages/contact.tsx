@@ -64,7 +64,7 @@ export default function Contact() {
   ];
 
   return (
-    <div className="w-full py-16">
+    <div className="w-full bg-[#f8fafc] py-16 text-gray-900">
       <section className="relative bg-gradient-to-b from-blue-50 to-white pb-16 text-center">
         <div className="pointer-events-none absolute left-1/2 top-0 h-[200px] w-[400px] -translate-x-1/2 rounded-full bg-primary/10 blur-[80px]" />
         <div className="container relative z-10 mx-auto max-w-3xl px-4 pt-12">
