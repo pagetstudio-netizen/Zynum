@@ -21,7 +21,7 @@ import iconAffiliate from "@assets/20260228_002918_1772238747293_1782945047044.p
 import iconHelp      from "@assets/images_(12)_1774828482000.png";
 import iconSupport   from "@assets/3430127_1774831941357.png";
 import iconEmpty     from "@assets/no_1774828481941.png";
-import iconAffiliateStats from "@assets/statss_1790061994731.png";
+import iconAffiliateStats from "@assets/statss_1790062014731.png";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
