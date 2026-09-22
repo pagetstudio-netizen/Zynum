@@ -220,12 +220,14 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
   if (!user) {
+    console.warn("[Auth] Login rejected: account not found");
     res.status(401).json({ error: "Unauthorized", message: "Email ou mot de passe incorrect" });
     return;
   }
 
   const valid = verifyPassword(password, user.passwordHash);
   if (!valid) {
+    console.warn("[Auth] Login rejected: invalid password");
     res.status(401).json({ error: "Unauthorized", message: "Email ou mot de passe incorrect" });
     return;
   }
