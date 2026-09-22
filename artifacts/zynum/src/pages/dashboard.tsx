@@ -36,6 +36,7 @@ import OrderHistory from "./history";
 import Recharge from "./recharge";
 import AdminPanel from "./admin";
 import AffiliatePage from "./affiliate";
+import ProfilePage from "./profile";
 import { NotificationBanner } from "@/components/notification-banner";
 import "./dashboard-reference.css";
 
@@ -787,7 +788,7 @@ export default function Dashboard() {
               {activeTab === "history"    && <OrderHistory />}
               {activeTab === "recharge"   && <Recharge />}
               {activeTab === "affiliate"  && <AffiliatePage />}
-              {activeTab === "profile"    && <Profile user={user} />}
+              {activeTab === "profile"    && <ProfilePage user={user} />}
               {activeTab === "admin"      && user?.isAdmin && <AdminPanel />}
             </motion.div>
           </AnimatePresence>
