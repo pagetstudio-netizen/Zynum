@@ -5,6 +5,7 @@ import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucid
 import { useLoginUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
+import { AuthShell, authBlue, authButtonClass, authInputClass, authLinkClass } from "@/components/auth/auth-shell";
 
 const API = "/api";
 
@@ -209,57 +210,20 @@ export default function Login() {
     }
   };
 
-  const inputClass =
-    "w-full h-13 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white placeholder:text-gray-400";
+  const inputClass = `${authInputClass} pl-12 pr-4`;
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row">
-
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-[42%] bg-gradient-to-br from-red-500 to-primary flex-col justify-between p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: "radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-        </div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-16">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-black/20">
-              <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold text-xl text-white tracking-tight">ZyNum</span>
-          </div>
-          <h2 className="text-4xl font-extrabold text-white leading-tight mb-4">
-            Numéros virtuels<br />pour le monde entier
-          </h2>
-          <p className="text-white/70 text-lg leading-relaxed max-w-sm">
-            Recevez vos codes OTP en quelques secondes. 180+ pays, 200+ services.
-          </p>
-        </div>
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">50K</div>
-          <p className="text-white/70 text-sm">utilisateurs nous font confiance</p>
-        </div>
-      </div>
-
-      {/* Right panel */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-white">
-        <div className="w-full max-w-md">
-
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-10 lg:hidden">
-            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
-              <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold text-lg text-gray-900 tracking-tight">ZyNum</span>
-          </div>
+    <AuthShell>
+      <div className="w-full max-w-md">
 
           {/* ── Step: credentials ── */}
           {step === "credentials" && !showForgot && (
             <>
               <div className="mb-8">
-                <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">Bon retour 👋</h1>
-                <p className="text-[15px] text-gray-500">
+                <h1 className="text-center text-3xl font-extrabold leading-tight text-[#111827] mb-2">Content de te revoir</h1>
+                <p className="text-center text-[15px] text-[#687386]">
                   Pas encore de compte ?{" "}
-                  <Link href="/register" className="text-red-500 font-semibold hover:text-red-600 transition-colors">Créer un compte</Link>
+                  <Link href="/register" className={authLinkClass}>Créer un compte</Link>
                 </p>
               </div>
 
@@ -272,7 +236,7 @@ export default function Login() {
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-[13px] font-semibold text-gray-700 mb-2">Adresse email <span className="text-red-500">*</span></label>
+                   <label className="block text-[13px] font-semibold text-[#30394d] mb-2">Adresse email <span className="text-[#3157d5]">*</span></label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
                     <input type="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }} />
@@ -280,9 +244,9 @@ export default function Login() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-[13px] font-semibold text-gray-700">Mot de passe <span className="text-red-500">*</span></label>
-                    <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(email); }} className="text-[12px] text-red-500 font-semibold hover:text-red-600 transition-colors">
+                   <div className="flex items-center justify-between mb-2">
+                     <label className="text-[13px] font-semibold text-[#30394d]">Mot de passe <span className="text-[#3157d5]">*</span></label>
+                     <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(email); }} className="text-[12px] font-semibold text-[#3157d5] transition-colors hover:text-[#203da7]">
                       Mot de passe oublié ?
                     </button>
                   </div>
@@ -303,18 +267,18 @@ export default function Login() {
                   </div>
                 </div>
 
-                <button
+                   <button
                   type="submit"
                   disabled={loginMutation.isPending || !email || !password}
-                  className="w-full py-4 rounded-xl font-bold text-white text-[16px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] bg-gradient-to-r from-red-500 to-primary hover:from-red-600 hover:to-primary/90 shadow-lg shadow-red-500/30"
+                     className={`${authButtonClass} flex items-center justify-center gap-2`}
                 >
                   {loginMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Se connecter <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </form>
 
-              <p className="text-center text-[13px] text-gray-400 mt-8 leading-relaxed">
+              <p className="text-center text-[13px] text-[#8a94a6] mt-8 leading-relaxed">
                 Avez-vous précédemment acheté sur ZyNum ?{" "}
-                <Link href="/register" className="text-red-500 font-semibold hover:text-red-600 transition-colors">Accéder à votre compte ici</Link>
+                 <Link href="/register" className={authLinkClass}>Accéder à votre compte ici</Link>
               </p>
             </>
           )}
@@ -322,19 +286,19 @@ export default function Login() {
           {/* ── Step: forgot password ── */}
           {step === "credentials" && showForgot && (
             <>
-              <button onClick={() => { setShowForgot(false); setForgotSent(false); }} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors">
+               <button onClick={() => { setShowForgot(false); setForgotSent(false); }} className="flex items-center gap-1.5 text-sm text-[#687386] hover:text-[#3157d5] mb-6 transition-colors">
                 <ArrowRight className="w-4 h-4 rotate-180" /> Retour
               </button>
 
               {!forgotSent ? (
                 <>
                   <div className="mb-8">
-                    <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">Mot de passe oublié 🔐</h1>
-                    <p className="text-[15px] text-gray-500">Entrez votre email pour recevoir un lien de réinitialisation.</p>
+                     <h1 className="text-center text-3xl font-extrabold text-[#111827] leading-tight mb-2">Mot de passe oublié ?</h1>
+                     <p className="text-center text-[15px] text-[#687386]">Entrez votre email pour recevoir un lien de réinitialisation.</p>
                   </div>
                   <form onSubmit={handleForgot} className="space-y-5">
                     <div>
-                      <label className="block text-[13px] font-semibold text-gray-700 mb-2">Adresse email <span className="text-red-500">*</span></label>
+                       <label className="block text-[13px] font-semibold text-[#30394d] mb-2">Adresse email <span className="text-[#3157d5]">*</span></label>
                       <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
                         <input type="email" placeholder="votre@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required className={inputClass} style={{ paddingTop: "0.875rem", paddingBottom: "0.875rem" }} />
@@ -343,25 +307,25 @@ export default function Login() {
                     <button
                       type="submit"
                       disabled={forgotLoading || !forgotEmail}
-                      className="w-full py-4 rounded-xl font-bold text-white text-[16px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] bg-gradient-to-r from-red-500 to-primary hover:from-red-600 hover:to-primary/90 shadow-lg shadow-red-500/30"
+                       className={`${authButtonClass} flex items-center justify-center gap-2`}
                     >
                       {forgotLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Envoyer le lien <ArrowRight className="w-4 h-4" /></>}
                     </button>
                   </form>
                 </>
               ) : (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center mx-auto mb-5">
-                    <ShieldCheck className="w-8 h-8 text-green-500" />
+                 <div className="text-center py-8">
+                   <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#d6e1ff] bg-[#eef2ff]">
+                     <ShieldCheck className="h-8 w-8 text-[#3157d5]" />
                   </div>
-                  <h2 className="text-2xl font-extrabold text-gray-900 mb-3">Email envoyé !</h2>
-                  <p className="text-[15px] text-gray-500 max-w-xs mx-auto">
+                   <h2 className="text-2xl font-extrabold text-[#111827] mb-3">Email envoyé !</h2>
+                   <p className="text-[15px] text-[#687386] max-w-xs mx-auto">
                     Si cet email correspond à un compte, vous recevrez un lien de réinitialisation dans quelques minutes.
                   </p>
-                  <p className="mt-4 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 max-w-xs mx-auto text-left">
+                   <p className="mt-4 text-[13px] text-[#6f5b1d] bg-[#fff9e8] border border-[#f2e4ae] rounded-xl px-3 py-2 max-w-xs mx-auto text-left">
                     📩 Si vous ne trouvez pas l'email, vérifiez votre dossier <strong>spam / courrier indésirable</strong>.
                   </p>
-                  <button onClick={() => { setShowForgot(false); setForgotSent(false); }} className="mt-6 text-sm text-red-500 font-semibold hover:text-red-600 transition-colors">
+                   <button onClick={() => { setShowForgot(false); setForgotSent(false); }} className={`mt-6 text-sm ${authLinkClass}`}>
                     Retour à la connexion
                   </button>
                 </div>
@@ -372,21 +336,21 @@ export default function Login() {
           {/* ── Step: 2FA or email verify code ── */}
           {(step === "verify_2fa" || step === "verify_admin_2fa" || step === "verify_email") && (
             <>
-              <div className="mb-8">
-                <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mb-5">
-                  <ShieldCheck className="w-7 h-7 text-red-500" />
+               <div className="mb-8">
+                 <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#d6e1ff] bg-[#eef2ff]">
+                   <ShieldCheck className="h-7 w-7 text-[#3157d5]" />
                 </div>
-                <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">
+                 <h1 className="text-center text-3xl font-extrabold text-[#111827] leading-tight mb-2">
                     {step === "verify_email" ? "Vérifiez votre email ✉️" : "Vérification 🔑"}
                 </h1>
-                <p className="text-[15px] text-gray-500">
+                 <p className="text-center text-[15px] text-[#687386]">
                   {step === "verify_2fa"
                     ? "Vous n'avez pas utilisé ZyNum depuis plus de 3 jours. Entrez le code envoyé à :"
                     : step === "verify_admin_2fa"
                       ? "Entrez le code de sécurité à usage unique pour continuer :"
                       : "Entrez le code envoyé à :"}
                   <br />
-                  {step !== "verify_admin_2fa" && <span className="font-semibold text-gray-800">{email}</span>}
+                   {step !== "verify_admin_2fa" && <span className="font-semibold text-[#172033]">{email}</span>}
                 </p>
                 {step !== "verify_admin_2fa" && <p className="mt-3 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
                   📩 Si vous ne trouvez pas l'email, vérifiez votre dossier <strong>spam / courrier indésirable</strong>.
@@ -400,7 +364,7 @@ export default function Login() {
                 </div>
               )}
 
-              <form onSubmit={step === "verify_2fa" ? handleVerify2FA : step === "verify_admin_2fa" ? handleVerifyAdmin2FA : handleVerifyEmail}>
+               <form onSubmit={step === "verify_2fa" ? handleVerify2FA : step === "verify_admin_2fa" ? handleVerifyAdmin2FA : handleVerifyEmail}>
                 <div className="flex gap-2 justify-center mb-6" onPaste={handleCodePaste}>
                   {codeDigits.map((d, i) => (
                     <input
@@ -412,8 +376,8 @@ export default function Login() {
                       value={d}
                       onChange={(e) => handleCodeChange(i, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                      className="w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 bg-gray-50 text-gray-900 outline-none transition-all focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white"
-                      style={{ borderColor: d ? "#f87171" : undefined }}
+                       className="h-14 w-12 rounded-xl border-2 bg-[#f1f3f7] text-center text-2xl font-bold text-[#172033] outline-none transition-all focus:border-[#3157d5] focus:bg-white focus:ring-4 focus:ring-[#3157d5]/10"
+                       style={{ borderColor: d ? authBlue : undefined }}
                     />
                   ))}
                 </div>
@@ -421,24 +385,23 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={isSubmitting || codeDigits.join("").length < 6}
-                  className="w-full py-4 rounded-xl font-bold text-white text-[16px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] bg-gradient-to-r from-red-500 to-primary hover:from-red-600 hover:to-primary/90 shadow-lg shadow-red-500/30"
+                   className={`${authButtonClass} flex items-center justify-center gap-2`}
                 >
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Confirmer <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </form>
 
-              <div className="flex items-center justify-between mt-5">
-                <button onClick={() => { setStep("credentials"); setErrorMsg(""); setCodeDigits(["", "", "", "", "", ""]); }} className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+               <div className="flex items-center justify-between mt-5">
+                 <button onClick={() => { setStep("credentials"); setErrorMsg(""); setCodeDigits(["", "", "", "", "", ""]); }} className="text-sm text-[#687386] hover:text-[#3157d5] transition-colors">
                   ← Retour
                 </button>
-                <button onClick={handleResend} className="text-sm text-red-500 font-semibold hover:text-red-600 transition-colors">
+                 <button onClick={handleResend} className={`text-sm ${authLinkClass}`}>
                   Renvoyer le code
                 </button>
               </div>
             </>
           )}
-        </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }

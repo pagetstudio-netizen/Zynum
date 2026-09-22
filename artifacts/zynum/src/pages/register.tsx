@@ -5,6 +5,7 @@ import { Loader2, User, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, Shiel
 import { useRegisterUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
+import { AuthShell, authBlue, authButtonClass, authInputClass, authLinkClass } from "@/components/auth/auth-shell";
 
 const API = "/api";
 
@@ -129,64 +130,22 @@ export default function Register() {
     toast({ title: "Code renvoyé", description: "Vérifiez votre boîte email." });
   };
 
-  const inputBase =
-    "w-full pl-11 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white placeholder:text-gray-400";
+  const inputBase = `${authInputClass} pl-11 pr-4`;
 
   const pwdMatch = confirmPassword ? password === confirmPassword : true;
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row">
-
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-[40%] bg-gradient-to-br from-red-500 to-primary flex-col justify-between p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: "radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-        </div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-16">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-black/20">
-              <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold text-xl text-white tracking-tight">ZyNum</span>
-          </div>
-          <h2 className="text-4xl font-extrabold text-white leading-tight mb-4">
-            Rejoignez<br />50 000+ utilisateurs
-          </h2>
-          <p className="text-white/70 text-lg leading-relaxed max-w-sm mb-8">
-            Obtenez votre premier numéro virtuel en moins de 30 secondes.
-          </p>
-          <div className="space-y-3">
-            {["Inscription gratuite, sans carte bancaire", "180+ pays disponibles", "OTP reçu en moins de 30 secondes"].map((f) => (
-              <div key={f} className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-white/80 shrink-0" />
-                <span className="text-white/80 text-[15px]">{f}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="relative z-10 text-white/50 text-xs">© 2025 ZyNum. Tous droits réservés.</div>
-      </div>
-
-      {/* Right panel */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 bg-white overflow-y-auto">
-        <div className="w-full max-w-md">
-
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md">
-              <img src="/logo.jpg" alt="ZyNum" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold text-lg text-gray-900 tracking-tight">ZyNum</span>
-          </div>
+    <AuthShell>
+      <div className="w-full max-w-md">
 
           {/* ── Step: form ── */}
           {step === "form" && (
             <>
               <div className="mb-7">
-                <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">Créer un compte</h1>
-                <p className="text-[15px] text-gray-500">
+                <h1 className="text-center text-3xl font-extrabold leading-tight text-[#111827] mb-2">Créer un compte</h1>
+                <p className="text-center text-[15px] text-[#687386]">
                   Déjà utilisateur ?{" "}
-                  <Link href="/login" className="text-red-500 font-semibold hover:text-red-600 transition-colors">Connectez-vous ici</Link>
+                  <Link href="/login" className={authLinkClass}>Connectez-vous ici</Link>
                 </p>
               </div>
 
@@ -200,14 +159,14 @@ export default function Register() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Prénom <span className="text-red-500">*</span></label>
+                     <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Prénom <span className="text-[#3157d5]">*</span></label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input type="text" placeholder="Jean" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Nom <span className="text-red-500">*</span></label>
+                     <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Nom <span className="text-[#3157d5]">*</span></label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input type="text" placeholder="Dupont" value={lastName} onChange={(e) => setLastName(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
@@ -216,7 +175,7 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Adresse email <span className="text-red-500">*</span></label>
+                   <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Adresse email <span className="text-[#3157d5]">*</span></label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input type="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputBase} style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }} />
@@ -224,11 +183,11 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Mot de passe <span className="text-red-500">*</span></label>
+                   <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Mot de passe <span className="text-[#3157d5]">*</span></label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
-                      className="w-full pl-11 pr-11 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-[15px] outline-none transition-all focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white placeholder:text-gray-400"
+                       className={`${authInputClass} pl-11 pr-11`}
                       style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }}
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -238,7 +197,7 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Confirmer le mot de passe <span className="text-red-500">*</span></label>
+                   <label className="block text-[13px] font-semibold text-[#30394d] mb-1.5">Confirmer le mot de passe <span className="text-[#3157d5]">*</span></label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
@@ -248,8 +207,8 @@ export default function Register() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       className={`w-full pl-11 pr-11 rounded-xl text-gray-900 text-[15px] outline-none transition-all placeholder:text-gray-400 ${
-                        !pwdMatch ? "bg-red-50 border border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-500/15"
-                          : "bg-gray-50 border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white"
+                         !pwdMatch ? "border border-red-300 bg-red-50 focus:border-red-400 focus:ring-4 focus:ring-red-500/10"
+                           : authInputClass
                       }`}
                       style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }}
                     />
@@ -271,28 +230,28 @@ export default function Register() {
 
                 <label className="flex items-start gap-3 cursor-pointer select-none pt-1">
                   <div className="relative mt-0.5 shrink-0" onClick={() => setAcceptTerms(!acceptTerms)}>
-                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${acceptTerms ? "bg-red-500 border-red-500" : "border-gray-300 bg-white hover:border-red-400"}`}>
+                     <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${acceptTerms ? "bg-[#3157d5] border-[#3157d5]" : "border-gray-300 bg-white hover:border-[#3157d5]"}`}>
                       {acceptTerms && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                     </div>
                   </div>
                   <span className="text-[14px] text-gray-500 leading-snug">
-                    J'accepte les{" "}
-                    <Link href="/terms" className="text-red-500 font-semibold hover:text-red-600 transition-colors">termes et conditions</Link>
+                     J'accepte les{" "}
+                     <Link href="/terms" className={authLinkClass}>termes et conditions</Link>
                   </span>
                 </label>
 
                 <button
                   type="submit"
                   disabled={registerMutation.isPending || !firstName || !email || !password || !confirmPassword || !acceptTerms || password !== confirmPassword}
-                  className="w-full py-4 rounded-xl font-bold text-white text-[16px] transition-all mt-1 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] bg-gradient-to-r from-red-500 to-primary hover:from-red-600 hover:to-primary/90 shadow-lg shadow-red-500/30"
+                   className={`${authButtonClass} mt-1 flex items-center justify-center gap-2`}
                 >
                   {registerMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Créer mon compte <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </form>
 
-              <p className="text-center text-[13px] text-gray-400 mt-8 leading-relaxed">
+               <p className="text-center text-[13px] text-[#8a94a6] mt-8 leading-relaxed">
                 Avez-vous précédemment acheté sur ZyNum ?{" "}
-                <Link href="/login" className="text-red-500 font-semibold hover:text-red-600 transition-colors">Accéder à vos achats ici</Link>
+                 <Link href="/login" className={authLinkClass}>Accéder à vos achats ici</Link>
               </p>
             </>
           )}
@@ -300,16 +259,16 @@ export default function Register() {
           {/* ── Step: verify email ── */}
           {step === "verify" && (
             <>
-              <div className="mb-8">
-                <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mb-5">
-                  <ShieldCheck className="w-7 h-7 text-red-500" />
+               <div className="mb-8">
+                 <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#d6e1ff] bg-[#eef2ff]">
+                   <ShieldCheck className="h-7 w-7 text-[#3157d5]" />
                 </div>
-                <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">Vérifiez votre email ✉️</h1>
-                <p className="text-[15px] text-gray-500">
+                 <h1 className="text-center text-3xl font-extrabold text-[#111827] leading-tight mb-2">Vérifiez votre email</h1>
+                 <p className="text-center text-[15px] text-[#687386]">
                   Un code à 6 chiffres a été envoyé à :<br />
-                  <span className="font-semibold text-gray-800">{pendingEmail}</span>
+                   <span className="font-semibold text-[#172033]">{pendingEmail}</span>
                 </p>
-                <p className="mt-3 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                 <p className="mt-3 text-[13px] text-[#6f5b1d] bg-[#fff9e8] border border-[#f2e4ae] rounded-xl px-3 py-2">
                   📩 Si vous ne trouvez pas l'email, vérifiez votre dossier <strong>spam / courrier indésirable</strong>.
                 </p>
               </div>
@@ -333,8 +292,8 @@ export default function Register() {
                       value={d}
                       onChange={(e) => handleCodeChange(i, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                      className="w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 bg-gray-50 text-gray-900 outline-none transition-all focus:border-red-400 focus:ring-2 focus:ring-red-500/15 focus:bg-white"
-                      style={{ borderColor: d ? "#f87171" : undefined }}
+                       className="h-14 w-12 rounded-xl border-2 bg-[#f1f3f7] text-center text-2xl font-bold text-[#172033] outline-none transition-all focus:border-[#3157d5] focus:bg-white focus:ring-4 focus:ring-[#3157d5]/10"
+                       style={{ borderColor: d ? authBlue : undefined }}
                     />
                   ))}
                 </div>
@@ -342,24 +301,23 @@ export default function Register() {
                 <button
                   type="submit"
                   disabled={isVerifying || codeDigits.join("").length < 6}
-                  className="w-full py-4 rounded-xl font-bold text-white text-[16px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] bg-gradient-to-r from-red-500 to-primary hover:from-red-600 hover:to-primary/90 shadow-lg shadow-red-500/30"
+                   className={`${authButtonClass} flex items-center justify-center gap-2`}
                 >
                   {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Activer mon compte <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </form>
 
-              <div className="flex items-center justify-between mt-5">
-                <button onClick={() => { setStep("form"); setErrorMsg(""); setCodeDigits(["", "", "", "", "", ""]); }} className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+               <div className="flex items-center justify-between mt-5">
+                 <button onClick={() => { setStep("form"); setErrorMsg(""); setCodeDigits(["", "", "", "", "", ""]); }} className="text-sm text-[#687386] hover:text-[#3157d5] transition-colors">
                   ← Retour
                 </button>
-                <button onClick={handleResend} className="text-sm text-red-500 font-semibold hover:text-red-600 transition-colors">
+                 <button onClick={handleResend} className={`text-sm ${authLinkClass}`}>
                   Renvoyer le code
                 </button>
               </div>
             </>
           )}
-        </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }
