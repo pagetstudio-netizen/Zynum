@@ -758,8 +758,8 @@ export default function Dashboard() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1">
-             <h1 className="dashboard-topbar-title text-base font-semibold">
-              {NAV.find((n) => n.id === activeTab)?.label ?? "Dashboard"}
+              <h1 className="dashboard-topbar-title text-base font-semibold">
+               {activeTab === "developer" ? t("dash_developer_console_title") : NAV.find((n) => n.id === activeTab)?.label ?? "Dashboard"}
             </h1>
           </div>
           <div className="flex items-center gap-2">

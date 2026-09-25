@@ -260,6 +260,7 @@ export const translations = {
     dash_tab_recharge: "Recharger",
     dash_tab_profile: "Profil",
     dash_tab_developers: "Développeurs",
+    dash_developer_console_title: "console développeurs",
 
     // ── Dashboard overview ────────────────────────────────────────────
     dash_balance: "Solde ZyNum",
@@ -919,6 +920,7 @@ export const translations = {
     dash_tab_recharge: "Top up",
     dash_tab_profile: "Profile",
     dash_tab_developers: "Developers",
+    dash_developer_console_title: "developer console",
 
     // ── Dashboard overview ────────────────────────────────────────────
     dash_balance: "ZyNum Balance",
