@@ -30,3 +30,4 @@ export type {
   SuccessResponse,
   UserProfile,
 } from "./generated/types";
+export * from './generated/types';
