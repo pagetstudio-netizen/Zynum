@@ -1,0 +1,348 @@
+Oui. J’ai analysé toute la documentation que tu viens de fournir. L’API ZyNum est déjà assez complète pour permettre à un développeur externe de faire une intégration réelle, mais j’ai relevé quelques points techniques importants à corriger/améliorer.
+1. Structure générale
+Tu as une API v1 avec :
+Plain text
+Base URL
+https://zynum.net/api
+Les endpoints sont bien organisés :
+Catalogue
+GET /v1/services
+GET /v1/countries
+GET /v1/operators
+Compte
+GET /v1/balance
+Commandes
+POST /v1/buy
+GET /v1/check/{orderId}
+GET /v1/orders
+POST /v1/cancel/{orderId}
+POST /v1/finish/{orderId}
+Webhooks
+order.created
+order.updated
+C'est une bonne séparation entre catalogue, compte et commandes.
+2. Le fonctionnement d'achat est cohérent
+Le workflow documenté est clair :
+Plain text
+1. GET /services
+       ↓
+2. GET /countries
+       ↓
+3. GET /operators
+       ↓
+4. GET /balance
+       ↓
+5. POST /buy
+       ↓
+6. GET /check/{orderId}
+       ↓
+   SMS reçu ?
+   ├── NON → attendre / éventuellement annuler
+   └── OUI → récupérer smsCode
+                  ↓
+             POST /finish/{orderId}
+Et avec les webhooks, le développeur peut même éviter de faire du polling permanent.
+3. ⚠️ J'ai trouvé une petite erreur dans l'exemple d'authentification
+Tu as :
+Bash
+-H "Authorization: Authorization: Bearer zyn_<secret>"
+Il y a deux fois Authorization:.
+Il faut :
+Bash
+-H "Authorization: Bearer zyn_<secret>"
+C'est important de corriger ça dans la documentation, sinon quelqu'un qui copie-colle l'exemple peut avoir une erreur d'authentification.
+4. Très bonne chose : le solde est documenté
+Tu as bien :
+Http
+GET /v1/balance
+avec :
+JSON
+{
+  "balance": 12.75,
+  "currency": "USD"
+}
+Donc un intégrateur peut facilement afficher le solde ZyNum dans son propre dashboard.
+5. ⚠️ Il manque probablement une chose importante sur /buy
+Tu expliques :
+Plain text
+POST /v1/buy
+avec :
+JSON
+{
+  "service": "telegram",
+  "country": "senegal",
+  "currency": "USD",
+  "operator": "operator-id",
+  "discountCode": "WELCOME"
+}
+Mais la réponse ne retourne que :
+JSON
+{
+  "order": {
+    "id": "...",
+    "status": "PENDING",
+    "createdAt": "..."
+  }
+}
+Si l'achat est réellement créé avec un numéro immédiatement disponible, le développeur peut avoir besoin de savoir quand et où le numéro de téléphone sera disponible.
+Tu expliques ensuite que /check/{orderId} retourne :
+JSON
+"phone": ...
+via les webhooks, mais ce serait plus clair de documenter explicitement :
+Après POST /v1/buy, utilisez GET /v1/check/{orderId} ou le webhook order.updated pour récupérer le numéro et suivre l'arrivée du SMS.
+6. Les webhooks sont probablement l'une des meilleures parties
+Tu as prévu :
+Plain text
+X-ZyNum-Event
+X-ZyNum-Delivery
+X-ZyNum-Signature
+et surtout :
+Plain text
+sha256=<hex>
+avec HMAC-SHA256.
+C'est très bien.
+Le fait d'avoir :
+X-ZyNum-Delivery comme identifiant stable de livraison
+est également important pour permettre au développeur de faire de l'idempotence.
+Et tu précises :
+livraison « au moins une fois »
+C'est exactement le genre d'information qu'un développeur doit connaître.
+7. Très bonne gestion des remboursements
+La distinction :
+Plain text
+refundPending: true
+et remboursement effectivement confirmé est importante.
+Tu évites ainsi que l'intégrateur considère immédiatement l'argent comme disponible alors que le fournisseur n'a pas encore confirmé l'annulation.
+La documentation :
+Plain text
+503 = remboursement/annulation fournisseur non confirmé
+est également utile.
+8. ⚠️ Je renforcerais cependant la documentation de /check
+Actuellement tu indiques :
+Si elle a plus de six minutes et qu’aucun code n’est enregistré, cet appel lance une tentative d’annulation et de remboursement.
+C'est une information très importante.
+Je la mettrais directement dans un encadré d'avertissement :
+Important : GET /v1/check/{orderId} peut déclencher automatiquement une tentative d'annulation après expiration. N'utilisez pas cette route comme un simple endpoint de lecture sans tenir compte de ce comportement.
+Parce qu'un développeur peut penser que GET signifie uniquement "lecture".
+9. ⚠️ Il faudrait documenter les réponses d'erreur complètes
+Tu donnes :
+JSON
+{
+  "error": "<error-code>",
+  "message": "<human-readable details>"
+}
+C'est bien.
+Mais tu pourrais donner un exemple réel pour chaque erreur importante.
+Par exemple :
+JSON
+{
+  "error": "INSUFFICIENT_BALANCE",
+  "message": "Insufficient balance",
+  "balanceUsd": 1.25,
+  "requiredUsd": 2.40
+}
+Et :
+JSON
+{
+  "error": "NUMBER_UNAVAILABLE",
+  "message": "The selected number is no longer available"
+}
+Ça aiderait beaucoup les développeurs.
+10. ⚠️ Il manque une vraie stratégie d'idempotence sur /buy
+C'est probablement le principal point technique que j'améliorerais.
+Tu écris :
+Après un délai incertain sur POST /v1/buy, vérifiez GET /v1/orders avant de réessayer pour éviter un double achat.
+C'est une bonne précaution, mais ce n'est pas idéal.
+Imagine :
+Plain text
+POST /buy
+     ↓
+ZyNum achète le numéro
+     ↓
+réponse réseau perdue
+     ↓
+client reçoit timeout
+Le développeur ne sait pas si l'achat a réellement eu lieu.
+Il peut ensuite refaire :
+Plain text
+POST /buy
+et créer potentiellement un deuxième achat.
+Une solution professionnelle serait :
+Ajouter une clé d'idempotence :
+Http
+Idempotency-Key: unique-client-order-id
+Ainsi :
+Plain text
+POST /v1/buy
+Idempotency-Key: abc123
+Si la requête est répétée avec abc123, ZyNum retourne le même achat au lieu d'en créer un nouveau.
+Ce n'est pas obligatoire pour ta v1, mais ce serait une amélioration importante.
+11. Il manque également des limites API
+Je ne vois pas dans la documentation que tu m'as donnée une section du genre :
+Plain text
+Rate limits
+Par exemple :
+Plain text
+100 requêtes/minute/API key
+ou autre valeur correspondant réellement à ton infrastructure.
+C'est important pour les développeurs et pour protéger ton API.
+Tu pourrais documenter :
+limite globale ;
+limite par endpoint ;
+comportement avec 429;
+éventuellement headers Retry-After.
+12. Pagination
+Tu as :
+Http
+GET /v1/orders?page=1&limit=20
+Très bien.
+Mais je documenterais les limites :
+Plain text
+limit minimum : 1
+limit maximum : 100
+si c'est ce que ton API applique.
+Et éventuellement :
+JSON
+{
+  "orders": [],
+  "total": 250,
+  "page": 1,
+  "limit": 20
+}
+Tu as déjà total, donc c'est bien.
+13. Une chose que je changerais dans le vocabulaire
+Tu écris parfois :
+prix et disponibilités
+mais les réponses indiquent :
+Plain text
+available: 0
+Tu précises correctement que ce sont des instantanés.
+Je mettrais encore plus clairement :
+⚠️ available est indicatif et peut changer entre la consultation du catalogue et l'achat. La disponibilité réelle est confirmée uniquement par POST /v1/buy.
+Cela évite qu'un développeur fasse :
+Plain text
+available > 0
+↓
+considère le stock réservé
+alors qu'il ne l'est pas.
+14. Ton système de devises est simple
+Tu as :
+Plain text
+USD
+FCFA
+et :
+JSON
+"currency": "USD"
+ou :
+JSON
+"currency": "FCFA"
+C'est simple à intégrer.
+Mais attention à cette phrase :
+le solde est actuellement retourné en USD.
+Je la garderais très visible, car un développeur pourrait croire que son compte possède un solde FCFA indépendant.
+15. Je rajouterais une section "Workflow complet"
+C'est probablement la meilleure amélioration documentaire que tu pourrais faire.
+Par exemple :
+Plain text
+Étape 1
+Lister les services
+
+GET /v1/services
+
+↓
+
+Étape 2
+Lister les pays
+
+GET /v1/countries?service=telegram
+
+↓
+
+Étape 3
+Choisir un opérateur
+
+GET /v1/operators?service=telegram&country=senegal
+
+↓
+
+Étape 4
+Vérifier le solde
+
+GET /v1/balance
+
+↓
+
+Étape 5
+Acheter
+
+POST /v1/buy
+
+↓
+
+Étape 6
+Suivre la commande
+
+GET /v1/check/{orderId}
+
+ou webhook
+
+↓
+
+Étape 7
+SMS reçu
+
+↓
+
+Étape 8
+Terminer
+
+POST /v1/finish/{orderId}
+Cela permettra à quelqu'un qui découvre ZyNum de comprendre l'intégration en quelques minutes.
+16. Un autre point important : sécurité
+Tu fais déjà plusieurs bonnes choses :
+Bearer API key
+clé uniquement côté serveur
+HMAC-SHA256
+vérification du corps brut
+timingSafeEqual
+déduplication des webhooks
+HTTPS
+Je renforcerais simplement la documentation avec :
+Ne jamais appeler /v1/buy directement depuis une application mobile ou un navigateur.
+Le développeur doit faire :
+Plain text
+Application
+    ↓
+Son serveur
+    ↓
+ZyNum API
+et jamais :
+Plain text
+Application
+    ↓
+ZyNum API
+avec la clé API embarquée dans l'application.
+Mon bilan
+La documentation actuelle couvre déjà l'essentiel du cycle de vie d'une commande :
+catalogue → solde → achat → SMS → annulation/remboursement → terminaison → webhook.
+Les améliorations que je traiterais en priorité sont :
+Priorité
+Amélioration
+🔴
+Corriger Authorization: Authorization: Bearer
+🔴
+Ajouter une stratégie d'idempotence à /buy
+🟠
+Documenter les rate limits
+🟠
+Ajouter davantage d'exemples d'erreurs JSON
+🟠
+Clarifier le comportement automatique de /check
+🟡
+Ajouter un workflow complet d'intégration
+🟡
+Documenter précisément les limites de pagination
+🟡
+Ajouter une section sécurité serveur/client
+Globalement, la base de l'API est solide et cohérente. Le plus gros manque n'est pas le nombre d'endpoints : c'est surtout la documentation des cas limites (timeout d'achat, idempotence, rate limits, erreurs détaillées).
+Et il y a une correction immédiate à faire dans ta documentation : Authorization: Authorization: Bearer → Authorization: Bearer.
