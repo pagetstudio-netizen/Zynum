@@ -1,6 +1,9 @@
 import { createHmac } from "node:crypto";
 import { lookup } from "node:dns/promises";
+import type { LookupAddress } from "node:dns";
+import type { LookupFunction } from "node:net";
 import { isIP } from "node:net";
+import { request as httpsRequest } from "node:https";
 import { db, webhookDeliveriesTable, usersTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 
@@ -76,9 +79,9 @@ function isPublicAddress(address: string): boolean {
   return false;
 }
 
-async function assertPublicWebhookTarget(endpoint: string): Promise<void> {
+async function resolvePublicWebhookTarget(endpoint: string): Promise<LookupAddress> {
   const hostname = new URL(endpoint).hostname.replace(/^\[|\]$/g, "");
-  let addresses: Array<{ address: string }>;
+  let addresses: LookupAddress[];
   try {
     addresses = await lookup(hostname, { all: true, verbatim: true });
   } catch {
@@ -87,6 +90,46 @@ async function assertPublicWebhookTarget(endpoint: string): Promise<void> {
   if (addresses.length === 0 || addresses.some(({ address }) => !isPublicAddress(address))) {
     throw new Error("Le webhook doit pointer vers une adresse IP publique.");
   }
+  return addresses[0];
+}
+
+function postWebhook(
+  endpoint: string,
+  target: LookupAddress,
+  body: string,
+  headers: Record<string, string>,
+): Promise<number> {
+  const url = new URL(endpoint);
+  const hostname = url.hostname.replace(/^\[|\]$/g, "");
+  const pinnedLookup: LookupFunction = (_host, options, callback) => {
+    if (options.all) {
+      callback(null, [{ address: target.address, family: target.family }]);
+    } else {
+      callback(null, target.address, target.family);
+    }
+  };
+
+  return new Promise((resolve, reject) => {
+    const request = httpsRequest({
+      protocol: url.protocol,
+      hostname,
+      port: url.port || 443,
+      servername: hostname,
+      method: "POST",
+      path: `${url.pathname}${url.search}`,
+      headers,
+      lookup: pinnedLookup,
+      signal: AbortSignal.timeout(10_000),
+    }, (response) => {
+      const status = response.statusCode ?? 0;
+      response.resume();
+      response.once("end", () => resolve(status));
+      response.once("error", reject);
+    });
+
+    request.once("error", reject);
+    request.end(body);
+  });
 }
 
 async function claimNextDelivery(): Promise<ClaimedDelivery | null> {
@@ -159,24 +202,16 @@ async function deliver(delivery: ClaimedDelivery): Promise<void> {
   let errorMessage = "Échec temporaire de livraison.";
 
   try {
-    await assertPublicWebhookTarget(delivery.endpointUrl);
+    const target = await resolvePublicWebhookTarget(delivery.endpointUrl);
     const body = JSON.stringify(delivery.payload);
     const signature = createHmac("sha256", user.apiKey).update(body).digest("hex");
-    const response = await fetch(delivery.endpointUrl, {
-      method: "POST",
-      redirect: "manual",
-      signal: AbortSignal.timeout(10_000),
-      headers: {
-        "Content-Type": "application/json",
-        "X-ZyNum-Event": delivery.event,
-        "X-ZyNum-Delivery": String(delivery.id),
-        "X-ZyNum-Signature": `sha256=${signature}`,
-      },
-      body,
+    responseStatus = await postWebhook(delivery.endpointUrl, target, body, {
+      "Content-Type": "application/json",
+      "X-ZyNum-Event": delivery.event,
+      "X-ZyNum-Delivery": String(delivery.id),
+      "X-ZyNum-Signature": `sha256=${signature}`,
     });
-    responseStatus = response.status;
-    await response.body?.cancel().catch(() => {});
-    if (response.ok) {
+    if (responseStatus >= 200 && responseStatus < 300) {
       await setDeliveryResult(delivery.id, {
         status: "delivered",
         deliveredAt: new Date(),
@@ -186,8 +221,8 @@ async function deliver(delivery: ClaimedDelivery): Promise<void> {
       return;
     }
 
-    retryable = response.status === 408 || response.status === 425 || response.status === 429 || response.status >= 500;
-    errorMessage = `Le serveur webhook a répondu HTTP ${response.status}.`;
+    retryable = responseStatus === 408 || responseStatus === 425 || responseStatus === 429 || responseStatus >= 500;
+    errorMessage = `Le serveur webhook a répondu HTTP ${responseStatus}.`;
   } catch (error) {
     if (
       error instanceof Error
