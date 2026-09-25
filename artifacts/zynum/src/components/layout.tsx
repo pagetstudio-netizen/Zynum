@@ -283,7 +283,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 >
                   <AppLink
                     href={link.href}
-                    external={link.external}
+                    external={"external" in link ? link.external : false}
                     onClick={() => setIsMobileMenuOpen(false)}
                     style={{
                       display: "flex",

@@ -15,6 +15,7 @@ Use this skill when an application or coding agent needs to discover ZyNum servi
 - Private calls require `Authorization: Bearer <ZYNUM_API_KEY>`. ZyNum keys begin with `zyn_`.
 - The account owner manages the key in the ZyNum developer area.
 - Keep the key on a trusted server and in a secrets manager or environment variable. Never put it in browser code, logs, source control, or a chat prompt. Do not ask a user to paste a key into chat.
+- Each account has one API key. The same key is the HMAC-SHA256 secret for verifying outgoing ZyNum webhooks; the key itself is never sent in webhook requests.
 - Send `Content-Type: application/json` on JSON requests.
 
 ## Available routes
@@ -34,6 +35,8 @@ Country and service availability can change. Treat `available` and prices as a r
 | --- | --- | --- | --- |
 | `GET` | `/v1/operators?service={service}&country={country}` | Both query parameters required | `{ "operators": [{ "name": "operator-id", "label": "Operator", "priceUsd": 0.42, "priceFcfa": 260, "available": 0 }] }` |
 | `GET` | `/v1/balance` | None | `{ "balance": 12.75, "currency": "USD" }` |
+| `GET` | `/v1/developer/webhook` | Account authentication | `{ "webhookUrl": null, "events": ["order.created", "order.updated"] }` |
+| `PUT` | `/v1/developer/webhook` | JSON: `url` is a public HTTPS URL, or `null` to disable | `{ "webhookUrl": "https://example.com/hooks", "events": ["order.created", "order.updated"] }` |
 
 ### Purchase and order management
 
@@ -59,6 +62,23 @@ Order statuses are `PENDING`, `RECEIVED`, `FINISHED`, `TIMEOUT`, `BANNED`, and `
 
 Orders are scoped to the authenticated account. Do not retry a purchase blindly after an ambiguous network failure; first inspect the account's order history to reduce the risk of creating a duplicate order.
 
+## Outgoing order webhooks
+
+Configure one public HTTPS destination in Profile → Developer, or use the authenticated webhook routes above. ZyNum sends:
+
+- `order.created` when a new order is saved.
+- `order.updated` when an order's public status, `smsCode`, or `smsText` changes.
+
+The JSON envelope is `{ "type": "...", "createdAt": "...", "data": { "order": { ... } } }`. The order object uses the same fields as the API order response, including `smsCode` and `smsText` when available. Treat those SMS fields as sensitive verification data.
+
+Every request includes:
+
+- `X-ZyNum-Event`: event type.
+- `X-ZyNum-Delivery`: stable delivery ID; use it to deduplicate retries.
+- `X-ZyNum-Signature`: `sha256=<hex>` HMAC-SHA256 of the exact raw request body, using the account's existing API key.
+
+Return any HTTP 2xx response to acknowledge delivery. Network errors, HTTP `408`, `425`, `429`, and `5xx` responses are retried with exponential backoff for up to 12 attempts. Other non-2xx responses are treated as permanent failures. Delivery is at least once, so handlers must be idempotent. Changing or disabling the destination stops pending deliveries to the previous URL. Rotating the API key changes the HMAC key immediately; the old key is invalidated.
+
 ## Errors and edge cases
 
 - `400`: validation or purchase failure; purchase failures can include insufficient balance.
@@ -69,7 +89,7 @@ Orders are scoped to the authenticated account. Do not retry a purchase blindly 
 - `503`: refund is still pending.
 - Error bodies commonly contain `error` and `message`; use the specific endpoint response rather than assuming every route has an identical error body.
 - A check on an order older than six minutes with no SMS code can trigger automatic cancellation/refund handling. The response may include `autocanceled` and `refundPending`, or return `503` while refund handling is retried.
-- Do not promise filtering, webhooks, SDKs, rate limits, or endpoints not listed here.
+- Do not promise filtering, SDKs, rate limits, or endpoints not listed here. Webhook behavior is limited to the events and delivery contract above.
 
 ## Server-side JavaScript example
 
