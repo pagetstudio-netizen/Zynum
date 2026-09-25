@@ -552,6 +552,16 @@ export default function Dashboard() {
   });
 
   React.useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const bodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = bodyOverflow;
+    };
+  }, [sidebarOpen]);
+
+  React.useEffect(() => {
     const legacyParams = new URLSearchParams(window.location.search);
     const fragmentParams = new URLSearchParams(window.location.hash.slice(1));
     const authToken = fragmentParams.get("auth_token") ?? legacyParams.get("auth_token");
@@ -625,8 +635,10 @@ export default function Dashboard() {
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 lg:hidden"
-          style={{ background: "rgba(0,0,0,0.62)", backdropFilter: "blur(3px)" }}
+          style={{ background: "rgba(0,0,0,0.62)", backdropFilter: "blur(3px)", touchAction: "none" }}
           onClick={() => setSidebarOpen(false)}
+          onWheel={(event) => event.preventDefault()}
+          onTouchMove={(event) => event.preventDefault()}
         />
       )}
 

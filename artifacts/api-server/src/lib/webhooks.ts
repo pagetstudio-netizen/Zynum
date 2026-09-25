@@ -50,6 +50,33 @@ export class WebhookTestError extends Error {
   }
 }
 
+export function buildWebhookTestRequest(
+  apiKey: string,
+  deliveryId = `test-${randomUUID()}`,
+  createdAt = new Date().toISOString(),
+): { body: string; headers: Record<string, string> } {
+  const body = JSON.stringify({
+    type: "webhook.test",
+    test: true,
+    createdAt,
+    data: {
+      message: "Test de connexion ZyNum. Aucun SMS ni aucune commande réelle ne sont inclus.",
+    },
+  });
+  const signature = createHmac("sha256", apiKey).update(body).digest("hex");
+
+  return {
+    body,
+    headers: {
+      "Content-Type": "application/json",
+      "X-ZyNum-Event": "webhook.test",
+      "X-ZyNum-Delivery": deliveryId,
+      "X-ZyNum-Signature": `sha256=${signature}`,
+      "X-ZyNum-Test": "true",
+    },
+  };
+}
+
 function isPublicAddress(address: string): boolean {
   const version = isIP(address);
   if (version === 4) {
@@ -152,23 +179,8 @@ export async function sendWebhookTest(userId: number): Promise<{ ok: true; statu
 
   const endpoint = normalizeWebhookUrl(user.webhookUrl);
   const target = await resolvePublicWebhookTarget(endpoint);
-  const deliveryId = `test-${randomUUID()}`;
-  const body = JSON.stringify({
-    type: "webhook.test",
-    test: true,
-    createdAt: new Date().toISOString(),
-    data: {
-      message: "Test de connexion ZyNum. Aucun SMS ni aucune commande réelle ne sont inclus.",
-    },
-  });
-  const signature = createHmac("sha256", user.apiKey).update(body).digest("hex");
-  const statusCode = await postWebhook(endpoint, target, body, {
-    "Content-Type": "application/json",
-    "X-ZyNum-Event": "webhook.test",
-    "X-ZyNum-Delivery": deliveryId,
-    "X-ZyNum-Signature": `sha256=${signature}`,
-    "X-ZyNum-Test": "true",
-  });
+  const testRequest = buildWebhookTestRequest(user.apiKey);
+  const statusCode = await postWebhook(endpoint, target, testRequest.body, testRequest.headers);
 
   if (statusCode < 200 || statusCode >= 300) {
     throw new WebhookTestError(`Le serveur webhook a répondu HTTP ${statusCode}.`, 502);

@@ -45,10 +45,11 @@
 
 .zynum-developer-card-title {
   margin: 0;
-  font-size: clamp(28px, 8vw, 42px);
+  font-size: clamp(23px, 4vw, 30px);
   font-weight: 800;
   letter-spacing: -0.055em;
   line-height: 1.03;
+  opacity: 0.72;
 }
 
 .zynum-developer-input-shell {
@@ -341,7 +342,7 @@
   }
 
   .zynum-developer-card-title {
-    font-size: clamp(27px, 9vw, 35px);
+    font-size: clamp(22px, 6vw, 27px);
   }
 
   .zynum-developer-card-copy {
