@@ -26,6 +26,8 @@ import icon3dPartners from "@assets/partners@2x.07xoz5yxyff0b_1782931480890.png"
 import icon3dClients  from "@assets/clients@2x.0ijun8_o5qiat_1782931481090.png";
 import icon3dIncome   from "@assets/income-image@3x.0-d1di3zb~-f__1782931481119.png";
 import icon3dSupport  from "@assets/support@2x.0delawx1ppnnt_1782933694962.png";
+import apiDeveloperImage from "@assets/9496161_1790343914268.png";
+import apiCloudImage from "@assets/2165004_1790343914452.png";
 
 const ICON_ORANGE = "brightness(0) saturate(100%) invert(58%) sepia(97%) saturate(2476%) hue-rotate(346deg) brightness(1.1) contrast(1)";
 
@@ -141,9 +143,52 @@ export default function Home() {
     { num: "04", img: icon3dPartners, title: t("home_steps_d_title"), desc: t("home_steps_d_desc"), accent: "#fdf4ff", border: "#e9d5ff" },
   ];
 
+  const API_CARDS = [
+    {
+      id: "integration",
+      image: apiDeveloperImage,
+      alt: t("home_api_card1_alt"),
+      badge: t("home_api_card1_badge"),
+      title: t("home_api_card1_title"),
+      description: t("home_api_card1_desc"),
+      href: "/api-docs#quickstart",
+    },
+    {
+      id: "webhooks",
+      image: apiCloudImage,
+      alt: t("home_api_card2_alt"),
+      badge: t("home_api_card2_badge"),
+      title: t("home_api_card2_title"),
+      description: t("home_api_card2_desc"),
+      href: "/api-docs#webhooks",
+    },
+  ];
+
   return (
     <div style={{ background: "#f9fafb", color: "#111827", overflowX: "hidden" }}>
       <style>{`
+        .home-api-section { padding: 64px 0 68px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+        .home-api-inner { max-width: 1280px; margin: 0 auto; }
+        .home-api-heading { padding: 0 24px; margin: 0 auto 30px; text-align: center; }
+        .home-api-kicker { margin: 0 0 10px; color: ${O}; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+        .home-api-heading h2 { margin: 0; color: #111827; font-size: clamp(27px, 3.6vw, 42px); font-weight: 800; line-height: 1.15; letter-spacing: -.045em; }
+        .home-api-heading > p:last-child { max-width: 650px; margin: 14px auto 0; color: #6b7280; font-size: 15px; line-height: 1.7; }
+        .home-api-track { display: flex; gap: 20px; overflow-x: auto; padding: 2px 24px 16px; scroll-snap-type: x mandatory; scroll-padding-inline: 24px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: rgba(249,115,22,.55) #f3f4f6; }
+        .home-api-track::-webkit-scrollbar { height: 6px; }
+        .home-api-track::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 999px; }
+        .home-api-track::-webkit-scrollbar-thumb { background: rgba(249,115,22,.55); border-radius: 999px; }
+        .home-api-card { display: grid; grid-template-columns: minmax(190px, .85fr) minmax(0, 1.15fr); flex: 0 0 calc((100% - 20px) / 2); min-width: 0; min-height: 290px; overflow: hidden; scroll-snap-align: start; background: #fff; border: 1px solid #e5e7eb; border-radius: 22px; box-shadow: 0 10px 32px rgba(17,24,39,.07); }
+        .home-api-art { display: grid; place-items: center; min-height: 100%; padding: 18px; background: linear-gradient(135deg, #fce7f3, #dbeafe); }
+        .home-api-art-webhooks { background: linear-gradient(135deg, #dbeafe, #eff6ff); }
+        .home-api-art img { display: block; width: min(100%, 230px); aspect-ratio: 1; object-fit: contain; }
+        .home-api-card-content { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 26px 28px; }
+        .home-api-card-badge { display: inline-flex; align-items: center; min-height: 27px; padding: 0 10px; color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .home-api-card-content h3 { margin: 13px 0 8px; color: #111827; font-size: clamp(19px, 2vw, 24px); font-weight: 800; line-height: 1.25; letter-spacing: -.025em; }
+        .home-api-card-content p { margin: 0; color: #6b7280; font-size: 13px; line-height: 1.65; }
+        .home-api-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; margin-top: 20px; padding: 0 15px; color: #fff; background: ${O}; border-radius: 10px; box-shadow: 0 5px 14px rgba(249,115,22,.22); font-size: 13px; font-weight: 700; text-decoration: none; transition: transform .18s ease, background .18s ease; }
+        .home-api-cta:hover { transform: translateY(-2px); background: #ea580c; }
+        .home-api-cta:focus-visible, .home-api-track:focus-visible { outline: 3px solid rgba(249,115,22,.5); outline-offset: 3px; }
+        .home-api-scroll-hint { display: none; }
         @media (max-width: 768px) {
           .hero-inner { flex-direction: column !important; gap: 40px !important; padding-top: 80px !important; padding-bottom: 60px !important; }
           .hero-left { text-align: center !important; align-items: center !important; display: flex !important; flex-direction: column !important; }
@@ -156,6 +201,21 @@ export default function Home() {
           .hero-right { order: -1 !important; max-width: 320px !important; margin: 0 auto !important; }
           .hero-right .hero-badge-left { left: 0 !important; font-size: 12px !important; padding: 8px 12px !important; }
           .hero-right .hero-badge-right { right: 0 !important; padding: 10px 12px !important; }
+          .home-api-section { padding: 52px 0 46px; }
+          .home-api-heading { margin-bottom: 23px; }
+          .home-api-heading > p:last-child { font-size: 14px; }
+          .home-api-track { gap: 14px; padding: 2px 18px 15px; scroll-padding-inline: 18px; }
+          .home-api-card { grid-template-columns: 1fr; flex-basis: min(84vw, 410px); min-height: 0; }
+          .home-api-art { min-height: 176px; padding: 8px; }
+          .home-api-art img { width: 170px; }
+          .home-api-card-content { padding: 20px 21px 22px; }
+          .home-api-card-content h3 { font-size: 21px; }
+          .home-api-cta { margin-top: 16px; }
+          .home-api-scroll-hint { display: block; margin: 8px 18px 0; color: #6b7280; text-align: center; font-size: 11px; }
+        }
+        @media (max-width: 380px) {
+          .home-api-card { flex-basis: 88vw; }
+          .home-api-card-content { padding-inline: 18px; }
         }
       `}</style>
 
@@ -281,6 +341,41 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* ── API INTRO CARDS ───────────────────────────────────────────────── */}
+      <section className="home-api-section" id="api-integration" aria-labelledby="home-api-title">
+        <div className="home-api-inner">
+          <motion.div {...fadeUp()} className="home-api-heading">
+            <p className="home-api-kicker">{t("home_api_badge")}</p>
+            <h2 id="home-api-title">{t("home_api_title")}</h2>
+            <p>{t("home_api_intro")}</p>
+          </motion.div>
+
+          <div className="home-api-track" role="region" aria-label={t("home_api_carousel_aria")} tabIndex={0}>
+            {API_CARDS.map((card, index) => (
+              <motion.article
+                key={card.id}
+                {...fadeUp(index * 0.08)}
+                className="home-api-card"
+                aria-labelledby={`home-api-card-title-${card.id}`}
+              >
+                <div className={`home-api-art home-api-art-${card.id}`}>
+                  <img src={card.image} alt={card.alt} loading="lazy" />
+                </div>
+                <div className="home-api-card-content">
+                  <span className="home-api-card-badge">{card.badge}</span>
+                  <h3 id={`home-api-card-title-${card.id}`}>{card.title}</h3>
+                  <p>{card.description}</p>
+                  <Link href={card.href} className="home-api-cta">
+                    {t("home_api_cta")} <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+          <p className="home-api-scroll-hint">{t("home_api_swipe_hint")}</p>
+        </div>
+      </section>
 
       {/* ── CARROUSEL HORIZONTAL ───────────────────────────────────────────── */}
       <section style={{ padding: "80px 0 80px 24px", overflow: "hidden" }}>
