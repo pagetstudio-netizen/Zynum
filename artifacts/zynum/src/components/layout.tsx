@@ -9,6 +9,14 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useGetCurrentUser } from "@workspace/api-client-react";
 import { SocialBar } from "@/components/social-bar";
+import { DEVELOPER_DOCS_URL } from "@/lib/urls";
+
+type AppLinkProps = React.ComponentProps<"a"> & { external?: boolean };
+
+function AppLink({ external = false, href = "/", ...props }: AppLinkProps) {
+  if (external) return <a href={href} {...props} />;
+  return <Link href={href} {...props} />;
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -37,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [isMobileMenuOpen]);
 
   const navLinks = [
-    { href: "/api-docs", label: t("nav_developer_docs"), icon: <Code2 className="w-4 h-4 mr-2" /> },
+    { href: DEVELOPER_DOCS_URL, label: t("nav_developer_docs"), external: true, icon: <Code2 className="w-4 h-4 mr-2" /> },
     { href: "/login",   label: t("nav_pricing"),  icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
     { href: "/aide",    label: t("nav_help"),     icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
     { href: "/about",   label: t("nav_about"),    icon: <MessageSquare className="w-4 h-4 mr-2" /> },
@@ -60,7 +68,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       { label: t("footer_about"), href: "/about" },
       { label: t("footer_faq"), href: "/faq" },
       { label: t("nav_contact"), href: "/contact" },
-      { label: t("footer_api"), href: "/api-docs" },
+      { label: t("footer_api"), href: DEVELOPER_DOCS_URL, external: true },
     ],
     [t("footer_legal")]: [
       { label: t("footer_terms"), href: "/terms" },
@@ -100,9 +108,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* Desktop nav links (hidden on mobile) */}
             <nav className="hidden md:flex" style={{ gap: 4 }}>
               {navLinks.map((link) => (
-                <Link
+                <AppLink
                   key={link.label}
                   href={link.href}
+                  external={link.external}
                   style={{
                     padding: "7px 14px",
                     borderRadius: 10,
@@ -114,7 +123,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   }}
                 >
                   {link.label}
-                </Link>
+                </AppLink>
               ))}
             </nav>
 
@@ -272,8 +281,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     visible: { opacity: 1, x: 0, transition: { duration: 0.28, ease: "easeOut" } },
                   }}
                 >
-                  <Link
+                  <AppLink
                     href={link.href}
+                    external={link.external}
                     onClick={() => setIsMobileMenuOpen(false)}
                     style={{
                       display: "flex",
@@ -289,7 +299,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     }}
                   >
                     {link.label}
-                  </Link>
+                  </AppLink>
                 </motion.div>
               ))}
 
@@ -381,13 +391,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <ul className="space-y-3">
                   {links.map((link) => (
                     <li key={link.label}>
-                      <Link
+                      <AppLink
                         href={link.href}
+                        external={link.external}
                         className="text-sm transition-colors"
                         style={{ color: isHome ? "rgba(255,255,255,0.4)" : "#6b7280" }}
                       >
                         {link.label}
-                      </Link>
+                      </AppLink>
                     </li>
                   ))}
                 </ul>

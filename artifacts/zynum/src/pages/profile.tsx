@@ -10,6 +10,7 @@ import iconAboutAccount from "@assets/mine-mod-aboutus-xnaBhqOq_1790066990174.pn
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { DEVELOPER_DOCS_URL } from "@/lib/urls";
 import {
   WHATSAPP_SUPPORT_NUMBER,
   openWhatsAppSupport,
@@ -549,7 +550,7 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
                   <p>{developerCopy.signature}</p>
                   <p>{developerCopy.retry}</p>
                 </div>
-                <a className="profile-reference-docs-link" href="/api-docs#webhooks" data-testid="link-developer-webhook-docs">{developerCopy.docs}</a>
+                <a className="profile-reference-docs-link" href={`${DEVELOPER_DOCS_URL}#webhooks`} data-testid="link-developer-webhook-docs">{developerCopy.docs}</a>
               </section>
             </>
           )}

@@ -10,6 +10,7 @@ const app: Express = express();
 const allowedOrigins = [
   "https://zynum.net",
   "https://www.zynum.net",
+  "https://developers.zynum.net",
   /\.replit\.app$/,
   /\.replit\.dev$/,
 ];

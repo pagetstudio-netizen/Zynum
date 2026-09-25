@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
+import { DEVELOPER_DOCS_URL } from "@/lib/urls";
 
 type SeoPage = {
   title: string;
@@ -145,7 +146,9 @@ export function RouteSeo({ path }: { path: string }) {
     const normalizedPath = path.split("?")[0].split("#")[0] || "/";
     const page = seoPages[lang][normalizedPath] ?? seoPages.fr["/"];
     const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, "");
-    const canonicalUrl = `${siteUrl}${normalizedPath === "/" ? "" : normalizedPath}`;
+    const canonicalUrl = normalizedPath === "/api-docs"
+      ? DEVELOPER_DOCS_URL
+      : `${siteUrl}${normalizedPath === "/" ? "" : normalizedPath}`;
     const robots = noIndexPaths.has(normalizedPath) ? "noindex, nofollow" : "index, follow";
     const imageUrl = `${siteUrl}/opengraph.jpg`;
 

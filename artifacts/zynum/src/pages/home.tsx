@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useGetServices } from "@workspace/api-client-react";
 import { useLanguage } from "@/hooks/use-language";
+import { DEVELOPER_DOCS_URL } from "@/lib/urls";
 
 import appDouble from "@assets/20260701_162442_1782923584243.png";
 import appHand from "@assets/20260701_161314_1782923584332.png";
@@ -151,7 +152,7 @@ export default function Home() {
       badge: t("home_api_card1_badge"),
       title: t("home_api_card1_title"),
       description: t("home_api_card1_desc"),
-      href: "/api-docs#quickstart",
+      href: `${DEVELOPER_DOCS_URL}#quickstart`,
     },
     {
       id: "webhooks",
@@ -160,7 +161,7 @@ export default function Home() {
       badge: t("home_api_card2_badge"),
       title: t("home_api_card2_title"),
       description: t("home_api_card2_desc"),
-      href: "/api-docs#webhooks",
+      href: `${DEVELOPER_DOCS_URL}#webhooks`,
     },
   ];
 

@@ -24,6 +24,7 @@ import ApiDocs from "@/pages/api-docs";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import CountryUnavailable from "@/pages/country-unavailable";
+import { isDeveloperDocsHost } from "@/lib/urls";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,7 +38,7 @@ const queryClient = new QueryClient({
 function ThemeByRoute() {
   const [location] = useLocation();
   useEffect(() => {
-    if (location === "/api-docs") return;
+    if (location === "/api-docs" || isDeveloperDocsHost()) return;
     document.documentElement.classList.remove("dark");
     document.documentElement.classList.add("light");
   }, [location]);
@@ -46,6 +47,23 @@ function ThemeByRoute() {
 
 function Router() {
   const [location] = useLocation();
+  const isDocsHost = isDeveloperDocsHost();
+
+  if (isDocsHost) {
+    const isDocsRoute = location === "/" || location === "/api-docs";
+
+    return (
+      <>
+        <ThemeByRoute />
+        <RouteSeo path={isDocsRoute ? "/api-docs" : location} />
+        <Switch>
+          <Route path="/" component={ApiDocs} />
+          <Route path="/api-docs" component={ApiDocs} />
+          <Route component={NotFound} />
+        </Switch>
+      </>
+    );
+  }
 
   return (
     <>

@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
+import { DEVELOPER_DOCS_URL } from "@/lib/urls";
 
 type Lang = "fr" | "en";
 type Method = "GET" | "POST";
@@ -305,7 +306,7 @@ function Endpoint({
           <p className="docs-kicker">{ui.endpoint}</p>
           <h2>{localized?.title ?? title}</h2>
         </div>
-        <a className="docs-anchor" href={`/api-docs#${id}`} aria-label={`${ui.linkTo} ${localized?.title ?? title}`}>#</a>
+        <a className="docs-anchor" href={`${DEVELOPER_DOCS_URL}#${id}`} aria-label={`${ui.linkTo} ${localized?.title ?? title}`}>#</a>
       </div>
       <p className="docs-lede">{localized?.description ?? description}</p>
       <div className="docs-path-row" data-testid={`path-${id}`}>
@@ -695,7 +696,7 @@ console.log(order.id);`;
           >
             <Menu size={20} aria-hidden="true" />
           </button>
-          <a href="/api-docs" className="docs-brand" data-testid="link-docs-home">
+          <a href={DEVELOPER_DOCS_URL} className="docs-brand" data-testid="link-docs-home">
             <img className="docs-logo-image" src="/logo.jpg" alt="" />
             <span className="docs-brand-name">ZyNum</span>
             <span className="docs-brand-divider" />
@@ -758,7 +759,7 @@ console.log(order.id);`;
                 {group.items.map((item) => (
                   <a
                     key={item.id}
-                    href={`/api-docs#${item.id}`}
+                    href={`${DEVELOPER_DOCS_URL}#${item.id}`}
                     className={activeId === item.id ? "is-active" : ""}
                     onClick={() => {
                       setActiveId(item.id);
@@ -798,7 +799,7 @@ console.log(order.id);`;
               <div className="docs-section-heading">
                 <div className="docs-section-icon"><KeyRound size={18} aria-hidden="true" /></div>
                 <div><p className="docs-kicker">01 · {copy.security}</p><h2>{copy.authTitle}</h2></div>
-                <a className="docs-anchor" href="/api-docs#authentication" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.authTitle}`}>#</a>
+                <a className="docs-anchor" href={`${DEVELOPER_DOCS_URL}#authentication`} aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.authTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.authBody}</p>
               <CodeBlock code={`curl ${BASE_URL}/v1/balance \\\n  -H "Authorization: ${authHeader}"`} label="authentication" lang={lang} />
@@ -809,7 +810,7 @@ console.log(order.id);`;
               <div className="docs-section-heading">
                 <div className="docs-section-icon docs-section-icon-orange"><Terminal size={18} aria-hidden="true" /></div>
                 <div><p className="docs-kicker">02 · {copy.integration}</p><h2>{copy.quickTitle}</h2></div>
-                <a className="docs-anchor" href="/api-docs#quickstart" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.quickTitle}`}>#</a>
+                <a className="docs-anchor" href={`${DEVELOPER_DOCS_URL}#quickstart`} aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.quickTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.quickBody}</p>
               <CodeBlock label="sdk-client" sampleKey="server-side-request" lang={lang} code={sdkCode} />
@@ -860,7 +861,7 @@ console.log(order.id);`;
               <div className="docs-section-heading">
                 <div className="docs-section-icon docs-section-icon-orange"><Globe2 size={18} aria-hidden="true" /></div>
                 <div><p className="docs-kicker">CATALOG</p><h2>{copy.pricingTitle}</h2></div>
-                <a className="docs-anchor" href="/api-docs#pricing" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.pricingTitle}`}>#</a>
+                <a className="docs-anchor" href={`${DEVELOPER_DOCS_URL}#pricing`} aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.pricingTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.pricingBody}</p>
               <div className="docs-pricing-grid">
@@ -956,7 +957,7 @@ console.log(order.id);`;
               <div className="docs-section-heading">
                 <div className="docs-section-icon docs-section-icon-orange"><ShieldCheck size={18} aria-hidden="true" /></div>
                 <div><p className="docs-kicker">03 · {copy.accountOrders}</p><h2>{copy.refundsTitle}</h2></div>
-                <a className="docs-anchor" href="/api-docs#refunds" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.refundsTitle}`}>#</a>
+                <a className="docs-anchor" href={`${DEVELOPER_DOCS_URL}#refunds`} aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.refundsTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.refundsBody}</p>
               <div className="docs-pricing-grid">
@@ -995,7 +996,7 @@ console.log(order.id);`;
               <div className="docs-section-heading">
                 <div className="docs-section-icon docs-section-icon-orange"><Webhook size={18} aria-hidden="true" /></div>
                 <div><p className="docs-kicker">04 · {copy.reference}</p><h2>{copy.webhooksTitle}</h2></div>
-                <a className="docs-anchor" href="/api-docs#webhooks" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.webhooksTitle}`}>#</a>
+                <a className="docs-anchor" href={`${DEVELOPER_DOCS_URL}#webhooks`} aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.webhooksTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.webhooksBody}</p>
               <div className="docs-pricing-grid">
@@ -1034,7 +1035,7 @@ console.log(order.id);`;
               <div className="docs-section-heading">
                 <div className="docs-section-icon docs-section-icon-orange"><Code2 size={18} aria-hidden="true" /></div>
                 <div><p className="docs-kicker">05 · {copy.reference}</p><h2>{copy.aiTitle}</h2></div>
-                <a className="docs-anchor" href="/api-docs#ai-agents" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.aiTitle}`}>#</a>
+                <a className="docs-anchor" href={`${DEVELOPER_DOCS_URL}#ai-agents`} aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.aiTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.aiBody}</p>
               <div className="docs-ai-actions">
@@ -1050,8 +1051,8 @@ console.log(order.id);`;
                 </a>
                 <div className="docs-ai-url">
                   <span>{copy.aiUrl}</span>
-                  <code>/api-docs#ai-agents</code>
-                  <CopyButton value="/api-docs#ai-agents" label="ai-agents-section" lang={lang} ariaTarget={ACTION_LABELS[lang].copySection} />
+                  <code>{`${DEVELOPER_DOCS_URL}#ai-agents`}</code>
+                  <CopyButton value={`${DEVELOPER_DOCS_URL}#ai-agents`} label="ai-agents-section" lang={lang} ariaTarget={ACTION_LABELS[lang].copySection} />
                 </div>
               </div>
             </section>
@@ -1060,7 +1061,7 @@ console.log(order.id);`;
               <div className="docs-section-heading">
                 <div className="docs-section-icon docs-section-icon-red"><CircleAlert size={18} aria-hidden="true" /></div>
                 <div><p className="docs-kicker">06 · {copy.reference}</p><h2>{copy.errorsTitle}</h2></div>
-                <a className="docs-anchor" href="/api-docs#errors" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.errorsTitle}`}>#</a>
+                <a className="docs-anchor" href={`${DEVELOPER_DOCS_URL}#errors`} aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.errorsTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.errorsBody}</p>
               <h3 className="docs-mini-heading">{copy.errorStatusTitle}</h3>
