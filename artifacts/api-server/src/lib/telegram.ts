@@ -434,21 +434,41 @@ export async function notifyPurchase(opts: {
   phone: string;
   priceFcfa: number;
   priceUsd: number;
+  purchaseSource?: string;
+  apiKeyMasked?: string | null;
+  webhookSiteUrl?: string;
+  webhookSiteHost?: string;
 }): Promise<void> {
   const chatId = await getChatId();
   if (!chatId) return;
   const now = fmtDate(new Date());
-  const text = [
+  const lines = [
     `📲 <b>ACHAT DE NUMÉRO</b>`,
     ``,
-    `👤 Utilisateur: <b>${opts.userName}</b> (#${opts.userId})`,
-    `🌐 Service: <b>${opts.serviceName}</b>`,
-    `🌍 Pays: ${opts.countryName}`,
-    `📞 Numéro: <code>${opts.phone}</code>`,
+    `👤 Utilisateur: <b>${escapeTelegramHtml(opts.userName)}</b> (#${opts.userId})`,
+  ];
+  if (opts.purchaseSource === "api") {
+    lines.push(`🛠 Origine: <b>API</b>`);
+    lines.push(opts.apiKeyMasked
+      ? `🔑 Clé API: <code>${escapeTelegramHtml(opts.apiKeyMasked)}</code>`
+      : `🔑 Clé API: <i>indisponible</i>`);
+    if (opts.webhookSiteUrl && opts.webhookSiteHost) {
+      lines.push(
+        `🔗 Site du webhook: <a href="${escapeTelegramHtml(opts.webhookSiteUrl)}">${escapeTelegramHtml(opts.webhookSiteHost)}</a>`,
+      );
+    } else {
+      lines.push(`🔗 Site du webhook: non configuré`);
+    }
+  }
+  lines.push(
+    `🌐 Service: <b>${escapeTelegramHtml(opts.serviceName)}</b>`,
+    `🌍 Pays: ${escapeTelegramHtml(opts.countryName)}`,
+    `📞 Numéro: <code>${escapeTelegramHtml(opts.phone)}</code>`,
     `💵 Prix: <b>${fmtNum(opts.priceFcfa)} FCFA</b> ($${opts.priceUsd.toFixed(2)})`,
-    `🔖 Commande: #${opts.orderId}`,
+    `🔖 Commande: #${escapeTelegramHtml(opts.orderId)}`,
     `📅 Date: ${now}`,
-  ].join("\n");
+  );
+  const text = lines.join("\n");
   await sendMessage(chatId, text).catch(() => {});
 }
 

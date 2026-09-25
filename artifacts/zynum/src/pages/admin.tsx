@@ -269,7 +269,7 @@ function AdminUsers() {
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState<any>({});
 
-  const queryStr = `/v1/admin/users?q=${search}&page=${page}&limit=15`;
+  const queryStr = `/v1/admin/users?q=${encodeURIComponent(search)}&page=${page}&limit=15`;
   const { data, loading, refetch } = useAdminFetch<any>(queryStr, [search, page]);
 
   const { data: userDetail, loading: detailLoading, refetch: refetchDetail } = useAdminFetch<any>(
@@ -474,6 +474,21 @@ function AdminUsers() {
             <p className="text-sm text-muted-foreground">{userDetail.orders?.length ?? 0} commandes</p>
             <p className="text-sm text-muted-foreground">{userDetail.transactions?.length ?? 0} transactions</p>
           </div>
+          <div className="rounded-2xl border border-white/10 bg-card/40 p-5 space-y-3 md:col-span-2">
+            <h3 className="font-semibold text-white">Accès développeur</h3>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Clé API ZyNum (masquée)</p>
+              {u.apiKeyMasked
+                ? <code className="block break-all rounded-lg bg-white/5 px-3 py-2 text-xs text-white">{u.apiKeyMasked}</code>
+                : <p className="text-sm text-muted-foreground">Aucune clé API créée</p>}
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">URL du webhook configuré</p>
+              {u.webhookUrl
+                ? <code className="block break-all rounded-lg bg-white/5 px-3 py-2 text-xs text-white">{u.webhookUrl}</code>
+                : <p className="text-sm text-muted-foreground">Aucun webhook configuré</p>}
+            </div>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-card/40 overflow-hidden">
@@ -505,7 +520,7 @@ function AdminUsers() {
     <div className="space-y-5">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 flex gap-2 min-w-64">
-          <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="Rechercher nom, email..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-muted-foreground" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="Nom, email ou URL de webhook..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-muted-foreground" />
           <Button onClick={handleSearch} className="bg-primary hover:bg-primary/90 text-white px-3"><Search className="w-4 h-4" /></Button>
         </div>
         <button onClick={refetch} className="p-2 rounded-xl border border-white/10 text-muted-foreground hover:text-white hover:bg-white/5"><RefreshCw className="w-4 h-4" /></button>

@@ -23,6 +23,12 @@ export function generateApiKey(): string {
   return `zyn_${crypto.randomBytes(32).toString("hex")}`;
 }
 
+export function maskApiKey(apiKey: string | null | undefined): string | null {
+  if (!apiKey) return null;
+  if (apiKey.length <= 8) return "•".repeat(apiKey.length);
+  return `${apiKey.slice(0, 4)}${"•".repeat(12)}${apiKey.slice(-4)}`;
+}
+
 export async function createSession(userId: number): Promise<string> {
   const token = generateToken();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days

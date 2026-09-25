@@ -4,7 +4,7 @@
 
 ## Developer documentation
 
-- [ZyNum API v1 documentation](https://zynum.net/api-docs): Authentication, catalog, purchases, order management, signed outgoing webhooks, and error handling.
+- [ZyNum API v1 documentation](https://developers.zynum.net): Authentication, catalog, purchases, order management, signed outgoing webhooks, and error handling.
 - [ZyNum API agent skill](https://zynum.net/agent-skills/zynum-api/SKILL.md): Concise integration guidance for coding agents.
 
 ## Public pages

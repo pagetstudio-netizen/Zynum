@@ -17,6 +17,7 @@ import {
 import { applyTieredPricing } from "../lib/pricing.js";
 import { applyDiscountCode } from "./discounts.js";
 import { notifyPurchase } from "../lib/telegram.js";
+import { maskApiKey } from "../lib/auth.js";
 import { refundOrder } from "../lib/orderRefund.js";
 
 const router: IRouter = Router();
@@ -57,6 +58,17 @@ function formatOrder(order: typeof ordersTable.$inferSelect) {
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   };
+}
+
+function getWebhookSite(webhookUrl: string | null | undefined): { url: string; host: string } | null {
+  if (!webhookUrl) return null;
+  try {
+    const parsed = new URL(webhookUrl);
+    if (parsed.protocol !== "https:") return null;
+    return { url: parsed.origin, host: parsed.host };
+  } catch {
+    return null;
+  }
 }
 
 // ─── List operators for service + country ─────────────────────────────────────
@@ -260,7 +272,8 @@ export function createBuyNumberHandler(services: BuyNumberServices = defaultBuyN
   res.json({ order: formatOrder(order) });
 
   // Fire-and-forget Telegram notification
-  db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, userId)).limit(1).then(([u]) => {
+  db.select({ name: usersTable.name, webhookUrl: usersTable.webhookUrl }).from(usersTable).where(eq(usersTable.id, userId)).limit(1).then(([u]) => {
+    const webhookSite = order.purchaseSource === "api" ? getWebhookSite(u?.webhookUrl) : null;
     services.notifyPurchase({
       userId,
       userName: u?.name ?? `User#${userId}`,
@@ -270,6 +283,10 @@ export function createBuyNumberHandler(services: BuyNumberServices = defaultBuyN
       phone: fiveSimOrder.phone,
       priceFcfa: order.priceFcfa,
       priceUsd:  order.priceUsd,
+      purchaseSource: order.purchaseSource,
+      apiKeyMasked: order.purchaseSource === "api" ? maskApiKey(req.userApiKey) : null,
+      webhookSiteUrl: webhookSite?.url,
+      webhookSiteHost: webhookSite?.host,
     }).catch(() => {});
   }).catch(() => {});
   };

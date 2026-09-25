@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { db, usersTable, ordersTable, transactionsTable, adminSettingsTable, adminMessagesTable, paymentProvidersTable, faqArticlesTable, socialLinksTable, countryOverridesTable, affiliateWithdrawalsTable, securityEventsTable, ipBlocksTable } from "@workspace/db";
 import { invalidateFiveSimKeyCache } from "../lib/fivesim.js";
-import { eq, desc, count, sum, and, gte, lte, gt, like, or, sql } from "drizzle-orm";
+import { eq, desc, count, sum, and, gte, lte, gt, like, ilike, or, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
-import { hashPassword } from "../lib/auth.js";
+import { hashPassword, maskApiKey } from "../lib/auth.js";
 import { invalidateCommissionCache } from "../lib/commission.js";
 import { sendBroadcastEmail, sendDirectEmail } from "../lib/email.js";
 import { OWNER_ADMIN_EMAIL } from "../lib/adminPolicy.js";
@@ -28,6 +28,25 @@ function parsePagination(pageValue: unknown, limitValue: unknown) {
 
 function escapeLikePattern(value: string) {
   return value.replace(/[\\%_]/g, "\\$&");
+}
+
+type AdminUserRecord = Pick<
+  typeof usersTable.$inferSelect,
+  "id" | "name" | "email" | "balanceUsd" | "isAdmin" | "isBanned" | "createdAt" | "apiKey" | "webhookUrl"
+>;
+
+function toAdminUser(user: AdminUserRecord) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    balanceUsd: user.balanceUsd,
+    isAdmin: user.isAdmin,
+    isBanned: user.isBanned,
+    createdAt: user.createdAt,
+    apiKeyMasked: maskApiKey(user.apiKey),
+    webhookUrl: user.webhookUrl,
+  };
 }
 
 /* ─── STATS ─────────────────────────────────────────────────────────── */
@@ -99,11 +118,17 @@ router.get("/v1/admin/users", ...auth, async (req, res): Promise<void> => {
   const { page, limit, offset } = parsePagination(req.query.page, req.query.limit);
   const search = q ? `%${escapeLikePattern(q)}%` : null;
 
-  const whereClause = search ? or(like(usersTable.name, search), like(usersTable.email, search)) : undefined;
+  const whereClause = search
+    ? or(
+        ilike(usersTable.name, search),
+        ilike(usersTable.email, search),
+        ilike(usersTable.webhookUrl, search),
+      )
+    : undefined;
   const users = await db.select({ id: usersTable.id, name: usersTable.name, email: usersTable.email, balanceUsd: usersTable.balanceUsd, isAdmin: usersTable.isAdmin, isBanned: usersTable.isBanned, createdAt: usersTable.createdAt }).from(usersTable)
     .where(whereClause)
     .orderBy(desc(usersTable.createdAt)).limit(limit).offset(offset);
-  const [{ c }] = await db.select({ c: count() }).from(usersTable);
+  const [{ c }] = await db.select({ c: count() }).from(usersTable).where(whereClause);
   const [{ s: totalBal }] = await db.select({ s: sum(usersTable.balanceUsd) }).from(usersTable);
   const [{ wbal }] = await db.select({ wbal: count() }).from(usersTable).where(gt(usersTable.balanceUsd, 0));
 
@@ -112,13 +137,23 @@ router.get("/v1/admin/users", ...auth, async (req, res): Promise<void> => {
 
 router.get("/v1/admin/users/:id", ...auth, async (req, res): Promise<void> => {
   const userId = parseInt(String(req.params.id));
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  const [user] = await db.select({
+    id: usersTable.id,
+    name: usersTable.name,
+    email: usersTable.email,
+    balanceUsd: usersTable.balanceUsd,
+    isAdmin: usersTable.isAdmin,
+    isBanned: usersTable.isBanned,
+    createdAt: usersTable.createdAt,
+    apiKey: usersTable.apiKey,
+    webhookUrl: usersTable.webhookUrl,
+  }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
 
   const orders = await db.select().from(ordersTable).where(eq(ordersTable.userId, userId)).orderBy(desc(ordersTable.createdAt)).limit(50);
   const txs = await db.select().from(transactionsTable).where(eq(transactionsTable.userId, userId)).orderBy(desc(transactionsTable.createdAt)).limit(50);
 
-  res.json({ user: { ...user, passwordHash: undefined }, orders, transactions: txs });
+  res.json({ user: toAdminUser(user), orders, transactions: txs });
 });
 
 router.patch("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void> => {
@@ -161,7 +196,17 @@ router.patch("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void
   if (isAdmin !== undefined) updates.isAdmin = isAdmin;
   if (isBanned !== undefined) updates.isBanned = isBanned;
 
-  const [updated] = await db.update(usersTable).set(updates as any).where(eq(usersTable.id, userId)).returning();
+  const [updated] = await db.update(usersTable).set(updates as any).where(eq(usersTable.id, userId)).returning({
+    id: usersTable.id,
+    name: usersTable.name,
+    email: usersTable.email,
+    balanceUsd: usersTable.balanceUsd,
+    isAdmin: usersTable.isAdmin,
+    isBanned: usersTable.isBanned,
+    createdAt: usersTable.createdAt,
+    apiKey: usersTable.apiKey,
+    webhookUrl: usersTable.webhookUrl,
+  });
   if (!updated) { res.status(404).json({ error: "User not found" }); return; }
 
   // Record a transaction when balance is manually adjusted
@@ -184,7 +229,7 @@ router.patch("/v1/admin/users/:id", ...auth, async (req: any, res): Promise<void
     }
   }
 
-  res.json({ success: true, user: { ...updated, passwordHash: undefined } });
+  res.json({ success: true, user: toAdminUser(updated) });
 
   const changes: string[] = [];
   if (name !== undefined && String(name) !== current.name) {
