@@ -13,7 +13,7 @@ export * from './balanceResponse';
 export * from './balanceResponseCurrency';
 export * from './buyNumberRequest';
 export * from './buyNumberRequestCurrency';
-export * from './cancelOrderResponse';
+export * from './cancelOrderResult';
 export * from './checkRefundPendingResponse';
 export * from './countriesResponse';
 export * from './country';

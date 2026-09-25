@@ -7,7 +7,7 @@
  */
 import type { Order } from './order';
 
-export interface CancelOrderResponse {
+export interface CancelOrderResult {
   order: Order;
   refundPending: boolean;
 }

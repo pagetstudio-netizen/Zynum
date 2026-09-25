@@ -28,7 +28,7 @@ import type {
   ApiKeyResponse,
   BalanceResponse,
   BuyNumberRequest,
-  CancelOrderResponse,
+  CancelOrderResult,
   CheckRefundPendingResponse,
   CountriesResponse,
   ErrorResponse,
@@ -1051,9 +1051,9 @@ export const getCancelOrderUrl = (orderId: string,) => {
 /**
  * @summary Cancel an order
  */
-export const cancelOrder = async (orderId: string, options?: Parameters<typeof customFetch>[1]): Promise<CancelOrderResponse> => {
+export const cancelOrder = async (orderId: string, options?: Parameters<typeof customFetch>[1]): Promise<CancelOrderResult> => {
 
-  return customFetch<CancelOrderResponse>(getCancelOrderUrl(orderId),
+  return customFetch<CancelOrderResult>(getCancelOrderUrl(orderId),
   {
     ...options,
     method: 'POST'

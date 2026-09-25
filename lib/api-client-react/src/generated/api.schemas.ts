@@ -170,7 +170,7 @@ export interface CheckRefundPendingResponse {
   message: string;
 }
 
-export interface CancelOrderResponse {
+export interface CancelOrderResult {
   order: Order;
   refundPending: boolean;
 }
