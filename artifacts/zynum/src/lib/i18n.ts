@@ -622,25 +622,6 @@ export const translations = {
     aide_follow_steps: "Suivez les étapes ci-dessous pour résoudre votre problème ou accomplir l'action souhaitée.",
 
     // ── Privacy ───────────────────────────────────────────────────────
-    privacy_badge: "Légal",
-    privacy_title: "Politique de Confidentialité",
-    privacy_updated: "Dernière mise à jour : mars 2026",
-    privacy_s1_title: "1. Données collectées",
-    privacy_s1: "Nous collectons uniquement les données nécessaires au fonctionnement du service : nom, adresse e-mail, historique des commandes. Aucune donnée de carte bancaire n'est stockée sur nos serveurs.",
-    privacy_s2_title: "2. Utilisation des données",
-    privacy_s2: "Vos données sont utilisées exclusivement pour fournir le service ZyNum, améliorer l'expérience utilisateur, et vous envoyer des notifications importantes liées à votre compte.",
-    privacy_s3_title: "3. Partage des données",
-    privacy_s3: "Nous ne vendons, ne louons et ne partageons jamais vos données personnelles avec des tiers à des fins commerciales. Les données peuvent être partagées avec nos prestataires techniques (hébergement, base de données) dans le strict cadre de la fourniture du service.",
-    privacy_s4_title: "4. Sécurité",
-    privacy_s4: "Vos données sont chiffrées en transit (HTTPS/TLS) et au repos. Les mots de passe sont hachés avec bcrypt. Nous effectuons des audits de sécurité réguliers.",
-    privacy_s5_title: "5. Durée de conservation",
-    privacy_s5: "Les données de compte sont conservées tant que votre compte est actif. En cas de suppression du compte, vos données personnelles sont supprimées dans un délai de 30 jours, à l'exception des données de transaction conservées pour des raisons légales.",
-    privacy_s6_title: "6. Vos droits",
-    privacy_s6: "Vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits, contactez-nous via la page Contact.",
-    privacy_s7_title: "7. Cookies",
-    privacy_s7: "ZyNum utilise uniquement des cookies techniques nécessaires au fonctionnement du service (session d'authentification). Aucun cookie publicitaire ou de tracking tiers n'est utilisé.",
-    privacy_s8_title: "8. Contact",
-    privacy_s8: "Pour toute question relative à votre vie privée, contactez notre équipe via la page Contact.",
 
     // ── Terms ─────────────────────────────────────────────────────────
     terms_badge: "Légal",
@@ -1299,25 +1280,6 @@ export const translations = {
     aide_follow_steps: "Follow the steps below to resolve your issue or complete the action.",
 
     // ── Privacy ───────────────────────────────────────────────────────
-    privacy_badge: "Legal",
-    privacy_title: "Privacy Policy",
-    privacy_updated: "Last updated: March 2026",
-    privacy_s1_title: "1. Data collected",
-    privacy_s1: "We only collect the data necessary for the service to function: name, email address, order history. No bank card data is stored on our servers.",
-    privacy_s2_title: "2. Use of data",
-    privacy_s2: "Your data is used exclusively to provide the ZyNum service, improve the user experience, and send you important account-related notifications.",
-    privacy_s3_title: "3. Data sharing",
-    privacy_s3: "We never sell, rent or share your personal data with third parties for commercial purposes. Data may be shared with our technical providers (hosting, database) strictly within the scope of providing the service.",
-    privacy_s4_title: "4. Security",
-    privacy_s4: "Your data is encrypted in transit (HTTPS/TLS) and at rest. Passwords are hashed with bcrypt. We conduct regular security audits.",
-    privacy_s5_title: "5. Retention period",
-    privacy_s5: "Account data is retained as long as your account is active. If your account is deleted, your personal data is deleted within 30 days, except for transaction data retained for legal reasons.",
-    privacy_s6_title: "6. Your rights",
-    privacy_s6: "You have the right to access, rectify, delete and port your data. To exercise these rights, contact us via the Contact page.",
-    privacy_s7_title: "7. Cookies",
-    privacy_s7: "ZyNum only uses technical cookies necessary for the service to function (authentication session). No advertising or third-party tracking cookies are used.",
-    privacy_s8_title: "8. Contact",
-    privacy_s8: "For any questions regarding your privacy, contact our team via the Contact page.",
 
     // ── Terms ─────────────────────────────────────────────────────────
     terms_badge: "Legal",
