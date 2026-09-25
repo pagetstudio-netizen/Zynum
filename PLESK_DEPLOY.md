@@ -5,12 +5,11 @@ Le projet se déploie comme une seule application Node.js : le serveur API sert
 
 ## Configuration Plesk
 
-Depuis la racine du dépôt :
+Le script `deploy.sh` installe pnpm si nécessaire, restaure les dépendances
+depuis le lockfile puis compile le frontend et l’API :
 
 ```bash
-npm install -g pnpm@10
-pnpm install --frozen-lockfile
-pnpm run build
+bash deploy.sh
 ```
 
 Le build produit :
@@ -23,7 +22,7 @@ Dans la configuration de l’application Node.js Plesk :
 - **Application root** : racine du dépôt
 - **Startup file** : `app.js`
 - **Application URL** : le domaine ZyNum
-- **Node.js** : version compatible avec `.nvmrc` / `.node-version`
+- **Node.js** : version 20 (`.nvmrc` et `.node-version`)
 - **Port** : laisser Plesk fournir `PORT`
 - **Mode** : production
 
@@ -39,6 +38,17 @@ Le script racine suivant peut aussi être utilisé par Plesk :
 pnpm start
 ```
 
+Dans les réglages du dépôt Git Plesk, ajoute une action de déploiement après
+le déploiement :
+
+```bash
+bash deploy.sh
+```
+
+Cette action est nécessaire : le bouton **Deploy Now** ne compile pas le projet
+simplement parce que `deploy.sh` existe. Ne lance pas `npm install` dans Plesk :
+le dépôt utilise pnpm et bloque volontairement l’installation avec npm.
+
 ## Variables à renseigner dans Plesk
 
 Ne jamais mettre les valeurs secrètes dans GitHub, `.env.example` ou les logs :
@@ -46,31 +56,34 @@ Ne jamais mettre les valeurs secrètes dans GitHub, `.env.example` ou les logs :
 ```text
 NODE_ENV=production
 SUPABASE_DATABASE_URL=...
-SESSION_SECRET=...
 ADMIN_EMAIL=...
 ADMIN_PASSWORD=...
 FIVESIM_API_KEY=...
 TELEGRAM_BOT_TOKEN=...
-TELEGRAM_ADMIN_CHAT_ID=...
+TELEGRAM_CHAT_ID=...
 RESEND_API_KEY=...
 RESEND_FROM_EMAIL=...
 ```
 
-Ajouter aussi les secrets de paiement utilisés par l’installation, en suivant
-`.env.example`. La clé 5SIM peut être configurée dans le panneau admin ;
-`FIVESIM_API_KEY` reste disponible comme solution de secours si aucune clé
-n’est enregistrée dans les paramètres admin.
+`TELEGRAM_CHAT_ID` sert de chat de secours pour les notifications générales.
+Le chat privé du MFA administrateur se configure séparément dans **Admin →
+Bot Telegram**; il ne faut pas compter sur une variable d’environnement pour
+ce second facteur.
+
+Ajouter les clés des moyens de paiement activés en suivant `.env.example`.
+`FIVESIM_API_KEY` est facultative si la clé 5SIM est configurée dans le panneau
+admin.
 
 ## Après un Pull + Deploy Now
 
-1. Vérifier que l’installation utilise pnpm :
-   `pnpm install --frozen-lockfile`
-2. Lancer le build :
-   `pnpm run build`
-3. Redémarrer l’application Node.js.
+1. Configurer une fois l’action de déploiement `bash deploy.sh` dans Plesk.
+2. Après chaque push GitHub, cliquer sur **Pull** puis **Deploy Now**. Attendre
+   que l’installation et le build se terminent sans erreur.
+3. Dans la section Node.js, cliquer sur **Restart**.
 4. Vérifier :
    `https://zynum.net/api/healthz`
 5. Vérifier ensuite la connexion admin et l’achat d’un numéro.
 
 Le démarrage initialise le schéma. Après connexion admin, configure la clé
-5SIM dans **Paramètres**, puis sauvegarde.
+5SIM dans **Paramètres**, puis sauvegarde. Ne pousse jamais `.env` vers GitHub;
+les secrets doivent être saisis uniquement dans la configuration Node.js Plesk.

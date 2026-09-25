@@ -1,9 +1,13 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
 
 echo "=== ZyNum Deploy ==="
 echo "Node: $(node -v)"
 echo "NPM:  $(npm -v)"
+echo "Repository: $ROOT_DIR"
 
 # ── 1. pnpm ───────────────────────────────────────────────────────────────────
 if ! command -v pnpm &> /dev/null; then
@@ -14,15 +18,20 @@ echo "pnpm: $(pnpm -v)"
 
 # ── 2. Dependencies ───────────────────────────────────────────────────────────
 echo "Installing dependencies..."
-pnpm install --frozen-lockfile
+pnpm install --frozen-lockfile --prod=false
 
-# ── 3. Frontend (Vite) ────────────────────────────────────────────────────────
-echo "Building frontend..."
-NODE_ENV=production pnpm --filter @workspace/zynum run build
+# ── 3. Frontend + API server ───────────────────────────────────────────────────
+echo "Building frontend and API server..."
+pnpm run build
 
-# ── 4. API server (esbuild → dist/index.cjs) ─────────────────────────────────
-echo "Building API server..."
-NODE_ENV=production pnpm --filter @workspace/api-server run build
+test -s artifacts/api-server/dist/index.cjs || {
+  echo "Build failed: API startup bundle is missing." >&2
+  exit 1
+}
+test -s artifacts/api-server/dist/public/index.html || {
+  echo "Build failed: frontend entry point is missing." >&2
+  exit 1
+}
 
 echo ""
 echo "=== Build complete ==="
