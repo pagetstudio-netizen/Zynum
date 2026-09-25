@@ -160,16 +160,6 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
         >
           Sécurité
         </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={profileTab === "developer"}
-          className={profileTab === "developer" ? "is-active" : ""}
-          onClick={() => setProfileTab("developer")}
-          data-testid="tab-profile-developer"
-        >
-          {developerCopy.tab}
-        </button>
       </div>
 
       {profileTab === "personal" ? (
@@ -213,7 +203,7 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
             </div>
           </div>
         </div>
-      ) : profileTab === "security" ? (
+      ) : (
         <div className="profile-reference-tab-content" role="tabpanel">
           <section className="profile-reference-security-card">
             <div className="profile-reference-section-heading">
@@ -298,81 +288,6 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
             </div>
             <span><Check /> {t("profile_active")}</span>
           </div>
-        </div>
-      ) : (
-        <div className="profile-reference-tab-content" role="tabpanel" data-testid="panel-profile-developer">
-          {webhookLoading ? (
-            <p className="profile-reference-developer-loading">{developerCopy.loading}</p>
-          ) : (
-            <>
-              <div className="profile-reference-developer-heading">
-                <div>
-                  <h3>{developerCopy.title}</h3>
-                  <p>{developerCopy.subtitle}</p>
-                </div>
-                <Webhook aria-hidden="true" />
-              </div>
-
-              {webhookError && <p className="profile-reference-developer-error" role="alert" data-testid="status-developer-error">{webhookError}</p>}
-
-              <section className="profile-reference-developer-card">
-                <h4>{developerCopy.apiKey}</h4>
-                <div className="profile-reference-api-key">
-                  <code data-testid="text-developer-api-key">
-                    {showApiKey ? apiKey : `${apiKey.slice(0, 4)}${"•".repeat(24)}${apiKey.slice(-4)}`}
-                  </code>
-                  <button type="button" aria-label={showApiKey ? developerCopy.hideKey : developerCopy.showKey} onClick={() => setShowApiKey((value) => !value)} data-testid="button-toggle-api-key">
-                    {showApiKey ? <EyeOff /> : <Eye />}
-                  </button>
-                  <button type="button" aria-label={developerCopy.copyKey} onClick={handleApiKeyCopy} data-testid="button-copy-api-key">
-                    <Copy />
-                  </button>
-                </div>
-                <p>{developerCopy.keyHelp}</p>
-                <button type="button" className="profile-reference-developer-secondary" onClick={handleApiKeyRotate} disabled={rotatingApiKey} data-testid="button-rotate-api-key">
-                  <RotateCw aria-hidden="true" /> {rotatingApiKey ? "…" : developerCopy.rotate}
-                </button>
-              </section>
-
-              <section className="profile-reference-developer-card">
-                <h4>{developerCopy.webhook}</h4>
-                <p>{developerCopy.webhookHelp}</p>
-                <form onSubmit={handleWebhookSave} className="profile-reference-developer-form">
-                  <label htmlFor="developer-webhook-url">{developerCopy.endpoint}</label>
-                  <input
-                    id="developer-webhook-url"
-                    type="url"
-                    inputMode="url"
-                    autoComplete="url"
-                    placeholder="https://example.com/webhooks/zynum"
-                    value={webhookInput}
-                    onChange={(event) => setWebhookInput(event.target.value)}
-                    data-testid="input-developer-webhook-url"
-                  />
-                  <div className="profile-reference-developer-actions">
-                    <button type="submit" disabled={webhookSaving} data-testid="button-save-webhook">
-                      {webhookSaving ? "…" : developerCopy.save}
-                    </button>
-                    {webhookUrl && (
-                      <button type="button" className="is-secondary" disabled={webhookSaving} onClick={handleWebhookDisable} data-testid="button-disable-webhook">
-                        {developerCopy.disable}
-                      </button>
-                    )}
-                  </div>
-                </form>
-                <div className="profile-reference-webhook-details">
-                  <strong>{developerCopy.events}</strong>
-                  <ul>
-                    <li><code>order.created</code> — {developerCopy.created}</li>
-                    <li><code>order.updated</code> — {developerCopy.updated}</li>
-                  </ul>
-                  <p>{developerCopy.signature}</p>
-                  <p>{developerCopy.retry}</p>
-                </div>
-                <a className="profile-reference-docs-link" href={`${DEVELOPER_DOCS_URL}#webhooks`} data-testid="link-developer-webhook-docs">{developerCopy.docs}</a>
-              </section>
-            </>
-          )}
         </div>
       )}
 
