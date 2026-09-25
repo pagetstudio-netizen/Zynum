@@ -75,56 +75,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/main-D2WhJNfW.js"></script>
+    <script type="module" crossorigin src="/assets/main-SztUATOs.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/main-CpGQ1Z9u.css">
   </head>
   <body>
-    <div
-      id="docs-video-preloader"
-      role="status"
-      aria-live="polite"
-      aria-label="Chargement de la documentation"
-      hidden
-      style="position:fixed;inset:0;z-index:2147483647;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0c1119;color:#eef2f7;font-family:Inter,sans-serif"
-    >
-      <video
-        autoplay
-        loop
-        muted
-        playsinline
-        preload="auto"
-        aria-hidden="true"
-        style="width:132px;height:132px;object-fit:contain;background:#fff;border-radius:20px;box-shadow:0 12px 36px rgba(0,0,0,.3)"
-      >
-        <source src="/videos/otp-waiting.mp4" type="video/mp4" />
-      </video>
-      <p data-docs-video-label style="margin:0;font-size:15px;font-weight:600">
-        Chargement de la documentation…
-      </p>
-    </div>
-    <script>
-      (function() {
-        var path = window.location.pathname.replace(/\/+$/, "") || "/";
-        var isDeveloperRoot = path === "/" && window.location.hostname.toLowerCase() === "developers.zynum.net";
-        var isDocsRoute = path === "/api-docs";
-        var preloader = document.getElementById("docs-video-preloader");
-
-        if (!preloader) return;
-        if (!isDeveloperRoot && !isDocsRoute) {
-          preloader.remove();
-          return;
-        }
-
-        var label = (navigator.language || "").toLowerCase().startsWith("fr")
-          ? "Chargement de la documentation…"
-          : "Loading documentation…";
-        preloader.hidden = false;
-        preloader.style.display = "flex";
-        preloader.setAttribute("aria-label", label);
-        var caption = preloader.querySelector("[data-docs-video-label]");
-        if (caption) caption.textContent = label;
-      })();
-    </script>
     <div id="root"></div>
   </body>
 </html>
