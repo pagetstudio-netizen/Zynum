@@ -19,7 +19,7 @@ export const registerUserBodyPasswordMin = 6;
 
 export const RegisterUserBody = zod.object({
   "name": zod.string().min(registerUserBodyNameMin),
-  "email": zod.email(),
+  "email": zod.string().email(),
   "password": zod.string().min(registerUserBodyPasswordMin),
   "referralCode": zod.string().optional(),
   "confirmPassword": zod.string()
@@ -27,7 +27,7 @@ export const RegisterUserBody = zod.object({
 
 export const RegisterUserResponse = zod.object({
   "requiresVerification": zod.literal(true),
-  "email": zod.email()
+  "email": zod.string().email()
 })
 
 
@@ -35,26 +35,26 @@ export const RegisterUserResponse = zod.object({
  * @summary Login user
  */
 export const LoginUserBody = zod.object({
-  "email": zod.email(),
+  "email": zod.string().email(),
   "password": zod.string()
 })
 
 export const LoginUserResponse = zod.union([zod.object({
   "user": zod.object({
-  "id": zod.int(),
+  "id": zod.number().int(),
   "name": zod.string(),
   "email": zod.string(),
   "isAdmin": zod.boolean(),
   "isBanned": zod.boolean(),
-  "createdAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true})
 }),
   "token": zod.string()
 }),zod.object({
   "requires2FA": zod.literal(true),
-  "email": zod.email()
+  "email": zod.string().email()
 }),zod.object({
   "requiresAdmin2FA": zod.literal(true),
-  "email": zod.email()
+  "email": zod.string().email()
 })])
 
 
@@ -71,12 +71,12 @@ export const LogoutUserResponse = zod.object({
  * @summary Get current user
  */
 export const GetCurrentUserResponse = zod.object({
-  "id": zod.int(),
+  "id": zod.number().int(),
   "name": zod.string(),
   "email": zod.string(),
   "isAdmin": zod.boolean(),
   "isBanned": zod.boolean(),
-  "createdAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true})
 })
 
 
@@ -110,7 +110,7 @@ export const GetCountriesResponse = zod.object({
   "flag": zod.string(),
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
-  "available": zod.int()
+  "available": zod.number().int()
 }))
 })
 
@@ -129,7 +129,7 @@ export const GetOperatorsResponse = zod.object({
   "label": zod.string(),
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
-  "available": zod.int()
+  "available": zod.number().int()
 }))
 })
 
@@ -164,8 +164,8 @@ export const BuyNumberResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
-  "createdAt": zod.iso.datetime({"offset":true}),
-  "updatedAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true}),
+  "updatedAt": zod.string().datetime({"offset":true})
 })
 })
 
@@ -194,8 +194,8 @@ export const CheckSmsResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
-  "createdAt": zod.iso.datetime({"offset":true}),
-  "updatedAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true}),
+  "updatedAt": zod.string().datetime({"offset":true})
 }),
   "autocanceled": zod.boolean().optional(),
   "refundPending": zod.boolean().optional()
@@ -230,12 +230,12 @@ export const GetOrderHistoryResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
-  "createdAt": zod.iso.datetime({"offset":true}),
-  "updatedAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true}),
+  "updatedAt": zod.string().datetime({"offset":true})
 })),
-  "total": zod.int(),
-  "page": zod.int(),
-  "limit": zod.int()
+  "total": zod.number().int(),
+  "page": zod.number().int(),
+  "limit": zod.number().int()
 })
 
 
@@ -263,8 +263,8 @@ export const CancelOrderResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
-  "createdAt": zod.iso.datetime({"offset":true}),
-  "updatedAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true}),
+  "updatedAt": zod.string().datetime({"offset":true})
 }),
   "refundPending": zod.boolean()
 })
@@ -294,8 +294,8 @@ export const FinishOrderResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
-  "createdAt": zod.iso.datetime({"offset":true}),
-  "updatedAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true}),
+  "updatedAt": zod.string().datetime({"offset":true})
 })
 })
 
@@ -314,7 +314,7 @@ export const GetBalanceResponse = zod.object({
  */
 export const GetDeveloperApiKeyResponse = zod.object({
   "apiKey": zod.string(),
-  "createdAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true})
 })
 
 
@@ -323,7 +323,7 @@ export const GetDeveloperApiKeyResponse = zod.object({
  */
 export const RegenerateDeveloperApiKeyResponse = zod.object({
   "apiKey": zod.string(),
-  "createdAt": zod.iso.datetime({"offset":true})
+  "createdAt": zod.string().datetime({"offset":true})
 })
 
 

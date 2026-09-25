@@ -43,6 +43,8 @@ const CODE_LABELS: Record<Lang, Record<string, string>> = {
     "request-body": "Request body",
     response: "Response example",
     "ai-skill": "Agent skill",
+    "sdk-client": "Node.js client example",
+    "error-response": "Error response",
   },
   fr: {
     authentication: "Authentification",
@@ -50,6 +52,8 @@ const CODE_LABELS: Record<Lang, Record<string, string>> = {
     "request-body": "Corps de la requête",
     response: "Exemple de réponse",
     "ai-skill": "Compétence agent",
+    "sdk-client": "Exemple de client Node.js",
+    "error-response": "Réponse d’erreur",
   },
 };
 
@@ -86,14 +90,14 @@ const ENDPOINT_COPY: Record<string, Record<Lang, EndpointTranslation>> = {
   countries: {
     en: {
       title: "List countries",
-      description: "Return countries and an illustrative availability value for a service. The service query is optional and defaults to telegram.",
+      description: "Return country-level prices in USD and FCFA, plus a live availability snapshot for a service. The service query is optional and defaults to telegram.",
       auth: "Public. No Authorization header is required.",
       request: "Query: service (optional, string). Defaults to telegram.",
       errors: ["Non-2xx responses indicate that the country catalog could not be returned."],
     },
     fr: {
       title: "Lister les pays",
-      description: "Retourne les pays et une valeur de disponibilité illustrative pour un service. La requête service est optionnelle et vaut telegram par défaut.",
+      description: "Retourne les prix par pays en USD et en FCFA, ainsi qu’un instantané de disponibilité pour un service. La requête service est optionnelle et vaut telegram par défaut.",
       auth: "Publique. Aucun header Authorization n’est requis.",
       request: "Requête : service (optionnel, string). Vaut telegram par défaut.",
       errors: ["Une réponse hors 2xx indique que le catalogue des pays n’a pas pu être retourné."],
@@ -102,14 +106,14 @@ const ENDPOINT_COPY: Record<string, Record<Lang, EndpointTranslation>> = {
   operators: {
     en: {
       title: "List operators",
-      description: "Return operators, prices, and an illustrative availability value for one service/country combination.",
+      description: "Return operator-specific prices in USD and FCFA, plus a live availability snapshot for one service/country combination.",
       auth: "Bearer API key required.",
       request: "Query: service (required, string), country (required, string).",
       errors: ["400 — a required service or country query field is missing.", "401 — the Bearer API key is missing or invalid."],
     },
     fr: {
       title: "Lister les opérateurs",
-      description: "Retourne les opérateurs, les prix et une valeur de disponibilité illustrative pour une combinaison service/pays.",
+      description: "Retourne les prix par opérateur en USD et en FCFA, ainsi qu’un instantané de disponibilité pour une combinaison service/pays.",
       auth: "Clé API Bearer requise.",
       request: "Requête : service (requis, string), country (requis, string).",
       errors: ["400 — un champ service ou country requis est manquant.", "401 — la clé API Bearer est absente ou invalide."],
@@ -350,6 +354,7 @@ const NAV_GROUPS = [
       { id: "services", label: { en: "List services", fr: "Lister les services" } },
       { id: "countries", label: { en: "List countries", fr: "Lister les pays" } },
       { id: "operators", label: { en: "List operators", fr: "Lister les opérateurs" } },
+      { id: "pricing", label: { en: "Prices & currencies", fr: "Prix et devises" } },
     ],
   },
   {
@@ -386,13 +391,22 @@ const labels = {
     baseUrl: "Base URL",
     introKicker: "BUILD WITH ZYNUM",
     introTitle: "A clear path from balance to SMS",
-    introBody: "The ZyNum API gives your automation a small, predictable surface for discovering services and countries, purchasing virtual-number orders, and reading their SMS state.",
+    introBody: "ZyNum is a virtual-number platform with a simple API for discovering services, countries, operators and current prices, buying numbers, and following their SMS status.",
     introNote: "v1 is the documented and current version. v2 is not available yet.",
     keyArea: "Manage your key in the developer area of your ZyNum account.",
     authTitle: "Authentication",
     authBody: "Private endpoints use a Bearer API key. Send it on every authenticated request; never expose it in browser code, logs, or support messages.",
-    quickTitle: "Quickstart",
-    quickBody: "The shortest safe integration is: inspect the catalog, buy with an authenticated server-side request, then poll the order endpoint from your backend.",
+    quickTitle: "Node.js client example",
+    quickBody: "Use this small server-side SDK-style client to read the catalog and prices, buy in USD or FCFA, and handle HTTP errors. It is an example to copy, not a published npm package.",
+    pricingTitle: "Prices and currencies",
+    pricingBody: "There is no separate pricing route: GET /v1/countries returns country prices, while GET /v1/operators returns operator-specific prices. Both include priceUsd and priceFcfa.",
+    pricingNote: "Prices and availability are snapshots, not reservations. Re-fetch the catalog before buying. POST /v1/buy accepts USD or FCFA (USD by default); the balance endpoint currently reports USD.",
+    countryPricing: "Country prices",
+    operatorPricing: "Operator prices",
+    purchaseCurrency: "Purchase currency",
+    countryPriceDetails: "Use the country catalog to compare priceUsd and priceFcfa before selecting a country.",
+    operatorPriceDetails: "This authenticated catalog returns the price for each operator and the selected country.",
+    purchaseCurrencyDetails: "Send currency: USD or currency: FCFA to POST /v1/buy. If omitted, the API uses USD.",
     parameters: "Parameters",
     body: "JSON body",
     query: "Query parameters",
@@ -404,7 +418,17 @@ const labels = {
     statusTitle: "Order statuses",
     statusBody: "Use the status returned in the order object to drive your integration. Timestamps are ISO 8601 strings.",
     errorsTitle: "Errors & status codes",
-    errorsBody: "Treat non-2xx responses as actionable. The endpoint sections above list the documented cases for each route.",
+    errorsBody: "Check response.ok before reading success data. Error responses commonly include an error code and a readable message; each endpoint above lists its documented status codes.",
+    errorStatusTitle: "HTTP error codes",
+    errorStatusMeanings: {
+      "400": "Invalid input or purchase rejected, including insufficient balance.",
+      "401": "Authentication is missing or invalid.",
+      "404": "The requested account resource or order was not found.",
+      "409": "The number is unavailable or the order cannot change to the requested state.",
+      "502": "The order finish could not be confirmed; check the order before retrying.",
+      "503": "Refund handling is still pending; check the order again later.",
+    },
+    retryNote: "After an unclear timeout on POST /v1/buy, check GET /v1/orders before retrying to avoid duplicate purchases. Do not treat a pending refund as confirmed.",
     security: "Security",
     integration: "Integration",
     catalog: "CATALOG",
@@ -439,13 +463,22 @@ const labels = {
     baseUrl: "URL de base",
     introKicker: "CONSTRUIRE AVEC ZYNUM",
     introTitle: "Du solde au SMS, sans détour",
-    introBody: "L’API ZyNum offre une surface simple et prévisible pour découvrir les services et pays, acheter des commandes de numéros virtuels et suivre leurs SMS.",
+    introBody: "ZyNum est une plateforme de numéros virtuels avec une API simple pour découvrir les services, les pays, les opérateurs et leurs prix, acheter des numéros et suivre leurs SMS.",
     introNote: "v1 est la version documentée et actuelle. v2 n’est pas encore disponible.",
     keyArea: "Gérez votre clé dans l’espace développeur de votre compte ZyNum.",
     authTitle: "Authentification",
     authBody: "Les endpoints privés utilisent une clé API Bearer. Envoyez-la pour chaque requête authentifiée ; ne l’exposez jamais dans le navigateur, les logs ou un message de support.",
-    quickTitle: "Démarrage rapide",
-    quickBody: "L’intégration la plus sûre consiste à consulter le catalogue, acheter depuis votre serveur, puis interroger la commande depuis votre backend.",
+    quickTitle: "Exemple de client Node.js",
+    quickBody: "Utilisez ce petit client serveur de style SDK pour lire le catalogue et les prix, acheter en USD ou en FCFA et traiter les erreurs HTTP. C’est un exemple à copier, pas un package npm publié.",
+    pricingTitle: "Prix et devises",
+    pricingBody: "Il n’existe pas de route de prix séparée : GET /v1/countries retourne les prix par pays et GET /v1/operators les prix par opérateur. Les deux exposent priceUsd et priceFcfa.",
+    pricingNote: "Les prix et disponibilités sont des instantanés, pas des réservations. Relisez le catalogue avant l’achat. POST /v1/buy accepte USD ou FCFA (USD par défaut) ; le solde est actuellement retourné en USD.",
+    countryPricing: "Prix par pays",
+    operatorPricing: "Prix par opérateur",
+    purchaseCurrency: "Devise d’achat",
+    countryPriceDetails: "Utilisez le catalogue des pays pour comparer priceUsd et priceFcfa avant de choisir un pays.",
+    operatorPriceDetails: "Ce catalogue authentifié retourne le prix de chaque opérateur pour le pays sélectionné.",
+    purchaseCurrencyDetails: "Envoyez currency: USD ou currency: FCFA à POST /v1/buy. Sans ce champ, l’API utilise USD.",
     parameters: "Paramètres",
     body: "Corps JSON",
     query: "Paramètres de requête",
@@ -457,7 +490,17 @@ const labels = {
     statusTitle: "Statuts des commandes",
     statusBody: "Utilisez le statut retourné dans l’objet order pour piloter votre intégration. Les dates sont au format ISO 8601.",
     errorsTitle: "Erreurs et codes de statut",
-    errorsBody: "Traitez les réponses hors 2xx. Chaque endpoint détaille les cas documentés pour sa route.",
+    errorsBody: "Vérifiez response.ok avant de lire les données de succès. Les erreurs contiennent généralement un code et un message lisible ; les sections des endpoints listent leurs statuts documentés.",
+    errorStatusTitle: "Codes d’erreur HTTP",
+    errorStatusMeanings: {
+      "400": "Entrée invalide ou achat refusé, notamment pour solde insuffisant.",
+      "401": "Authentification absente ou invalide.",
+      "404": "La ressource du compte ou la commande demandée est introuvable.",
+      "409": "Le numéro est indisponible ou la commande ne peut pas passer à l’état demandé.",
+      "502": "La fin de commande n’a pas pu être confirmée ; vérifiez son état avant de réessayer.",
+      "503": "Le traitement du remboursement est en attente ; revérifiez la commande plus tard.",
+    },
+    retryNote: "Après un délai incertain sur POST /v1/buy, vérifiez GET /v1/orders avant de réessayer pour éviter un double achat. Ne considérez pas un remboursement en attente comme confirmé.",
     security: "Sécurité",
     integration: "Intégration",
     catalog: "CATALOGUE",
@@ -548,6 +591,42 @@ export default function ApiDocs() {
 
   const authHeader = "Authorization: Bearer zyn_<secret>";
   const response = (body: string) => body;
+  const sdkCode = `const BASE_URL = "${BASE_URL}";
+const apiKey = process.env.ZYNUM_API_KEY; // configure on your server
+
+async function zynum(path, { method = "GET", body } = {}) {
+  const headers = { Accept: "application/json" };
+  if (apiKey) headers.Authorization = \`Bearer \${apiKey}\`;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+
+  const response = await fetch(\`\${BASE_URL}\${path}\`, {
+    method,
+    headers,
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw Object.assign(new Error(data?.message ?? \`HTTP \${response.status}\`), {
+      status: response.status,
+      code: data?.error,
+    });
+  }
+  return data;
+}
+
+const { services } = await zynum("/v1/services"); // public
+const { countries } = await zynum("/v1/countries?service=telegram");
+const { operators } = await zynum(
+  "/v1/operators?service=telegram&country=senegal",
+);
+const selected = operators[0];
+console.log(selected.priceUsd, selected.priceFcfa);
+
+const { order } = await zynum("/v1/buy", {
+  method: "POST",
+  body: { service: "telegram", country: "senegal", currency: "FCFA" },
+});
+console.log(order.id);`;
 
   return (
     <div className="docs-shell" data-testid="api-docs-page">
@@ -564,7 +643,7 @@ export default function ApiDocs() {
             <Menu size={20} aria-hidden="true" />
           </button>
           <a href="/api-docs" className="docs-brand" data-testid="link-docs-home">
-            <span className="docs-logo" aria-hidden="true"><Code2 size={18} /></span>
+            <img className="docs-logo-image" src="/logo.jpg" alt="" />
             <span className="docs-brand-name">ZyNum</span>
             <span className="docs-brand-divider" />
             <span className="docs-brand-section">{copy.docs}</span>
@@ -680,7 +759,7 @@ export default function ApiDocs() {
                 <a className="docs-anchor" href="/api-docs#quickstart" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.quickTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.quickBody}</p>
-              <CodeBlock label="server-side-request" lang={lang} code={`const response = await fetch("${BASE_URL}/v1/buy", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer zyn_<secret>",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({ service: "telegram", country: "senegal" })\n});\n\nconst { order } = await response.json();`} />
+              <CodeBlock label="sdk-client" sampleKey="server-side-request" lang={lang} code={sdkCode} />
             </section>
 
             <div className="docs-divider"><span>{copy.catalog}</span></div>
@@ -723,6 +802,33 @@ export default function ApiDocs() {
               response={response(`{\n  "operators": [\n    {\n      "name": "<operator-id>",\n      "label": "<operator-label>",\n      "priceUsd": 0.42,\n      "priceFcfa": 260,\n      "available": 0\n    }\n  ]\n}`)}
               errors={["400 — a required service or country query field is missing.", "401 — the Bearer API key is missing or invalid."]}
             />
+
+            <section id="pricing" className="docs-section" data-testid="section-pricing">
+              <div className="docs-section-heading">
+                <div className="docs-section-icon docs-section-icon-orange"><Globe2 size={18} aria-hidden="true" /></div>
+                <div><p className="docs-kicker">CATALOG</p><h2>{copy.pricingTitle}</h2></div>
+                <a className="docs-anchor" href="/api-docs#pricing" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.pricingTitle}`}>#</a>
+              </div>
+              <p className="docs-lede">{copy.pricingBody}</p>
+              <div className="docs-pricing-grid">
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><Globe2 size={14} aria-hidden="true" /> {copy.countryPricing}</div>
+                  <code>GET /v1/countries?service=telegram</code>
+                  <p>{copy.countryPriceDetails}</p>
+                </article>
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><ShieldCheck size={14} aria-hidden="true" /> {copy.operatorPricing}</div>
+                  <code>GET /v1/operators?service=telegram&amp;country=senegal</code>
+                  <p>{copy.operatorPriceDetails}</p>
+                </article>
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><FileJson size={14} aria-hidden="true" /> {copy.purchaseCurrency}</div>
+                  <code>currency: "USD" | "FCFA"</code>
+                  <p>{copy.purchaseCurrencyDetails}</p>
+                </article>
+              </div>
+              <p className="docs-footnote"><CircleAlert size={14} aria-hidden="true" /> {copy.pricingNote}</p>
+            </section>
 
             <div className="docs-divider"><span>{copy.accountOrders}</span></div>
 
@@ -839,13 +945,27 @@ export default function ApiDocs() {
                 <a className="docs-anchor" href="/api-docs#errors" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.errorsTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.errorsBody}</p>
+              <h3 className="docs-mini-heading">{copy.errorStatusTitle}</h3>
+              <CodeBlock
+                label="error-response"
+                sampleKey="error-response"
+                lang={lang}
+                code={`{\n  "error": "<error-code>",\n  "message": "<human-readable details>"\n}`}
+              />
+              <div className="docs-status-table" role="table" aria-label={copy.errorStatusTitle}>
+                <div className="docs-status-row docs-status-header" role="row"><span>{copy.statusHeader}</span><span>{copy.meaningHeader}</span></div>
+                {(Object.entries(copy.errorStatusMeanings) as [string, string][]).map(([status, meaning]) => (
+                  <div className="docs-status-row" role="row" key={status}><code>{status}</code><span>{meaning}</span></div>
+                ))}
+              </div>
+              <p className="docs-footnote">{copy.retryNote}</p>
+              <h3 className="docs-mini-heading">{copy.statusTitle}</h3>
               <div className="docs-status-table" role="table" aria-label={copy.statusTitle}>
                 <div className="docs-status-row docs-status-header" role="row"><span>{copy.statusHeader}</span><span>{copy.meaningHeader}</span></div>
                 {(Object.entries(copy.statusMeanings) as [string, string][]).map(([status, meaning]) => (
                   <div className="docs-status-row" role="row" key={status}><code>{status}</code><span>{meaning}</span></div>
                 ))}
               </div>
-              <h3 className="docs-mini-heading">{copy.statusTitle}</h3>
               <p className="docs-footnote">{copy.statusBody}</p>
             </section>
 

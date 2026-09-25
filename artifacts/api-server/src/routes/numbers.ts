@@ -1,10 +1,11 @@
 import { Router, type IRouter } from "express";
-import { db, ordersTable, usersTable, affiliateCommissionsTable } from "@workspace/db";
+import { db, ordersTable, usersTable, affiliateCommissionsTable, discountCodesTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { BuyNumberBody, CheckSmsParams, GetOrderHistoryQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js";
 import {
   buyNumber,
+  cancelOrder,
   checkOrder,
   finishOrder,
   getOperatorsForServiceCountry,
@@ -22,6 +23,16 @@ const router: IRouter = Router();
 
 function isNumberUnavailableError(message: string): boolean {
   return /no\s+free|no\s+(?:available\s+)?(?:phone|number)s?|not\s+available|unavailable|out\s+of\s+stock|sold\s+out/i.test(message);
+}
+
+class InsufficientBalanceError extends Error {}
+
+async function cancelUnpersistedPurchase(externalId: number): Promise<void> {
+  const canceled = await cancelOrder(externalId);
+  const status = mapFiveSimStatus(canceled.status);
+  if (!["CANCELED", "TIMEOUT", "BANNED"].includes(status)) {
+    throw new Error(`5SIM n'a pas confirmé l'annulation (statut ${status}).`);
+  }
 }
 
 function formatOrder(order: typeof ordersTable.$inferSelect) {
@@ -75,10 +86,66 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   const userId = req.userId!;
   const serviceName = getServiceName(service);
   const countryName = getCountryName(country);
+  const selectedOperator = operator ?? "any";
 
-  let fiveSimOrder;
+  let catalogOperators: Awaited<ReturnType<typeof getOperatorsForServiceCountry>>;
+  let fiveSimOrder: Awaited<ReturnType<typeof buyNumber>>;
   try {
-    fiveSimOrder = await buyNumber(service, country, operator ?? "any");
+    catalogOperators = await getOperatorsForServiceCountry(service, country);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur lors de l'achat du numéro";
+    if (isNumberUnavailableError(message)) {
+      res.status(409).json({
+        error: "NUMBER_UNAVAILABLE",
+        message: "Ce numéro n’est pas disponible à l’achat. Veuillez en choisir un autre.",
+      });
+      return;
+    }
+    res.status(502).json({ error: "Purchase failed", message });
+    return;
+  }
+
+  const quotedOperator = catalogOperators.find((entry) => entry.name === selectedOperator);
+  if (!quotedOperator) {
+    res.status(409).json({
+      error: "NUMBER_UNAVAILABLE",
+      message: "Ce numéro n’est pas disponible à l’achat. Veuillez en choisir un autre.",
+    });
+    return;
+  }
+
+  const quotedPrice = applyTieredPricing(quotedOperator.priceUsd);
+  let quotePriceUsd = quotedPrice.priceUsd;
+  let quotePriceFcfa = quotedPrice.priceFcfa;
+  if (discountCode) {
+    const quoteDiscount = await applyDiscountCode(
+      discountCode,
+      country,
+      quotePriceUsd,
+      quotePriceFcfa,
+      { recordUsage: false },
+    );
+    quotePriceUsd = quoteDiscount.finalPriceUsd;
+    quotePriceFcfa = quoteDiscount.finalPriceFcfa;
+  }
+
+  const [userBeforePurchase] = await db
+    .select({ balanceUsd: usersTable.balanceUsd })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+  if (!userBeforePurchase || userBeforePurchase.balanceUsd < quotePriceUsd) {
+    res.status(400).json({
+      error: "INSUFFICIENT_BALANCE",
+      message: "Solde insuffisant. Veuillez recharger votre compte.",
+      balanceUsd: userBeforePurchase?.balanceUsd ?? 0,
+      requiredUsd: quotePriceUsd,
+    });
+    return;
+  }
+
+  try {
+    fiveSimOrder = await buyNumber(service, country, selectedOperator);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat du numéro";
     if (isNumberUnavailableError(message)) {
@@ -92,24 +159,27 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
     return;
   }
 
-  // Applique la tarification à paliers ZyNum
-  let { priceUsd, priceFcfa } = applyTieredPricing(fiveSimOrder.price);
-
-  // Applique le code de réduction si fourni
-  if (discountCode) {
-    const result = await applyDiscountCode(discountCode, country, priceUsd, priceFcfa);
-    priceUsd = result.finalPriceUsd;
-    priceFcfa = result.finalPriceFcfa;
-  }
-
-  let order;
+  let priceUsd = 0;
+  let priceFcfa = 0;
+  let discountResult: Awaited<ReturnType<typeof applyDiscountCode>> | undefined;
+  let order: typeof ordersTable.$inferSelect;
   try {
+    // Applique le prix réel et le code promo sans comptabiliser celui-ci avant validation du débit.
+    ({ priceUsd, priceFcfa } = applyTieredPricing(fiveSimOrder.price));
+    if (discountCode) {
+      discountResult = await applyDiscountCode(discountCode, country, priceUsd, priceFcfa, { recordUsage: false });
+      priceUsd = discountResult.finalPriceUsd;
+      priceFcfa = discountResult.finalPriceFcfa;
+    }
+
     order = await db.transaction(async (tx) => {
-      const [user] = await tx.select({ balanceUsd: usersTable.balanceUsd }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-      if (!user || user.balanceUsd < priceUsd) {
-        throw new Error("Solde insuffisant. Veuillez recharger votre compte.");
-      }
-      await tx.update(usersTable).set({ balanceUsd: sql`${usersTable.balanceUsd} - ${priceUsd}` }).where(eq(usersTable.id, userId));
+      const [chargedUser] = await tx
+        .update(usersTable)
+        .set({ balanceUsd: sql`${usersTable.balanceUsd} - ${priceUsd}` })
+        .where(and(eq(usersTable.id, userId), sql`${usersTable.balanceUsd} >= ${priceUsd}`))
+        .returning({ id: usersTable.id });
+      if (!chargedUser) throw new InsufficientBalanceError("Solde insuffisant.");
+
       const [newOrder] = await tx.insert(ordersTable).values({
         userId,
         externalId: String(fiveSimOrder.id),
@@ -119,11 +189,53 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
         priceUsd, priceFcfa,
         currency: currency ?? "USD",
       }).returning();
+
+      if (discountResult?.discountId !== null && discountResult?.discountId !== undefined) {
+        await tx
+          .update(discountCodesTable)
+          .set({
+            usedCount: sql`${discountCodesTable.usedCount} + 1`,
+            totalSavedFcfa: sql`${discountCodesTable.totalSavedFcfa} + ${discountResult.savedFcfa}`,
+            totalSavedUsd: sql`${discountCodesTable.totalSavedUsd} + ${discountResult.savedUsd}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(discountCodesTable.id, discountResult.discountId));
+      }
+
       return newOrder;
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat";
-    res.status(400).json({ error: "Purchase failed", message });
+    try {
+      await cancelUnpersistedPurchase(fiveSimOrder.id);
+    } catch (cleanupError: unknown) {
+      const cleanupMessage = cleanupError instanceof Error ? cleanupError.message : "Erreur 5SIM inconnue";
+      console.error(
+        `[buy] Failed to persist/cancel 5SIM order ${fiveSimOrder.id} for user ${userId}: ${cleanupMessage}`,
+      );
+      res.status(503).json({
+        error: "PURCHASE_CLEANUP_PENDING",
+        message: "L’achat n’a pas été enregistré et son annulation fournisseur reste à confirmer. Ne relancez pas cet achat; contactez le support.",
+      });
+      return;
+    }
+
+    if (err instanceof InsufficientBalanceError) {
+      const [currentUser] = await db
+        .select({ balanceUsd: usersTable.balanceUsd })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .limit(1);
+      res.status(400).json({
+        error: "INSUFFICIENT_BALANCE",
+        message: "Solde insuffisant. Veuillez recharger votre compte.",
+        balanceUsd: currentUser?.balanceUsd ?? 0,
+        requiredUsd: priceUsd,
+      });
+      return;
+    }
+
+    res.status(500).json({ error: "Purchase failed", message });
     return;
   }
 

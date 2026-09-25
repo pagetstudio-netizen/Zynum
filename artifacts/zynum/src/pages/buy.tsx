@@ -261,7 +261,10 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     { service: selectedService || undefined },
     { query: { enabled: !!selectedService } }
   );
-  const { data: operatorsData, isLoading: isLoadingOperators } = useGetOperators(selectedService, selectedCountry);
+  const { data: operatorsData, isLoading: isLoadingOperators } = useGetOperators(
+    { service: selectedService ?? "", country: selectedCountry ?? "" },
+    { query: { enabled: !!selectedService && !!selectedCountry } },
+  );
 
   useEffect(() => {
     if (operatorsData?.operators?.length) setSelectedOperator(operatorsData.operators[0].name);
@@ -284,7 +287,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
         const isUnavailable =
           errorCode === "NUMBER_UNAVAILABLE"
             || /no\s+free|no\s+(?:available\s+)?(?:phone|number)s?|not\s+available|no\s+longer\s+available|unavailable|out\s+of\s+stock|sold\s+out|indisponible|plus\s+disponible|n['’]?\s*est\s+plus\s+disponible/i.test(msg);
-        const isBalance = /balance|no free|insufficient|solde/i.test(msg);
+        const isBalance = errorCode === "INSUFFICIENT_BALANCE" || /balance|no free|insufficient|solde/i.test(msg);
         toast({
           variant: "destructive",
           title: isUnavailable
@@ -356,7 +359,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
 
   const handleChangeNumber = () => {
     if (!activeOrder) return;
-    cancelMutation.mutate(activeOrder.id);
+    cancelMutation.mutate({ orderId: activeOrder.id });
     if (selectedService && selectedCountry) {
       setTimeout(() => {
         setBuyCount((c) => c + 1);
@@ -719,7 +722,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
           <div className="max-w-lg mx-auto">
             <StepIndicator current="preview" />
             <button
-              onClick={() => { cancelMutation.mutate(activeOrder.id); }}
+              onClick={() => { cancelMutation.mutate({ orderId: activeOrder.id }); }}
               disabled={cancelMutation.isPending}
               className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors"
             >
@@ -774,7 +777,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                 <Button
                   variant="ghost"
                   className="w-full h-10 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 text-sm"
-                  onClick={() => cancelMutation.mutate(activeOrder.id)}
+                  onClick={() => cancelMutation.mutate({ orderId: activeOrder.id })}
                   disabled={cancelMutation.isPending}
                 >
                   <X className="w-4 h-4 mr-2" /> {t("buy_cancel_refund")}
@@ -849,7 +852,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                       createdAt={activeOrder.createdAt}
                       onExpired={() => {
                         if (!cancelMutation.isPending) {
-                          cancelMutation.mutate(activeOrder.id);
+                          cancelMutation.mutate({ orderId: activeOrder.id });
                           toast({ title: t("buy_autocanceled_title"), description: t("buy_autocanceled_desc"), variant: "destructive" });
                         }
                       }}
@@ -861,7 +864,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                       <Button
                         variant="ghost" size="sm"
                         className="flex-1 text-gray-500 hover:text-red-500 hover:bg-red-50"
-                        onClick={() => cancelMutation.mutate(activeOrder.id)}
+                        onClick={() => cancelMutation.mutate({ orderId: activeOrder.id })}
                         disabled={cancelMutation.isPending}
                       >
                         {cancelMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <X className="w-4 h-4 mr-2" />}

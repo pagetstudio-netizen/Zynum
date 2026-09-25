@@ -6,8 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 export interface ErrorResponse {
+  /** Machine-readable error code. The buy endpoint uses INSUFFICIENT_BALANCE when the account balance cannot cover the purchase. */
   error: string;
   message: string;
+  /** Current account balance in USD, returned for INSUFFICIENT_BALANCE. */
+  balanceUsd?: number;
+  /** Required account balance in USD, returned for INSUFFICIENT_BALANCE. */
+  requiredUsd?: number;
 }
 
 export interface SuccessResponse {

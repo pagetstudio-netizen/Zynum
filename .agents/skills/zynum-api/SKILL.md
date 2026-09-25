@@ -61,7 +61,7 @@ Orders are scoped to the authenticated account. Do not retry a purchase blindly 
 
 ## Errors and edge cases
 
-- `400`: validation or purchase failure; purchase failures can include insufficient balance.
+- `400`: validation or purchase failure; insufficient account funds return `error: "INSUFFICIENT_BALANCE"` and include `balanceUsd` and `requiredUsd` in USD.
 - `401`: missing or invalid authentication.
 - `404`: order or account resource not found for the current account.
 - `409`: number unavailable, or an order action is not valid for its current state.

@@ -256,6 +256,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Purchase persistence failed and provider cancellation could not be confirmed; do not retry blindly
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v1/check/{orderId}:
     get:
@@ -527,8 +533,15 @@ components:
       properties:
         error:
           type: string
+          description: Machine-readable error code. The buy endpoint uses INSUFFICIENT_BALANCE when the account balance cannot cover the purchase.
         message:
           type: string
+        balanceUsd:
+          type: number
+          description: Current account balance in USD, returned for INSUFFICIENT_BALANCE.
+        requiredUsd:
+          type: number
+          description: Required account balance in USD, returned for INSUFFICIENT_BALANCE.
       required:
         - error
         - message

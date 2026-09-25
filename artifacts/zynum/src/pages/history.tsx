@@ -105,7 +105,7 @@ function CancelPendingButton({ orderId, refetch, compact = false }: { orderId: s
     <Button
       size="sm"
       className={`${compact ? "h-7 px-2.5 text-xs" : "h-8 px-3 text-xs"} bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-lg font-semibold transition-colors`}
-      onClick={() => cancel.mutate(orderId)}
+      onClick={() => cancel.mutate({ orderId })}
       disabled={cancel.isPending}
     >
       {cancel.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><X className="w-3.5 h-3.5 mr-1" />{t("history_cancel_refund")}</>}

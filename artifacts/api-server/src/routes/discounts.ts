@@ -134,6 +134,7 @@ export async function applyDiscountCode(
   country: string,
   priceUsd: number,
   priceFcfa: number,
+  options: { recordUsage?: boolean } = {},
 ): Promise<{
   finalPriceUsd: number;
   finalPriceFcfa: number;
@@ -158,16 +159,17 @@ export async function applyDiscountCode(
   const savedUsd = Math.round((priceUsd - finalPriceUsd) * 100) / 100;
   const savedFcfa = Math.round((priceFcfa - finalPriceFcfa));
 
-  // Update usage stats
-  await db
-    .update(discountCodesTable)
-    .set({
-      usedCount: sql`${discountCodesTable.usedCount} + 1`,
-      totalSavedFcfa: sql`${discountCodesTable.totalSavedFcfa} + ${savedFcfa}`,
-      totalSavedUsd: sql`${discountCodesTable.totalSavedUsd} + ${savedUsd}`,
-      updatedAt: new Date(),
-    })
-    .where(eq(discountCodesTable.id, dc.id));
+  if (options.recordUsage !== false) {
+    await db
+      .update(discountCodesTable)
+      .set({
+        usedCount: sql`${discountCodesTable.usedCount} + 1`,
+        totalSavedFcfa: sql`${discountCodesTable.totalSavedFcfa} + ${savedFcfa}`,
+        totalSavedUsd: sql`${discountCodesTable.totalSavedUsd} + ${savedUsd}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(discountCodesTable.id, dc.id));
+  }
 
   return { finalPriceUsd, finalPriceFcfa, savedUsd, savedFcfa, discountId: dc.id, discountPercent: dc.percent };
 }
