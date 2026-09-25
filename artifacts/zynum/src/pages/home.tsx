@@ -367,9 +367,9 @@ export default function Home() {
                   <span className="home-api-card-badge">{card.badge}</span>
                   <h3 id={`home-api-card-title-${card.id}`}>{card.title}</h3>
                   <p>{card.description}</p>
-                  <Link href={card.href} className="home-api-cta">
+                  <a href={card.href} className="home-api-cta">
                     {t("home_api_cta")} <ArrowRight size={16} aria-hidden="true" />
-                  </Link>
+                  </a>
                 </div>
               </motion.article>
             ))}
