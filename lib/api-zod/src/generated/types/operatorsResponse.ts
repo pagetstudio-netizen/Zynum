@@ -5,8 +5,8 @@
  * ZyNum API - Virtual Numbers Platform
  * OpenAPI spec version: 0.1.0
  */
-import type { Country } from './country';
+import type { Operator } from './operator';
 
-export interface CountriesResponse {
-  countries: Country[];
+export interface OperatorsResponse {
+  operators: Operator[];
 }

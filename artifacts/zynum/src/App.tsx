@@ -37,6 +37,7 @@ const queryClient = new QueryClient({
 function ThemeByRoute() {
   const [location] = useLocation();
   useEffect(() => {
+    if (location === "/api-docs") return;
     document.documentElement.classList.remove("dark");
     document.documentElement.classList.add("light");
   }, [location]);
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/country-unavailable" component={CountryUnavailable} />
+      <Route path="/api-docs" component={ApiDocs} />
       <Route>
         <Layout>
           <Switch>
@@ -68,7 +70,6 @@ function Router() {
             <Route path="/terms" component={Terms} />
             <Route path="/privacy" component={Privacy} />
             <Route path="/contact" component={Contact} />
-            <Route path="/api-docs" component={ApiDocs} />
             <Route component={NotFound} />
           </Switch>
         </Layout>

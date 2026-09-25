@@ -1,3 +1,5 @@
 - [Remboursements de numéros](number-refunds.md) — confirmer l’état remboursable chez 5SIM et verrouiller la commande avant tout crédit utilisateur.
 - [MFA administrateur](admin-auth-security.md) — le second facteur admin utilise un code à usage unique haché et un chat privé dédié, sans fallback vers les notifications générales.
 - [Alertes admin Telegram](telegram-admin-alerts.md) — toute route qui modifie un solde doit détailler l’ancien solde, le montant, le nouveau solde et l’administrateur.
+- [Limites du proxy Vite](vite-proxy-route-boundary.md) — faire correspondre `/api` sur une frontière de segment pour ne pas intercepter des routes frontend comme `/api-docs`.
+- [Ancres SPA](spa-docs-deep-links.md) — appliquer le fragment après le montage React pour que les liens profonds arrivent sur la bonne section.

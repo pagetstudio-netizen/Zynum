@@ -38,7 +38,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                $ref: "#/components/schemas/RegistrationResponse"
         "400":
           description: Validation error
           content:
@@ -69,9 +69,27 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Account is unverified, banned, or blocked by an access policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Admin second-factor verification is unavailable
           content:
             application/json:
               schema:
@@ -82,6 +100,9 @@ paths:
       operationId: logoutUser
       tags: [auth]
       summary: Logout user
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
       responses:
         "200":
           description: Logged out
@@ -89,12 +110,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Authentication is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v1/auth/me:
     get:
       operationId: getCurrentUser
       tags: [auth]
       summary: Get current user
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
       responses:
         "200":
           description: Current user info
@@ -133,6 +163,7 @@ paths:
           required: false
           schema:
             type: string
+            default: telegram
       responses:
         "200":
           description: List of countries
@@ -140,12 +171,60 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CountriesResponse"
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/operators:
+    get:
+      operationId: getOperators
+      tags: [services]
+      summary: Get available operators
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
+      parameters:
+        - name: service
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: country
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of operators for the service and country
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperatorsResponse"
+        "400":
+          description: Required query parameters are missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Authentication is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v1/buy:
     post:
       operationId: buyNumber
       tags: [numbers]
       summary: Buy a virtual number
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
       requestBody:
         required: true
         content:
@@ -160,7 +239,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OrderResponse"
         "400":
-          description: Validation error
+          description: Validation or purchase error, including insufficient balance
           content:
             application/json:
               schema:
@@ -171,8 +250,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        "402":
-          description: Insufficient balance
+        "409":
+          description: Number unavailable or purchase conflicts with current availability
           content:
             application/json:
               schema:
@@ -183,6 +262,9 @@ paths:
       operationId: checkSms
       tags: [numbers]
       summary: Check SMS for an order
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
       parameters:
         - name: orderId
           in: path
@@ -196,18 +278,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SmsStatusResponse"
+        "400":
+          description: Invalid order identifier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Authentication is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Order not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Refund handling is still pending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckRefundPendingResponse"
 
   /v1/orders:
     get:
       operationId: getOrderHistory
       tags: [orders]
       summary: Get order history
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
       parameters:
         - name: page
           in: query
@@ -233,11 +336,112 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /v1/cancel/{orderId}:
+    post:
+      operationId: cancelOrder
+      tags: [numbers]
+      summary: Cancel an order
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order canceled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancelOrderResponse"
+        "400":
+          description: Cancellation request is invalid for the order state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Authentication is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Order not found for the current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Order cannot be canceled in its current state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Refund handling is still pending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/finish/{orderId}:
+    post:
+      operationId: finishOrder
+      tags: [numbers]
+      summary: Finish an order
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order finished
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "401":
+          description: Authentication is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Order not found for the current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Order cannot be finished in its current state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Order finish could not be confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /v1/balance:
     get:
       operationId: getBalance
       tags: [balance]
-      summary: Get 5SIM balance
+      summary: Get balance
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
       responses:
         "200":
           description: Balance info
@@ -251,12 +455,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Balance could not be read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v1/developer/apikey:
     get:
       operationId: getDeveloperApiKey
       tags: [developer]
       summary: Get developer API key
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
       responses:
         "200":
           description: API key info
@@ -274,6 +493,9 @@ paths:
       operationId: regenerateDeveloperApiKey
       tags: [developer]
       summary: Regenerate developer API key
+      security:
+        - bearerAuth: []
+        - sessionCookieAuth: []
       responses:
         "200":
           description: New API key
@@ -289,6 +511,16 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Use an API key or session token in the Authorization header.
+    sessionCookieAuth:
+      type: apiKey
+      in: cookie
+      name: zynum_session
+      description: Browser session cookie accepted by authenticated routes.
   schemas:
     ErrorResponse:
       type: object
@@ -324,6 +556,8 @@ components:
         password:
           type: string
           minLength: 6
+        referralCode:
+          type: string
         confirmPassword:
           type: string
       required:
@@ -355,6 +589,51 @@ components:
         - user
         - token
 
+    RegistrationResponse:
+      type: object
+      properties:
+        requiresVerification:
+          type: boolean
+          enum: [true]
+        email:
+          type: string
+          format: email
+      required:
+        - requiresVerification
+        - email
+
+    LoginResponse:
+      oneOf:
+        - $ref: "#/components/schemas/AuthResponse"
+        - $ref: "#/components/schemas/LoginTwoFactorChallenge"
+        - $ref: "#/components/schemas/AdminTwoFactorChallenge"
+
+    LoginTwoFactorChallenge:
+      type: object
+      properties:
+        requires2FA:
+          type: boolean
+          enum: [true]
+        email:
+          type: string
+          format: email
+      required:
+        - requires2FA
+        - email
+
+    AdminTwoFactorChallenge:
+      type: object
+      properties:
+        requiresAdmin2FA:
+          type: boolean
+          enum: [true]
+        email:
+          type: string
+          format: email
+      required:
+        - requiresAdmin2FA
+        - email
+
     UserProfile:
       type: object
       properties:
@@ -364,6 +643,10 @@ components:
           type: string
         email:
           type: string
+        isAdmin:
+          type: boolean
+        isBanned:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -371,6 +654,8 @@ components:
         - id
         - name
         - email
+        - isAdmin
+        - isBanned
         - createdAt
 
     Service:
@@ -436,6 +721,36 @@ components:
       required:
         - countries
 
+    Operator:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        priceUsd:
+          type: number
+        priceFcfa:
+          type: number
+        available:
+          type: integer
+      required:
+        - name
+        - label
+        - priceUsd
+        - priceFcfa
+        - available
+
+    OperatorsResponse:
+      type: object
+      properties:
+        operators:
+          type: array
+          items:
+            $ref: "#/components/schemas/Operator"
+      required:
+        - operators
+
     BuyNumberRequest:
       type: object
       properties:
@@ -466,6 +781,7 @@ components:
           type: string
         externalId:
           type: string
+          description: Opaque reference; use id for ZyNum order routes.
         phone:
           type: string
         service:
@@ -483,11 +799,9 @@ components:
         status:
           $ref: "#/components/schemas/OrderStatus"
         smsCode:
-          type: string
-          nullable: true
+          type: [string, "null"]
         smsText:
-          type: string
-          nullable: true
+          type: [string, "null"]
         priceUsd:
           type: number
         priceFcfa:
@@ -511,6 +825,8 @@ components:
         - country
         - countryName
         - status
+        - smsCode
+        - smsText
         - priceUsd
         - priceFcfa
         - currency
@@ -530,8 +846,38 @@ components:
       properties:
         order:
           $ref: "#/components/schemas/Order"
+        autocanceled:
+          type: boolean
+        refundPending:
+          type: boolean
       required:
         - order
+
+    CheckRefundPendingResponse:
+      type: object
+      properties:
+        order:
+          $ref: "#/components/schemas/Order"
+        refundPending:
+          type: boolean
+          enum: [true]
+        message:
+          type: string
+      required:
+        - order
+        - refundPending
+        - message
+
+    CancelOrderResponse:
+      type: object
+      properties:
+        order:
+          $ref: "#/components/schemas/Order"
+        refundPending:
+          type: boolean
+      required:
+        - order
+        - refundPending
 
     OrderHistoryResponse:
       type: object
@@ -559,15 +905,10 @@ components:
           type: number
         currency:
           type: string
-        lowBalanceThreshold:
-          type: number
-        isLow:
-          type: boolean
+          enum: [USD]
       required:
         - balance
         - currency
-        - lowBalanceThreshold
-        - isLow
 
     ApiKeyResponse:
       type: object

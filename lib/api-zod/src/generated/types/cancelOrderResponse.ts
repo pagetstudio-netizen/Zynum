@@ -5,8 +5,9 @@
  * ZyNum API - Virtual Numbers Platform
  * OpenAPI spec version: 0.1.0
  */
-import type { Country } from './country';
+import type { Order } from './order';
 
-export interface CountriesResponse {
-  countries: Country[];
+export interface CancelOrderResponse {
+  order: Order;
+  refundPending: boolean;
 }

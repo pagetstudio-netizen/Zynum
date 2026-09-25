@@ -5,8 +5,11 @@
  * ZyNum API - Virtual Numbers Platform
  * OpenAPI spec version: 0.1.0
  */
-import type { Country } from './country';
 
-export interface CountriesResponse {
-  countries: Country[];
+export interface Operator {
+  name: string;
+  label: string;
+  priceUsd: number;
+  priceFcfa: number;
+  available: number;
 }

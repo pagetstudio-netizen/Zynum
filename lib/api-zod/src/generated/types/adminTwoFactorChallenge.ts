@@ -5,8 +5,8 @@
  * ZyNum API - Virtual Numbers Platform
  * OpenAPI spec version: 0.1.0
  */
-import type { Country } from './country';
 
-export interface CountriesResponse {
-  countries: Country[];
+export interface AdminTwoFactorChallenge {
+  requiresAdmin2FA: true;
+  email: string;
 }

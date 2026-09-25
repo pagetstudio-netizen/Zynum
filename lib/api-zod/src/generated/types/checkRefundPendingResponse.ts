@@ -5,8 +5,10 @@
  * ZyNum API - Virtual Numbers Platform
  * OpenAPI spec version: 0.1.0
  */
+import type { Order } from './order';
 
-export interface ErrorResponse {
-  error: string;
+export interface CheckRefundPendingResponse {
+  order: Order;
+  refundPending: true;
   message: string;
 }
