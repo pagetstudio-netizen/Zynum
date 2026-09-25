@@ -15,6 +15,7 @@ Use this skill when an application or coding agent needs to discover ZyNum servi
 - Private calls require `Authorization: Bearer <ZYNUM_API_KEY>`. ZyNum keys begin with `zyn_`.
 - The account owner manages the key in the ZyNum developer area.
 - Keep the key on a trusted server and in a secrets manager or environment variable. Never put it in browser code, logs, source control, or a chat prompt. Do not ask a user to paste a key into chat.
+- The account has one API key. The same key is used as the HMAC-SHA256 secret when verifying ZyNum outgoing webhooks; the key itself is never sent in webhook requests.
 - Send `Content-Type: application/json` on JSON requests.
 
 ## Available routes
@@ -55,9 +56,28 @@ Order statuses are `PENDING`, `RECEIVED`, `FINISHED`, `TIMEOUT`, `BANNED`, and `
 2. Submit `POST /v1/buy` from a trusted server. A successful response contains `order.id`; store this id for follow-up calls.
 3. Poll `GET /v1/check/{orderId}` from the backend to read the order status and SMS fields. A successful response can contain the existing saved order if a live status check fails, so HTTP 200 alone does not prove the data is fresh.
 4. Call `POST /v1/finish/{orderId}` only after the order is `RECEIVED` and has an SMS code.
-5. Call `POST /v1/cancel/{orderId}` only while the order is `PENDING`, or `RECEIVED` with no SMS code. Refund confirmation may be pending.
+5. Call `POST /v1/cancel/{orderId}` only while the order is `PENDING`, or `RECEIVED` with no SMS code. Manual cancellation does not require waiting six minutes; that threshold applies only to automatic cancellation attempts started by `GET /v1/check/{orderId}`.
+
+ZyNum credits the account balance only after 5SIM confirms an eligible cancellation. A `503` or `refundPending: true` is not confirmation; the scheduler retries eligible expired orders and you can check the order again later. There is no fixed provider response-time guarantee.
 
 Orders are scoped to the authenticated account. Do not retry a purchase blindly after an ambiguous network failure; first inspect the account's order history to reduce the risk of creating a duplicate order.
+
+## Outgoing order webhooks
+
+Configure one HTTPS destination in Profile → Developer. ZyNum sends:
+
+- `order.created` when a new order is saved.
+- `order.updated` when an order's public status, `smsCode`, or `smsText` changes.
+
+The JSON envelope is `{ "type": "...", "createdAt": "...", "data": { "order": { ... } } }`. The order object uses the same fields as the API order response, including `smsCode` and `smsText` when available. Treat those SMS fields as sensitive verification data.
+
+Every request includes:
+
+- `X-ZyNum-Event`: event type.
+- `X-ZyNum-Delivery`: stable delivery ID; use it to deduplicate retries.
+- `X-ZyNum-Signature`: `sha256=<hex>` HMAC-SHA256 of the exact raw request body, using the account's existing API key.
+
+Return any HTTP 2xx response to acknowledge delivery. Network errors, HTTP `408`, `425`, `429`, and `5xx` responses are retried with exponential backoff for up to 12 attempts. Other non-2xx responses are treated as permanent failures. Delivery is at least once, so handlers must be idempotent. Changing or disabling the destination stops pending deliveries to the previous URL. Rotating the API key changes the HMAC key immediately; the old key is invalidated.
 
 ## Errors and edge cases
 
@@ -66,10 +86,10 @@ Orders are scoped to the authenticated account. Do not retry a purchase blindly 
 - `404`: order or account resource not found for the current account.
 - `409`: number unavailable, or an order action is not valid for its current state.
 - `502`: order finish could not be confirmed.
-- `503`: refund is still pending.
+- `503`: refund is still pending, or a failed purchase could not be confirmed canceled by the provider. Do not retry an ambiguous purchase blindly.
 - Error bodies commonly contain `error` and `message`; use the specific endpoint response rather than assuming every route has an identical error body.
-- A check on an order older than six minutes with no SMS code can trigger automatic cancellation/refund handling. The response may include `autocanceled` and `refundPending`, or return `503` while refund handling is retried.
-- Do not promise filtering, webhooks, SDKs, rate limits, or endpoints not listed here.
+- The background scheduler checks every 60 seconds for eligible orders more than six minutes old with no SMS code and attempts cancellation/refund. A call to `GET /v1/check/{orderId}` after that threshold also triggers an attempt. The response may include `autocanceled` and `refundPending`, or return `503`. If pending, the scheduler retries eligible expired orders; you may also call the check or eligible cancel endpoint later.
+- Do not promise filtering, SDKs, rate limits, or endpoints not listed here. Webhook behavior is limited to the events and delivery contract above.
 
 ## Server-side JavaScript example
 

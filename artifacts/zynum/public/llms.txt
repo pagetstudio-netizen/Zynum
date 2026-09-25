@@ -1,0 +1,21 @@
+# ZyNum
+
+> ZyNum provides virtual numbers for receiving SMS and verification codes.
+
+## Developer documentation
+
+- [ZyNum API v1 documentation](https://zynum.net/api-docs): Authentication, catalog, purchases, order management, signed outgoing webhooks, and error handling.
+- [ZyNum API agent skill](https://zynum.net/agent-skills/zynum-api/SKILL.md): Concise integration guidance for coding agents.
+
+## Public pages
+
+- [Home](https://zynum.net/)
+- [Buy a virtual number](https://zynum.net/buy)
+- [Help center](https://zynum.net/aide)
+- [FAQ](https://zynum.net/faq)
+- [About ZyNum](https://zynum.net/about)
+- [Contact](https://zynum.net/contact)
+- [Terms of service](https://zynum.net/terms)
+- [Privacy policy](https://zynum.net/privacy)
+
+Only the endpoints and behaviors listed in the API documentation are supported.

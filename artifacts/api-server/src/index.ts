@@ -2,6 +2,7 @@ import app from "./app";
 import { initDb } from "./lib/initDb.js";
 import { scheduleDailyReport } from "./lib/telegram.js";
 import { scheduleAutoCancel } from "./lib/scheduler.js";
+import { scheduleWebhooks } from "./lib/webhooks.js";
 
 const rawPort = process.env["PORT"] ?? "3000";
 
@@ -17,6 +18,7 @@ initDb()
       console.log(`Server listening on port ${port}`);
       scheduleDailyReport();
       scheduleAutoCancel();
+      scheduleWebhooks();
     });
   })
   .catch((err) => {

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import {
-  Check, Eye, EyeOff, Globe2, Lock, User,
+  Check, Copy, Eye, EyeOff, Globe2, Lock, RotateCw, User, Webhook,
 } from "lucide-react";
 import iconCustomerSupport from "@assets/mine-mod-cs-DtBQ0Sp0_1790066990139.png";
 import iconChangePassword from "@assets/mine-mod-change-pwd-D4tL_Aft_1790066990157.png";
@@ -58,12 +58,191 @@ function PasswordInput({
 export default function ProfilePage({ user }: { user: ProfileUser }) {
   const { toast } = useToast();
   const { lang, setLang, t } = useLanguage();
-  const [profileTab, setProfileTab] = useState<"personal" | "security">("personal");
+  const [profileTab, setProfileTab] = useState<"personal" | "security" | "developer">("personal");
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookInput, setWebhookInput] = useState("");
+  const [webhookLoading, setWebhookLoading] = useState(false);
+  const [webhookSaving, setWebhookSaving] = useState(false);
+  const [webhookError, setWebhookError] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [rotatingApiKey, setRotatingApiKey] = useState(false);
+
+  const developerCopy = lang === "fr" ? {
+    tab: "Développeur",
+    title: "Intégration développeur",
+    subtitle: "Configurez le webhook de votre compte et gérez votre clé API unique.",
+    apiKey: "Clé API du compte",
+    keyHelp: "Cette clé authentifie vos appels API et sert à vérifier la signature des webhooks. Ne la partagez jamais.",
+    showKey: "Afficher la clé API",
+    hideKey: "Masquer la clé API",
+    copyKey: "Copier la clé API",
+    keyCopied: "Clé API copiée",
+    rotate: "Renouveler la clé",
+    rotateConfirm: "Renouveler la clé API invalidera immédiatement l’ancienne et les signatures de webhook utiliseront la nouvelle. Continuer ?",
+    webhook: "Webhook sortant",
+    webhookHelp: "Recevez les événements de commande sur une URL HTTPS publique. Le code et le texte du SMS peuvent être présents dans order.",
+    endpoint: "URL de réception",
+    save: "Enregistrer l’URL",
+    disable: "Désactiver",
+    events: "Événements envoyés",
+    created: "Nouvelle commande créée",
+    updated: "Statut ou données SMS modifiés",
+    signature: "Chaque requête inclut X-ZyNum-Event, X-ZyNum-Delivery et X-ZyNum-Signature. Vérifiez le HMAC-SHA256 du corps brut avec votre clé API.",
+    retry: "Livraison persistante : reprise automatique avec délai progressif, jusqu’à 12 tentatives. Répondez avec un statut HTTP 2xx pour confirmer la réception.",
+    docs: "Voir le contrat webhook dans la documentation API",
+    loading: "Chargement des paramètres développeur…",
+    saveSuccess: "Configuration webhook enregistrée.",
+    rotateSuccess: "La clé API a été renouvelée.",
+    requestError: "Impossible de charger les paramètres développeur.",
+  } : {
+    tab: "Developer",
+    title: "Developer integration",
+    subtitle: "Configure this account’s webhook and manage its single API key.",
+    apiKey: "Account API key",
+    keyHelp: "This key authenticates API requests and verifies webhook signatures. Never share it.",
+    showKey: "Show API key",
+    hideKey: "Hide API key",
+    copyKey: "Copy API key",
+    keyCopied: "API key copied",
+    rotate: "Rotate key",
+    rotateConfirm: "Rotating the API key immediately invalidates the old key, and webhook signatures will use the new one. Continue?",
+    webhook: "Outgoing webhook",
+    webhookHelp: "Receive order events at a public HTTPS URL. The SMS code and text may be included in order.",
+    endpoint: "Destination URL",
+    save: "Save URL",
+    disable: "Disable",
+    events: "Events sent",
+    created: "A new order is created",
+    updated: "Order status or SMS data changes",
+    signature: "Each request includes X-ZyNum-Event, X-ZyNum-Delivery, and X-ZyNum-Signature. Verify the HMAC-SHA256 of the raw body with your API key.",
+    retry: "Persistent delivery with automatic backoff for up to 12 attempts. Reply with an HTTP 2xx status to acknowledge receipt.",
+    docs: "Read the webhook contract in the API docs",
+    loading: "Loading developer settings…",
+    saveSuccess: "Webhook settings saved.",
+    rotateSuccess: "API key rotated.",
+    requestError: "Could not load developer settings.",
+  };
+
+  useEffect(() => {
+    if (profileTab !== "developer") return;
+    let active = true;
+    setWebhookLoading(true);
+    setWebhookError("");
+    const token = localStorage.getItem("zynum_token");
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+    Promise.all([
+      fetch("/api/v1/developer/webhook", { headers }),
+      fetch("/api/v1/developer/apikey", { headers }),
+    ])
+      .then(async ([webhookResponse, keyResponse]) => {
+        const webhookData = await webhookResponse.json();
+        const keyData = await keyResponse.json();
+        if (!webhookResponse.ok || !keyResponse.ok) {
+          throw new Error(webhookData.message ?? keyData.message ?? developerCopy.requestError);
+        }
+        if (!active) return;
+        setWebhookUrl(webhookData.webhookUrl ?? "");
+        setWebhookInput(webhookData.webhookUrl ?? "");
+        setApiKey(keyData.apiKey);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setWebhookError(error instanceof Error ? error.message : developerCopy.requestError);
+      })
+      .finally(() => {
+        if (active) setWebhookLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [profileTab, developerCopy.requestError]);
+
+  const handleWebhookSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setWebhookSaving(true);
+    setWebhookError("");
+    try {
+      const token = localStorage.getItem("zynum_token");
+      const response = await fetch("/api/v1/developer/webhook", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ url: webhookInput.trim() || null }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message ?? developerCopy.requestError);
+      setWebhookUrl(data.webhookUrl ?? "");
+      setWebhookInput(data.webhookUrl ?? "");
+      toast({ title: developerCopy.saveSuccess });
+    } catch (error) {
+      setWebhookError(error instanceof Error ? error.message : developerCopy.requestError);
+    } finally {
+      setWebhookSaving(false);
+    }
+  };
+
+  const handleWebhookDisable = async () => {
+    setWebhookSaving(true);
+    setWebhookError("");
+    try {
+      const token = localStorage.getItem("zynum_token");
+      const response = await fetch("/api/v1/developer/webhook", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ url: null }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message ?? developerCopy.requestError);
+      setWebhookUrl("");
+      setWebhookInput("");
+      toast({ title: developerCopy.saveSuccess });
+    } catch (error) {
+      setWebhookError(error instanceof Error ? error.message : developerCopy.requestError);
+    } finally {
+      setWebhookSaving(false);
+    }
+  };
+
+  const handleApiKeyRotate = async () => {
+    if (!window.confirm(developerCopy.rotateConfirm)) return;
+    setRotatingApiKey(true);
+    try {
+      const token = localStorage.getItem("zynum_token");
+      const response = await fetch("/api/v1/developer/apikey", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message ?? developerCopy.requestError);
+      setApiKey(data.apiKey);
+      setShowApiKey(false);
+      toast({ title: developerCopy.rotateSuccess });
+    } catch (error) {
+      setWebhookError(error instanceof Error ? error.message : developerCopy.requestError);
+    } finally {
+      setRotatingApiKey(false);
+    }
+  };
+
+  const handleApiKeyCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(apiKey);
+      toast({ title: developerCopy.keyCopied });
+    } catch {
+      setWebhookError(lang === "fr" ? "Impossible de copier la clé dans le presse-papiers." : "Could not copy the key to the clipboard.");
+    }
+  };
 
   const handleChangePassword = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -161,6 +340,16 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
         >
           Sécurité
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={profileTab === "developer"}
+          className={profileTab === "developer" ? "is-active" : ""}
+          onClick={() => setProfileTab("developer")}
+          data-testid="tab-profile-developer"
+        >
+          {developerCopy.tab}
+        </button>
       </div>
 
       {profileTab === "personal" ? (
@@ -204,7 +393,7 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
             </div>
           </div>
         </div>
-      ) : (
+      ) : profileTab === "security" ? (
         <div className="profile-reference-tab-content" role="tabpanel">
           <section className="profile-reference-security-card">
             <div className="profile-reference-section-heading">
@@ -289,6 +478,81 @@ export default function ProfilePage({ user }: { user: ProfileUser }) {
             </div>
             <span><Check /> {t("profile_active")}</span>
           </div>
+        </div>
+      ) : (
+        <div className="profile-reference-tab-content" role="tabpanel" data-testid="panel-profile-developer">
+          {webhookLoading ? (
+            <p className="profile-reference-developer-loading">{developerCopy.loading}</p>
+          ) : (
+            <>
+              <div className="profile-reference-developer-heading">
+                <div>
+                  <h3>{developerCopy.title}</h3>
+                  <p>{developerCopy.subtitle}</p>
+                </div>
+                <Webhook aria-hidden="true" />
+              </div>
+
+              {webhookError && <p className="profile-reference-developer-error" role="alert" data-testid="status-developer-error">{webhookError}</p>}
+
+              <section className="profile-reference-developer-card">
+                <h4>{developerCopy.apiKey}</h4>
+                <div className="profile-reference-api-key">
+                  <code data-testid="text-developer-api-key">
+                    {showApiKey ? apiKey : `${apiKey.slice(0, 4)}${"•".repeat(24)}${apiKey.slice(-4)}`}
+                  </code>
+                  <button type="button" aria-label={showApiKey ? developerCopy.hideKey : developerCopy.showKey} onClick={() => setShowApiKey((value) => !value)} data-testid="button-toggle-api-key">
+                    {showApiKey ? <EyeOff /> : <Eye />}
+                  </button>
+                  <button type="button" aria-label={developerCopy.copyKey} onClick={handleApiKeyCopy} data-testid="button-copy-api-key">
+                    <Copy />
+                  </button>
+                </div>
+                <p>{developerCopy.keyHelp}</p>
+                <button type="button" className="profile-reference-developer-secondary" onClick={handleApiKeyRotate} disabled={rotatingApiKey} data-testid="button-rotate-api-key">
+                  <RotateCw aria-hidden="true" /> {rotatingApiKey ? "…" : developerCopy.rotate}
+                </button>
+              </section>
+
+              <section className="profile-reference-developer-card">
+                <h4>{developerCopy.webhook}</h4>
+                <p>{developerCopy.webhookHelp}</p>
+                <form onSubmit={handleWebhookSave} className="profile-reference-developer-form">
+                  <label htmlFor="developer-webhook-url">{developerCopy.endpoint}</label>
+                  <input
+                    id="developer-webhook-url"
+                    type="url"
+                    inputMode="url"
+                    autoComplete="url"
+                    placeholder="https://example.com/webhooks/zynum"
+                    value={webhookInput}
+                    onChange={(event) => setWebhookInput(event.target.value)}
+                    data-testid="input-developer-webhook-url"
+                  />
+                  <div className="profile-reference-developer-actions">
+                    <button type="submit" disabled={webhookSaving} data-testid="button-save-webhook">
+                      {webhookSaving ? "…" : developerCopy.save}
+                    </button>
+                    {webhookUrl && (
+                      <button type="button" className="is-secondary" disabled={webhookSaving} onClick={handleWebhookDisable} data-testid="button-disable-webhook">
+                        {developerCopy.disable}
+                      </button>
+                    )}
+                  </div>
+                </form>
+                <div className="profile-reference-webhook-details">
+                  <strong>{developerCopy.events}</strong>
+                  <ul>
+                    <li><code>order.created</code> — {developerCopy.created}</li>
+                    <li><code>order.updated</code> — {developerCopy.updated}</li>
+                  </ul>
+                  <p>{developerCopy.signature}</p>
+                  <p>{developerCopy.retry}</p>
+                </div>
+                <a className="profile-reference-docs-link" href="/api-docs#webhooks" data-testid="link-developer-webhook-docs">{developerCopy.docs}</a>
+              </section>
+            </>
+          )}
         </div>
       )}
 

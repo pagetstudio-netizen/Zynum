@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Response } from "express";
 import { db, ordersTable, usersTable, affiliateCommissionsTable, discountCodesTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { BuyNumberBody, CheckSmsParams, GetOrderHistoryQueryParams } from "@workspace/api-zod";
@@ -27,8 +27,8 @@ function isNumberUnavailableError(message: string): boolean {
 
 class InsufficientBalanceError extends Error {}
 
-async function cancelUnpersistedPurchase(externalId: number): Promise<void> {
-  const canceled = await cancelOrder(externalId);
+async function cancelUnpersistedPurchase(externalId: number, cancel: typeof cancelOrder): Promise<void> {
+  const canceled = await cancel(externalId);
   const status = mapFiveSimStatus(canceled.status);
   if (!["CANCELED", "TIMEOUT", "BANNED"].includes(status)) {
     throw new Error(`5SIM n'a pas confirmé l'annulation (statut ${status}).`);
@@ -74,8 +74,24 @@ router.get("/v1/operators", requireAuth, async (req: AuthRequest, res): Promise<
   res.json({ operators });
 });
 
-// ─── Buy number ───────────────────────────────────────────────────────────────
-router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+type BuyNumberServices = {
+  getOperatorsForServiceCountry: typeof getOperatorsForServiceCountry;
+  buyNumber: typeof buyNumber;
+  cancelOrder: typeof cancelOrder;
+  applyDiscountCode: typeof applyDiscountCode;
+  notifyPurchase: typeof notifyPurchase;
+};
+
+const defaultBuyNumberServices: BuyNumberServices = {
+  getOperatorsForServiceCountry,
+  buyNumber,
+  cancelOrder,
+  applyDiscountCode,
+  notifyPurchase,
+};
+
+export function createBuyNumberHandler(services: BuyNumberServices = defaultBuyNumberServices) {
+  return async (req: AuthRequest, res: Response): Promise<void> => {
   const parsed = BuyNumberBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Validation error", message: parsed.error.message });
@@ -91,7 +107,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   let catalogOperators: Awaited<ReturnType<typeof getOperatorsForServiceCountry>>;
   let fiveSimOrder: Awaited<ReturnType<typeof buyNumber>>;
   try {
-    catalogOperators = await getOperatorsForServiceCountry(service, country);
+    catalogOperators = await services.getOperatorsForServiceCountry(service, country);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat du numéro";
     if (isNumberUnavailableError(message)) {
@@ -118,7 +134,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   let quotePriceUsd = quotedPrice.priceUsd;
   let quotePriceFcfa = quotedPrice.priceFcfa;
   if (discountCode) {
-    const quoteDiscount = await applyDiscountCode(
+    const quoteDiscount = await services.applyDiscountCode(
       discountCode,
       country,
       quotePriceUsd,
@@ -145,7 +161,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   }
 
   try {
-    fiveSimOrder = await buyNumber(service, country, selectedOperator);
+    fiveSimOrder = await services.buyNumber(service, country, selectedOperator);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat du numéro";
     if (isNumberUnavailableError(message)) {
@@ -167,7 +183,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
     // Applique le prix réel et le code promo sans comptabiliser celui-ci avant validation du débit.
     ({ priceUsd, priceFcfa } = applyTieredPricing(fiveSimOrder.price));
     if (discountCode) {
-      discountResult = await applyDiscountCode(discountCode, country, priceUsd, priceFcfa, { recordUsage: false });
+      discountResult = await services.applyDiscountCode(discountCode, country, priceUsd, priceFcfa, { recordUsage: false });
       priceUsd = discountResult.finalPriceUsd;
       priceFcfa = discountResult.finalPriceFcfa;
     }
@@ -207,7 +223,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erreur lors de l'achat";
     try {
-      await cancelUnpersistedPurchase(fiveSimOrder.id);
+      await cancelUnpersistedPurchase(fiveSimOrder.id, services.cancelOrder);
     } catch (cleanupError: unknown) {
       const cleanupMessage = cleanupError instanceof Error ? cleanupError.message : "Erreur 5SIM inconnue";
       console.error(
@@ -243,7 +259,7 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
 
   // Fire-and-forget Telegram notification
   db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, userId)).limit(1).then(([u]) => {
-    notifyPurchase({
+    services.notifyPurchase({
       userId,
       userName: u?.name ?? `User#${userId}`,
       orderId: String(order.id),
@@ -254,7 +270,11 @@ router.post("/v1/buy", requireAuth, async (req: AuthRequest, res): Promise<void>
       priceUsd:  order.priceUsd,
     }).catch(() => {});
   }).catch(() => {});
-});
+  };
+}
+
+// ─── Buy number ───────────────────────────────────────────────────────────────
+router.post("/v1/buy", requireAuth, createBuyNumberHandler());
 
 // ─── Check SMS ────────────────────────────────────────────────────────────────
 router.get("/v1/check/:orderId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
@@ -288,7 +308,7 @@ router.get("/v1/check/:orderId", requireAuth, async (req: AuthRequest, res): Pro
         res.status(503).json({
           order: formatOrder(result.order),
           refundPending: true,
-          message: "Remboursement 5SIM en attente. Le système réessaiera automatiquement.",
+          message: "5SIM n'a pas confirmé l'annulation. Le traitement automatique réessaiera ; vérifiez la commande plus tard.",
         });
         return;
       }
@@ -370,7 +390,7 @@ router.post("/v1/cancel/:orderId", requireAuth, async (req: AuthRequest, res): P
   if (result.status === "retry") {
     res.status(503).json({
       error: "Refund pending",
-      message: "5SIM n'a pas encore confirmé l'annulation. Le système réessaiera automatiquement.",
+      message: "5SIM n'a pas confirmé l'annulation. Le traitement automatique réessaiera ; vérifiez la commande plus tard.",
       order: formatOrder(result.order),
     });
     return;

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Documentation API ZyNum v1 : intégration de numéros virtuels</title>
+    <meta
+      name="description"
+      content="Documentation développeur de l’API ZyNum v1 : authentification Bearer, catalogue, achat de numéros virtuels, suivi SMS, annulations et webhooks signés."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://zynum.net/api-docs" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ZyNum" />
+    <meta property="og:url" content="https://zynum.net/api-docs" />
+    <meta property="og:title" content="Documentation API ZyNum v1" />
+    <meta
+      property="og:description"
+      content="Intégrez l’achat de numéros virtuels et la réception de SMS avec l’API ZyNum et ses webhooks signés."
+    />
+    <meta property="og:image" content="https://zynum.net/opengraph.jpg?v=2" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Documentation API ZyNum v1" />
+    <meta
+      name="twitter:description"
+      content="Authentification, commandes, réception des SMS et webhooks signés pour l’API ZyNum."
+    />
+    <meta name="twitter:image" content="https://zynum.net/opengraph.jpg?v=2" />
+    <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://zynum.net/#organization",
+            "name": "ZyNum",
+            "url": "https://zynum.net",
+            "logo": "https://zynum.net/logo.jpg"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Documentation API ZyNum v1",
+            "description": "Documentation développeur de l’API ZyNum pour les commandes de numéros virtuels et la réception de SMS.",
+            "url": "https://zynum.net/api-docs",
+            "inLanguage": "fr",
+            "isPartOf": {
+              "@type": "WebSite",
+              "name": "ZyNum",
+              "url": "https://zynum.net"
+            },
+            "about": { "@id": "https://zynum.net/#organization" }
+          }
+        ]
+      }
+    </script>
+    <style>
+      body { margin: 0; background: #0c1119; color: #ebf0f7; font: 16px/1.65 Inter, sans-serif; }
+      .crawlable-docs { max-width: 900px; margin: auto; padding: 42px 24px 72px; }
+      h1, h2, h3 { line-height: 1.2; }
+      h1 { font-size: clamp(2rem, 6vw, 3.5rem); letter-spacing: -.04em; }
+      h2 { margin-top: 2.5rem; }
+      a { color: #ff8548; }
+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      pre { overflow-x: auto; padding: 18px; border: 1px solid #293545; border-radius: 10px; background: #0a1019; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 10px; border-bottom: 1px solid #293545; text-align: left; vertical-align: top; }
+      .sr-app-note { color: #98a5b7; font-size: 13px; }
+    </style>
+    <script type="module" src="/src/main.tsx"></script>
+  </head>
+  <body>
+    <div id="root">
+      <main class="crawlable-docs">
+        <article>
+          <header>
+            <p><a href="/">ZyNum</a> / Documentation développeur</p>
+            <h1>Documentation de l’API ZyNum v1</h1>
+            <p>
+              L’API ZyNum permet aux applications serveur de parcourir le catalogue,
+              acheter un numéro virtuel, consulter les SMS reçus et gérer les commandes
+              avec le solde du compte.
+            </p>
+            <p>URL de base : <code>https://zynum.net/api</code></p>
+          </header>
+
+          <nav aria-label="Sommaire">
+            <h2>Dans cette documentation</h2>
+            <ul>
+              <li><a href="#authentication">Authentification et clé API</a></li>
+              <li><a href="#endpoints">Endpoints de l’API v1</a></li>
+              <li><a href="#order-lifecycle">Cycle de vie des commandes</a></li>
+              <li><a href="#webhooks">Webhooks sortants signés</a></li>
+              <li><a href="#statuses">Statuts et erreurs</a></li>
+            </ul>
+          </nav>
+
+          <section id="authentication">
+            <h2>Authentification de l’API ZyNum</h2>
+            <p>
+              Les endpoints privés acceptent la clé API du compte dans
+              <code>Authorization: Bearer zyn_…</code>. La clé se consulte dans
+              Profil &gt; Développeur. Conservez-la uniquement sur un serveur de
+              confiance, jamais dans le code du navigateur, les logs ou un dépôt public.
+            </p>
+          </section>
+
+          <section id="endpoints">
+            <h2>Endpoints de l’API v1</h2>
+            <table>
+              <thead>
+                <tr><th>Méthode</th><th>Chemin</th><th>Usage</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>GET</td><td><code>/v1/services</code></td><td>Catalogue public des services.</td></tr>
+                <tr><td>GET</td><td><code>/v1/countries?service=telegram</code></td><td>Pays, prix et disponibilité indicative.</td></tr>
+                <tr><td>GET</td><td><code>/v1/operators?service=…&amp;country=…</code></td><td>Opérateurs et prix pour un service et un pays.</td></tr>
+                <tr><td>GET</td><td><code>/v1/balance</code></td><td>Solde USD du compte.</td></tr>
+                <tr><td>POST</td><td><code>/v1/buy</code></td><td>Acheter un numéro. Le corps JSON exige <code>service</code> et <code>country</code>.</td></tr>
+                <tr><td>GET</td><td><code>/v1/check/{orderId}</code></td><td>Consulter le statut et le SMS d’une commande du compte.</td></tr>
+                <tr><td>GET</td><td><code>/v1/orders?page=1&amp;limit=20</code></td><td>Historique paginé des commandes du compte.</td></tr>
+                <tr><td>POST</td><td><code>/v1/cancel/{orderId}</code></td><td>Annuler une commande admissible et demander son remboursement.</td></tr>
+                <tr><td>POST</td><td><code>/v1/finish/{orderId}</code></td><td>Terminer une commande après réception d’un SMS.</td></tr>
+              </tbody>
+            </table>
+            <p>
+              Une réponse de succès à l’achat contient <code>order.id</code>. Utilisez
+              cet identifiant ZyNum (pas la référence du fournisseur) pour consulter,
+              annuler ou terminer la commande. Les prix et la disponibilité sont des
+              instantanés, pas une réservation.
+            </p>
+          </section>
+
+          <section id="order-lifecycle">
+            <h2>Suivi des commandes et remboursements</h2>
+            <p>
+              Appelez <code>GET /v1/check/{orderId}</code> pour consulter l’état et les
+              champs <code>smsCode</code> et <code>smsText</code>. Une annulation
+              manuelle est disponible tant que la commande est PENDING, ou RECEIVED
+              sans code SMS. Le solde est recrédité uniquement après confirmation du
+              fournisseur. Un remboursement en attente n’est pas un crédit confirmé.
+            </p>
+          </section>
+
+          <section id="webhooks">
+            <h2>Webhooks sortants ZyNum</h2>
+            <p>
+              Configurez une seule URL HTTPS publique dans Profil &gt; Développeur.
+              ZyNum envoie <code>order.created</code> à la création d’une commande et
+              <code>order.updated</code> quand son statut public ou ses données SMS
+              changent. Le corps contient <code>type</code>, <code>createdAt</code> et
+              <code>data.order</code>, avec les champs de commande de l’API, notamment
+              <code>smsCode</code> et <code>smsText</code>.
+            </p>
+            <p>
+              Les headers incluent <code>X-ZyNum-Event</code>,
+              <code>X-ZyNum-Delivery</code> (identifiant stable de livraison) et
+              <code>X-ZyNum-Signature</code> au format <code>sha256=&lt;hex&gt;</code>.
+              La signature est un HMAC-SHA256 du corps brut exact, calculé avec la clé
+              API unique du compte. Vérifiez-la côté serveur avant de traiter le SMS.
+            </p>
+            <pre><code>const expected = "sha256=" + createHmac(
+  "sha256",
+  process.env.ZYNUM_API_KEY,
+).update(rawRequestBody).digest("hex");</code></pre>
+            <p>
+              Répondez avec un statut HTTP 2xx pour confirmer la réception. Les erreurs
+              réseau, HTTP 408, 425, 429 et 5xx sont réessayées avec un délai
+              exponentiel, jusqu’à 12 tentatives. Les autres réponses hors 2xx sont
+              considérées définitives. La livraison est « au moins une fois » :
+              dédupliquez avec <code>X-ZyNum-Delivery</code>. Modifier ou désactiver
+              l’URL arrête les livraisons en attente vers l’ancienne destination.
+            </p>
+          </section>
+
+          <section id="statuses">
+            <h2>Statuts de commande et réponses d’erreur</h2>
+            <p>
+              Les statuts publics sont PENDING, RECEIVED, FINISHED, TIMEOUT, BANNED
+              et CANCELED. Les erreurs HTTP courantes sont 400 pour une entrée ou un
+              achat refusé, 401 pour une authentification invalide, 404 pour une
+              ressource introuvable, 409 pour un état incompatible, 502 si la fin de
+              commande n’est pas confirmée et 503 si l’annulation ou le remboursement
+              reste en attente.
+            </p>
+          </section>
+          <p class="sr-app-note">La documentation interactive et les exemples détaillés sont chargés par l’application ZyNum.</p>
+        </article>
+      </main>
+    </div>
+  </body>
+</html>

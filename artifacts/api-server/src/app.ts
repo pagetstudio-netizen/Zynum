@@ -43,6 +43,9 @@ if (process.env.NODE_ENV === "production") {
   // @ts-ignore
   const dir: string = typeof __dirname !== "undefined" ? __dirname : process.cwd();
   const publicDir = path.join(dir, "public");
+  app.get(["/api-docs", "/api-docs/"], (_req, res) => {
+    res.sendFile(path.join(publicDir, "api-docs", "index.html"));
+  });
   app.use(express.static(publicDir));
   app.get("/{*path}", (_req, res) => {
     res.sendFile(path.join(publicDir, "index.html"));

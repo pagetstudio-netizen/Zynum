@@ -574,3 +574,232 @@
     margin-left: auto;
   }
 }
+
+.profile-reference-developer-loading {
+  color: #79818b;
+  text-align: center;
+}
+
+.profile-reference-developer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.profile-reference-developer-heading h3,
+.profile-reference-developer-card h4 {
+  margin: 0;
+  color: #30363e;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.profile-reference-developer-heading p,
+.profile-reference-developer-card > p {
+  margin: 5px 0 0;
+  color: #79818b;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.profile-reference-developer-heading > svg {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: hsl(var(--primary));
+}
+
+.profile-reference-developer-card {
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid #e3e7ec;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 3px 14px rgba(31, 45, 61, 0.04);
+}
+
+.profile-reference-api-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-top: 12px;
+  padding: 7px 8px 7px 12px;
+  border: 1px solid #dfe4ea;
+  border-radius: 9px;
+  background: #f8f9fb;
+}
+
+.profile-reference-api-key code {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #343a42;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-reference-api-key button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #68717c;
+  cursor: pointer;
+}
+
+.profile-reference-api-key button:hover {
+  background: #e9edf2;
+}
+
+.profile-reference-api-key button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.profile-reference-developer-card > p {
+  margin-top: 10px;
+}
+
+.profile-reference-developer-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  margin-top: 12px;
+  padding: 0 12px;
+  border: 1px solid #e0e4e9;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #626a74;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.profile-reference-developer-secondary:disabled,
+.profile-reference-developer-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.profile-reference-developer-secondary svg {
+  width: 15px;
+  height: 15px;
+}
+
+.profile-reference-developer-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 17px;
+}
+
+.profile-reference-developer-form label {
+  color: #626a74;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.profile-reference-developer-form input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 45px;
+  padding: 0 12px;
+  border: 1px solid #dfe4ea;
+  border-radius: 9px;
+  background: #f8f9fb;
+  color: #30363e;
+  font-size: 13px;
+}
+
+.profile-reference-developer-form input:focus {
+  border-color: hsl(var(--primary));
+  outline: 2px solid hsl(var(--primary) / 0.16);
+}
+
+.profile-reference-developer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.profile-reference-developer-actions button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid hsl(var(--primary));
+  border-radius: 8px;
+  background: hsl(var(--primary));
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-reference-developer-actions button.is-secondary {
+  border-color: #e0e4e9;
+  background: #ffffff;
+  color: #68717c;
+}
+
+.profile-reference-webhook-details {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 9px;
+  background: #f6f8fa;
+  color: #626a74;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.profile-reference-webhook-details strong {
+  color: #30363e;
+}
+
+.profile-reference-webhook-details ul {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 12px;
+  padding-left: 18px;
+}
+
+.profile-reference-webhook-details code {
+  color: #374254;
+  font-size: 11px;
+}
+
+.profile-reference-webhook-details p {
+  margin: 8px 0 0;
+}
+
+.profile-reference-docs-link {
+  display: inline-flex;
+  margin-top: 14px;
+  color: hsl(var(--primary));
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.profile-reference-docs-link:hover {
+  text-decoration: underline;
+}
+
+.profile-reference-developer-error {
+  margin: 0 0 14px;
+  color: #b52d34;
+  font-size: 13px;
+}
+
+@media (max-width: 639px) {
+  .profile-reference-developer-card {
+    padding: 16px;
+  }
+}

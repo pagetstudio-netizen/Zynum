@@ -448,7 +448,7 @@ html.light .auth-shell .text-white {
   color: var(--docs-text);
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
-html.dark .docs-shell {
+.docs-shell[data-theme="dark"] {
   --docs-bg: #0c1119;
   --docs-surface: #121a25;
   --docs-surface-muted: #192332;
@@ -492,13 +492,13 @@ html.dark .docs-shell {
 .docs-language-toggle button.is-selected, .docs-version-picker button.is-selected { color: #fff; background: var(--docs-blue); }
 .docs-version-picker button:disabled { cursor: not-allowed; opacity: .42; }
 .docs-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); max-width: 1440px; min-height: calc(100dvh - 64px); margin: 0 auto; }
-.docs-sidebar { position: sticky; top: 64px; display: flex; flex-direction: column; height: calc(100dvh - 64px); padding: 28px 16px 18px; background: var(--docs-surface); border-right: 1px solid var(--docs-border); }
+.docs-sidebar { position: sticky; top: 64px; display: flex; flex-direction: column; min-height: 0; height: calc(100dvh - 64px); max-height: calc(100dvh - 64px); padding: 28px 16px 18px; overflow: hidden; background: var(--docs-surface); border-right: 1px solid var(--docs-border); }
 .docs-sidebar-top { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
 .docs-sidebar-title { display: inline-flex; align-items: center; gap: 8px; color: var(--docs-text); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .docs-search { display: flex; align-items: center; gap: 8px; margin: 25px 7px 18px; padding: 9px 10px; color: var(--docs-muted); background: var(--docs-surface-muted); border: 1px solid var(--docs-border); border-radius: 8px; }
 .docs-search input { width: 100%; min-width: 0; color: var(--docs-text); background: none !important; border: 0; outline: 0; font-size: 11px; }
 .docs-search input::placeholder { color: var(--docs-muted); }
-.docs-nav { flex: 1; overflow-y: auto; padding-right: 2px; }
+.docs-nav { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
 .docs-nav-group { margin-bottom: 25px; }
 .docs-nav-group-title { margin: 0 10px 7px; color: var(--docs-muted); font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
 .docs-nav a { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; color: var(--docs-muted); background: transparent; border: 0; border-left: 2px solid transparent; border-radius: 0 6px 6px 0; text-align: left; text-decoration: none; font-size: 12px; cursor: pointer; transition: color .18s, background .18s, border-color .18s; }
@@ -555,8 +555,8 @@ html.dark .docs-shell {
 .docs-method { display: inline-flex; align-items: center; justify-content: center; min-width: 47px; padding: 5px 7px; border-radius: 5px; font-size: 10px; font-weight: 900; letter-spacing: .06em; }
 .docs-method-get { color: #168a69; background: #dff5ec; }
 .docs-method-post { color: #2f61c9; background: #e3ebff; }
-html.dark .docs-method-get { color: #6ee0b9; background: rgba(39,174,114,.18); }
-html.dark .docs-method-post { color: #a9c2ff; background: rgba(49,104,217,.23); }
+.docs-shell[data-theme="dark"] .docs-method-get { color: #6ee0b9; background: rgba(39,174,114,.18); }
+.docs-shell[data-theme="dark"] .docs-method-post { color: #a9c2ff; background: rgba(49,104,217,.23); }
 .docs-example-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(170px, .8fr); gap: 16px; margin-top: 22px; }
 .docs-subheading { margin-bottom: 9px; color: var(--docs-muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
 .docs-subheading svg { color: var(--docs-accent); }
@@ -595,7 +595,7 @@ html.dark .docs-method-post { color: #a9c2ff; background: rgba(49,104,217,.23); 
   .docs-brand { min-width: 0; margin-right: auto; }
   .docs-top-actions { gap: 5px; }
   .docs-layout { display: block; min-height: calc(100dvh - 58px); }
-  .docs-sidebar { position: fixed; top: 0; left: 0; z-index: 60; width: min(320px, 88vw); height: 100dvh; transform: translateX(-102%); transition: transform .24s ease; box-shadow: 18px 0 45px rgba(16,25,39,.2); }
+  .docs-sidebar { position: fixed; top: 0; left: 0; z-index: 60; width: min(320px, 88vw); height: 100dvh; max-height: 100dvh; transform: translateX(-102%); transition: transform .24s ease; box-shadow: 18px 0 45px rgba(16,25,39,.2); }
   .docs-sidebar.is-open { transform: translateX(0); }
   .docs-backdrop { position: fixed; inset: 0; z-index: 50; display: block; width: 100%; height: 100%; background: rgba(8,15,24,.5); }
   .docs-content-inner { width: 100%; min-width: 0; padding: 47px 18px 55px; }

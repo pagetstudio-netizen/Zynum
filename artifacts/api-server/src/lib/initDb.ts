@@ -31,6 +31,7 @@ async function ensureSchema() {
       "email" text NOT NULL,
       "password_hash" text NOT NULL,
       "api_key" text,
+      "webhook_url" text,
       "balance_usd" real DEFAULT 0 NOT NULL,
       "is_admin" boolean DEFAULT false NOT NULL,
       "is_banned" boolean DEFAULT false NOT NULL,
@@ -256,6 +257,7 @@ async function ensureSchema() {
   for (const col of [
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at timestamp with time zone`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS webhook_url text`,
   ]) {
     await db.execute(sql.raw(col)).catch(() => {});
   }
@@ -303,6 +305,108 @@ async function ensureSchema() {
       "created_at" timestamp with time zone DEFAULT now() NOT NULL,
       "updated_at" timestamp with time zone DEFAULT now() NOT NULL
     )
+  `);
+
+  await safeExecute(sql`
+    CREATE TABLE IF NOT EXISTS "webhook_deliveries" (
+      "id" serial PRIMARY KEY NOT NULL,
+      "user_id" integer NOT NULL,
+      "order_id" integer NOT NULL,
+      "event" text NOT NULL,
+      "endpoint_url" text NOT NULL,
+      "payload" jsonb NOT NULL,
+      "status" text DEFAULT 'pending' NOT NULL,
+      "attempts" integer DEFAULT 0 NOT NULL,
+      "next_attempt_at" timestamp with time zone DEFAULT now() NOT NULL,
+      "delivered_at" timestamp with time zone,
+      "response_status" integer,
+      "last_error" text,
+      "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+      "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+    )
+  `);
+  await safeExecute(sql`
+    CREATE INDEX IF NOT EXISTS "webhook_deliveries_pending_idx"
+    ON "webhook_deliveries" ("next_attempt_at", "id")
+    WHERE "status" = 'pending'
+  `);
+  await safeExecute(sql`
+    CREATE OR REPLACE FUNCTION enqueue_zynum_order_webhook() RETURNS trigger AS $$
+    DECLARE
+      target_url text;
+      event_name text;
+    BEGIN
+      IF TG_OP = 'UPDATE' AND (
+        NEW.status = 'REFUNDING'
+        OR (
+          NEW.status IS NOT DISTINCT FROM OLD.status
+          AND NEW.sms_code IS NOT DISTINCT FROM OLD.sms_code
+          AND NEW.sms_text IS NOT DISTINCT FROM OLD.sms_text
+        )
+      ) THEN
+        RETURN NEW;
+      END IF;
+
+      SELECT webhook_url INTO target_url
+      FROM users
+      WHERE id = NEW.user_id;
+
+      IF target_url IS NULL OR btrim(target_url) = '' THEN
+        RETURN NEW;
+      END IF;
+
+      event_name := CASE WHEN TG_OP = 'INSERT' THEN 'order.created' ELSE 'order.updated' END;
+
+      INSERT INTO webhook_deliveries (user_id, order_id, event, endpoint_url, payload)
+      VALUES (
+        NEW.user_id,
+        NEW.id,
+        event_name,
+        target_url,
+        jsonb_build_object(
+          'type', event_name,
+          'createdAt', now(),
+          'data', jsonb_build_object(
+            'order', jsonb_build_object(
+              'id', NEW.id::text,
+              'externalId', NEW.external_id,
+              'phone', NEW.phone,
+              'service', NEW.service,
+              'serviceName', NEW.service_name,
+              'country', NEW.country,
+              'countryName', NEW.country_name,
+              'status', NEW.status,
+              'smsCode', NEW.sms_code,
+              'smsText', NEW.sms_text,
+              'priceUsd', NEW.price_usd,
+              'priceFcfa', NEW.price_fcfa,
+              'currency', NEW.currency,
+              'createdAt', NEW.created_at,
+              'updatedAt', NEW.updated_at
+            )
+          )
+        )
+      );
+
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql
+  `);
+  await safeExecute(sql`
+    DROP TRIGGER IF EXISTS orders_webhook_created ON orders
+  `);
+  await safeExecute(sql`
+    CREATE TRIGGER orders_webhook_created
+    AFTER INSERT ON orders
+    FOR EACH ROW EXECUTE FUNCTION enqueue_zynum_order_webhook()
+  `);
+  await safeExecute(sql`
+    DROP TRIGGER IF EXISTS orders_webhook_updated ON orders
+  `);
+  await safeExecute(sql`
+    CREATE TRIGGER orders_webhook_updated
+    AFTER UPDATE OF status, sms_code, sms_text ON orders
+    FOR EACH ROW EXECUTE FUNCTION enqueue_zynum_order_webhook()
   `);
 
   await safeExecute(sql`

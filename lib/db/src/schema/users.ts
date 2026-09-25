@@ -8,6 +8,7 @@ export const usersTable = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   apiKey: text("api_key").unique(),
+  webhookUrl: text("webhook_url"),
   balanceUsd: real("balance_usd").notNull().default(0),
   isAdmin: boolean("is_admin").notNull().default(false),
   isBanned: boolean("is_banned").notNull().default(false),

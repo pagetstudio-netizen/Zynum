@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Sun,
   Terminal,
+  Webhook,
   X,
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
@@ -141,30 +142,30 @@ const ENDPOINT_COPY: Record<string, Record<Lang, EndpointTranslation>> = {
       description: "Spend the account balance on a virtual-number purchase. The returned order.id is the id used by subsequent order routes.",
       auth: "Bearer API key required.",
       request: "JSON body: service (string, required), country (string, required), currency (USD or FCFA, optional, defaults to USD), operator (string, optional), discountCode (string, optional).",
-      errors: ["400 — validation, purchase, or balance error.", "401 — the Bearer API key is missing or invalid.", "409 — NUMBER_UNAVAILABLE."],
+      errors: ["400 — validation/purchase error; INSUFFICIENT_BALANCE includes balanceUsd and requiredUsd.", "401 — the Bearer API key is missing or invalid.", "409 — NUMBER_UNAVAILABLE.", "503 — provider cancellation could not be confirmed after a failed purchase; do not retry blindly."],
     },
     fr: {
       title: "Acheter un numéro",
       description: "Dépensez le solde du compte pour acheter un numéro virtuel. Le order.id retourné est l’identifiant utilisé par les routes de commande suivantes.",
       auth: "Clé API Bearer requise.",
       request: "Corps JSON : service (string, requis), country (string, requis), currency (USD ou FCFA, optionnel, USD par défaut), operator (string, optionnel), discountCode (string, optionnel).",
-      errors: ["400 — erreur de validation, d’achat ou de solde.", "401 — la clé API Bearer est absente ou invalide.", "409 — NUMBER_UNAVAILABLE."],
+      errors: ["400 — erreur de validation ou d’achat ; INSUFFICIENT_BALANCE inclut balanceUsd et requiredUsd.", "401 — la clé API Bearer est absente ou invalide.", "409 — NUMBER_UNAVAILABLE.", "503 — l’annulation fournisseur n’est pas confirmée après un échec ; ne relancez pas l’achat à l’aveugle."],
     },
   },
   check: {
     en: {
       title: "Check an order",
-      description: "Read the current state and SMS data for an order owned by the authenticated account.",
+      description: "Read the current state and SMS data for an order owned by the authenticated account. If it is more than six minutes old with no SMS code, this request starts the cancellation and refund attempt.",
       auth: "Bearer API key required. Only the current account’s orders are visible.",
       request: "Path: orderId (required, the order.id returned by ZyNum). No request body.",
-      errors: ["401 — the Bearer API key is missing or invalid.", "404 — the order is not available to the current account.", "503 — refund is pending."],
+      errors: ["401 — the Bearer API key is missing or invalid.", "404 — the order is not available to the current account.", "503 — provider cancellation is unconfirmed; check again later."],
     },
     fr: {
       title: "Vérifier une commande",
-      description: "Consultez l’état actuel et les données SMS d’une commande appartenant au compte authentifié.",
+      description: "Consultez l’état actuel et les données SMS d’une commande appartenant au compte authentifié. Si elle a plus de six minutes et qu’aucun code n’est enregistré, cet appel lance une tentative d’annulation et de remboursement.",
       auth: "Clé API Bearer requise. Seules les commandes du compte courant sont visibles.",
       request: "Chemin : orderId (requis, le order.id retourné par ZyNum). Aucun corps de requête.",
-      errors: ["401 — la clé API Bearer est absente ou invalide.", "404 — la commande n’est pas disponible pour le compte courant.", "503 — le remboursement est en attente."],
+      errors: ["401 — la clé API Bearer est absente ou invalide.", "404 — la commande n’est pas disponible pour le compte courant.", "503 — l’annulation fournisseur n’est pas confirmée ; vérifiez de nouveau plus tard."],
     },
   },
   orders: {
@@ -186,17 +187,17 @@ const ENDPOINT_COPY: Record<string, Record<Lang, EndpointTranslation>> = {
   cancel: {
     en: {
       title: "Cancel an order",
-      description: "Request cancellation of an order and the associated balance refund when the order state allows it.",
+      description: "Cancel an order only while it is PENDING or RECEIVED without an SMS code. ZyNum credits the account only after the provider confirms the cancellation.",
       auth: "Bearer API key required.",
       request: "Path: orderId (required, the order.id returned by ZyNum). No request body.",
-      errors: ["400 — the request is invalid for the order state.", "401 — the Bearer API key is missing or invalid.", "404 — the order is not found for the current account.", "409 — the order cannot be canceled in its current state.", "503 — refund is pending."],
+      errors: ["400 — the order already has an SMS code or is ineligible for cancellation.", "401 — the Bearer API key is missing or invalid.", "404 — the order is not found for the current account.", "409 — the provider reports that the order is no longer refundable.", "503 — provider cancellation is unconfirmed; check again later."],
     },
     fr: {
       title: "Annuler une commande",
-      description: "Demande l’annulation d’une commande et le remboursement associé lorsque son état le permet.",
+      description: "Annulez une commande uniquement si elle est PENDING ou RECEIVED sans code SMS. ZyNum crédite le solde uniquement après confirmation de l’annulation par le fournisseur.",
       auth: "Clé API Bearer requise.",
       request: "Chemin : orderId (requis, le order.id retourné par ZyNum). Aucun corps de requête.",
-      errors: ["400 — la requête n’est pas valide pour l’état de la commande.", "401 — la clé API Bearer est absente ou invalide.", "404 — la commande est introuvable pour le compte courant.", "409 — la commande ne peut pas être annulée dans son état actuel.", "503 — le remboursement est en attente."],
+      errors: ["400 — la commande a déjà un code SMS ou ne peut pas être annulée.", "401 — la clé API Bearer est absente ou invalide.", "404 — la commande est introuvable pour le compte courant.", "409 — le fournisseur indique que la commande n’est plus remboursable.", "503 — l’annulation fournisseur n’est pas confirmée ; vérifiez de nouveau plus tard."],
     },
   },
   finish: {
@@ -365,7 +366,9 @@ const NAV_GROUPS = [
       { id: "check", label: { en: "Check an order", fr: "Vérifier une commande" } },
       { id: "orders", label: { en: "List orders", fr: "Lister les commandes" } },
       { id: "cancel", label: { en: "Cancel an order", fr: "Annuler une commande" } },
+      { id: "refunds", label: { en: "Cancellations & refunds", fr: "Annulations et remboursements" } },
       { id: "finish", label: { en: "Finish an order", fr: "Terminer une commande" } },
+      { id: "webhooks", label: { en: "Webhooks", fr: "Webhooks" } },
     ],
   },
   {
@@ -389,9 +392,13 @@ const labels = {
     upcoming: "Not available yet",
     search: "Search documentation",
     baseUrl: "Base URL",
-    introKicker: "BUILD WITH ZYNUM",
-    introTitle: "A clear path from balance to SMS",
-    introBody: "ZyNum is a virtual-number platform with a simple API for discovering services, countries, operators and current prices, buying numbers, and following their SMS status.",
+    introKicker: "GET STARTED WITH ZYNUM",
+    introTitle: "Overview",
+    introBody: [
+      "ZyNum is a virtual-number platform for obtaining temporary numbers and receiving SMS. A single API lets your application browse services, countries, operators, prices, and availability, then create and track a purchase.",
+      "A typical integration reads the catalog and checks the account balance, then purchases the number from a trusted server. ZyNum returns an order ID used to check the SMS, cancel an eligible order, or finish it after the code arrives.",
+      "The purchase is charged to the account balance. If an order is eligible for cancellation, the balance is refunded only after the provider confirms it. The check endpoint can trigger a cancellation attempt for an order with no SMS after more than six minutes.",
+    ],
     introNote: "v1 is the documented and current version. v2 is not available yet.",
     keyArea: "Manage your key in the developer area of your ZyNum account.",
     authTitle: "Authentication",
@@ -407,6 +414,14 @@ const labels = {
     countryPriceDetails: "Use the country catalog to compare priceUsd and priceFcfa before selecting a country.",
     operatorPriceDetails: "This authenticated catalog returns the price for each operator and the selected country.",
     purchaseCurrencyDetails: "Send currency: USD or currency: FCFA to POST /v1/buy. If omitted, the API uses USD.",
+    refundsTitle: "Cancellations and refunds",
+    refundsBody: "A pending refund is not a confirmed credit. ZyNum first checks the provider’s order state and requests cancellation when needed; it credits the account balance only after the provider confirms an eligible cancellation.",
+    refundManualTitle: "Manual cancellation",
+    refundManualBody: "POST /v1/cancel/{orderId} is available while the order is PENDING or RECEIVED without an SMS code. You do not need to wait six minutes to cancel manually. Once a code is delivered or the order is finished, it cannot be refunded.",
+    refundTimeoutTitle: "The six-minute rule",
+    refundTimeoutBody: "When more than six minutes have elapsed since createdAt and no SMS code is recorded, the automatic job checks expired orders every 60 seconds and starts a cancellation attempt. Processing may therefore begin at the next check after the six-minute threshold. Calling GET /v1/check/{orderId} after that threshold also starts an attempt. If the provider reports an SMS, the order is not refunded.",
+    refundPendingTitle: "If the refund is pending",
+    refundPendingBody: "HTTP 503 or refundPending: true means the balance credit is not confirmed yet. The automatic job retries eligible expired orders; check the order later with GET /v1/check/{orderId}. While it remains eligible, POST /v1/cancel/{orderId} can also be called again. Provider response time is not guaranteed.",
     parameters: "Parameters",
     body: "JSON body",
     query: "Query parameters",
@@ -426,9 +441,9 @@ const labels = {
       "404": "The requested account resource or order was not found.",
       "409": "The number is unavailable or the order cannot change to the requested state.",
       "502": "The order finish could not be confirmed; check the order before retrying.",
-      "503": "Refund handling is still pending; check the order again later.",
+      "503": "A provider cancellation or refund is still unconfirmed; do not retry a purchase blindly, and check the order again later.",
     },
-    retryNote: "After an unclear timeout on POST /v1/buy, check GET /v1/orders before retrying to avoid duplicate purchases. Do not treat a pending refund as confirmed.",
+    retryNote: "After an unclear timeout on POST /v1/buy, check GET /v1/orders before retrying to avoid duplicate purchases. For a pending refund, check the order again later and do not treat it as credited until confirmed.",
     security: "Security",
     integration: "Integration",
     catalog: "CATALOG",
@@ -438,6 +453,14 @@ const labels = {
     aiBody: "Give an AI coding agent a stable starting point for ZyNum integrations. The skill file summarizes the documented v1 surface and can be downloaded or referenced from your agent workflow.",
     aiDownload: "Download the ZyNum API skill",
     aiUrl: "Section URL",
+    webhooksTitle: "Outgoing order webhooks",
+    webhooksBody: "Set one HTTPS destination in the Developer tab of your account profile. ZyNum sends order.created when an order is saved and order.updated when its public status or SMS data changes. Each delivery includes the order object returned by the API; smsCode and smsText may contain verification data.",
+    webhooksPayloadTitle: "Event payload",
+    webhooksHeadersTitle: "Signature and headers",
+    webhooksHeadersBody: "X-ZyNum-Event repeats the event type, X-ZyNum-Delivery is the stable delivery ID for deduplication, and X-ZyNum-Signature is sha256=<hex>. The HMAC-SHA256 key is the account’s existing API key. Verify the signature against the exact raw request body; do not parse and re-serialize the JSON first.",
+    webhooksRetryTitle: "Acknowledgement and retries",
+    webhooksRetryBody: "Return any HTTP 2xx response to acknowledge delivery. ZyNum retries temporary network errors, HTTP 408, 425, 429, and 5xx responses with exponential backoff, for up to 12 attempts. Other non-2xx responses are treated as permanent failures. Delivery is at least once, so deduplicate using X-ZyNum-Delivery. Changing or disabling the destination stops pending deliveries to the previous URL.",
+    webhooksKeyWarning: "The API key is a secret. Keep signature verification on your server and rotate the key if it is exposed.",
     statusHeader: "Status",
     meaningHeader: "Meaning",
     statusMeanings: {
@@ -461,9 +484,13 @@ const labels = {
     upcoming: "Pas encore disponible",
     search: "Rechercher dans la documentation",
     baseUrl: "URL de base",
-    introKicker: "CONSTRUIRE AVEC ZYNUM",
-    introTitle: "Du solde au SMS, sans détour",
-    introBody: "ZyNum est une plateforme de numéros virtuels avec une API simple pour découvrir les services, les pays, les opérateurs et leurs prix, acheter des numéros et suivre leurs SMS.",
+    introKicker: "COMMENCER AVEC ZYNUM",
+    introTitle: "Présentation générale",
+    introBody: [
+      "ZyNum est une plateforme de numéros virtuels qui permet d’obtenir des numéros temporaires et de recevoir des SMS. Une seule API permet à votre application de consulter les services, les pays, les opérateurs, les prix et les disponibilités, puis de créer et suivre un achat.",
+      "Une intégration classique commence par la lecture du catalogue et la vérification du solde, puis achète le numéro depuis un serveur de confiance. ZyNum retourne un identifiant de commande qui sert à vérifier le SMS, annuler une commande admissible ou terminer la commande après réception du code.",
+      "Le prix est débité du solde au moment de l’achat. Si une commande peut être annulée, le solde n’est recrédité qu’après confirmation du fournisseur. La route de vérification peut déclencher une tentative d’annulation pour une commande sans SMS après plus de six minutes.",
+    ],
     introNote: "v1 est la version documentée et actuelle. v2 n’est pas encore disponible.",
     keyArea: "Gérez votre clé dans l’espace développeur de votre compte ZyNum.",
     authTitle: "Authentification",
@@ -479,6 +506,14 @@ const labels = {
     countryPriceDetails: "Utilisez le catalogue des pays pour comparer priceUsd et priceFcfa avant de choisir un pays.",
     operatorPriceDetails: "Ce catalogue authentifié retourne le prix de chaque opérateur pour le pays sélectionné.",
     purchaseCurrencyDetails: "Envoyez currency: USD ou currency: FCFA à POST /v1/buy. Sans ce champ, l’API utilise USD.",
+    refundsTitle: "Annulations et remboursements",
+    refundsBody: "Un remboursement en attente n’est pas un crédit confirmé. ZyNum vérifie d’abord l’état de la commande chez le fournisseur et demande son annulation si nécessaire ; le solde est crédité uniquement après confirmation d’une annulation admissible.",
+    refundManualTitle: "Annulation manuelle",
+    refundManualBody: "POST /v1/cancel/{orderId} est disponible lorsque la commande est PENDING ou RECEIVED sans code SMS. Il n’est pas nécessaire d’attendre six minutes pour annuler manuellement. Dès qu’un code est reçu ou que la commande est terminée, elle ne peut plus être remboursée.",
+    refundTimeoutTitle: "La règle des six minutes",
+    refundTimeoutBody: "Lorsque plus de six minutes se sont écoulées depuis createdAt sans code SMS enregistré, le traitement automatique vérifie les commandes expirées toutes les 60 secondes et lance une tentative d’annulation. Elle peut donc démarrer au prochain passage après le seuil de six minutes. Un appel à GET /v1/check/{orderId} après ce seuil lance aussi une tentative. Si le fournisseur signale un SMS, la commande n’est pas remboursée.",
+    refundPendingTitle: "Si le remboursement est en attente",
+    refundPendingBody: "HTTP 503 ou refundPending: true signifie que le crédit du solde n’est pas encore confirmé. Le traitement automatique réessaie les commandes expirées admissibles ; vérifiez ensuite la commande avec GET /v1/check/{orderId}. Tant qu’elle reste admissible, POST /v1/cancel/{orderId} peut aussi être rappelée. Le délai de réponse du fournisseur n’est pas garanti.",
     parameters: "Paramètres",
     body: "Corps JSON",
     query: "Paramètres de requête",
@@ -498,9 +533,9 @@ const labels = {
       "404": "La ressource du compte ou la commande demandée est introuvable.",
       "409": "Le numéro est indisponible ou la commande ne peut pas passer à l’état demandé.",
       "502": "La fin de commande n’a pas pu être confirmée ; vérifiez son état avant de réessayer.",
-      "503": "Le traitement du remboursement est en attente ; revérifiez la commande plus tard.",
+      "503": "L’annulation fournisseur ou le remboursement n’est pas confirmé ; ne relancez pas un achat à l’aveugle et vérifiez de nouveau la commande plus tard.",
     },
-    retryNote: "Après un délai incertain sur POST /v1/buy, vérifiez GET /v1/orders avant de réessayer pour éviter un double achat. Ne considérez pas un remboursement en attente comme confirmé.",
+    retryNote: "Après un délai incertain sur POST /v1/buy, vérifiez GET /v1/orders avant de réessayer pour éviter un double achat. Pour un remboursement en attente, vérifiez la commande plus tard et ne considérez pas le solde comme crédité avant confirmation.",
     security: "Sécurité",
     integration: "Intégration",
     catalog: "CATALOGUE",
@@ -510,6 +545,14 @@ const labels = {
     aiBody: "Donnez à un agent de code IA un point de départ stable pour les intégrations ZyNum. Le fichier de compétence résume la surface v1 documentée et peut être téléchargé ou référencé dans votre workflow agent.",
     aiDownload: "Télécharger la compétence API ZyNum",
     aiUrl: "URL de la section",
+    webhooksTitle: "Webhooks sortants de commande",
+    webhooksBody: "Configurez une destination HTTPS dans l’onglet Développeur du profil de votre compte. ZyNum envoie order.created lorsqu’une commande est enregistrée et order.updated lorsque son statut public ou ses données SMS changent. Chaque livraison contient l’objet de commande retourné par l’API ; smsCode et smsText peuvent contenir des données de vérification.",
+    webhooksPayloadTitle: "Corps de l’événement",
+    webhooksHeadersTitle: "Signature et headers",
+    webhooksHeadersBody: "X-ZyNum-Event répète le type d’événement, X-ZyNum-Delivery est l’identifiant stable de livraison à utiliser pour dédupliquer, et X-ZyNum-Signature vaut sha256=<hex>. La clé HMAC-SHA256 est la clé API existante du compte. Vérifiez la signature sur le corps brut exact ; ne parsez pas puis ne recréez pas le JSON avant la vérification.",
+    webhooksRetryTitle: "Accusé de réception et reprises",
+    webhooksRetryBody: "Retournez un statut HTTP 2xx pour confirmer la livraison. ZyNum réessaie les erreurs réseau temporaires et les réponses HTTP 408, 425, 429 et 5xx avec un délai exponentiel, jusqu’à 12 tentatives. Les autres réponses hors 2xx sont considérées comme des échecs définitifs. La livraison est « au moins une fois » : dédupliquez avec X-ZyNum-Delivery. Modifier ou désactiver l’URL arrête les livraisons en attente vers l’ancienne destination.",
+    webhooksKeyWarning: "La clé API est un secret. Vérifiez les signatures côté serveur et renouvelez la clé si elle est exposée.",
     statusHeader: "Statut",
     meaningHeader: "Signification",
     statusMeanings: {
@@ -527,19 +570,13 @@ const labels = {
 export default function ApiDocs() {
   const { lang, setLang } = useLanguage();
   const copy = labels[lang] ?? labels.fr;
-  const [isDark, setIsDark] = useState(() => localStorage.getItem("zynum-docs-theme") === "dark");
+  const [isDark, setIsDark] = useState(() => localStorage.getItem("zynum-docs-theme") !== "light");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeId, setActiveId] = useState("introduction");
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
-    document.documentElement.classList.toggle("light", !isDark);
     localStorage.setItem("zynum-docs-theme", isDark ? "dark" : "light");
-    return () => {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.classList.add("light");
-    };
   }, [isDark]);
 
   useEffect(() => {
@@ -629,7 +666,7 @@ const { order } = await zynum("/v1/buy", {
 console.log(order.id);`;
 
   return (
-    <div className="docs-shell" data-testid="api-docs-page">
+    <div className="docs-shell" data-theme={isDark ? "dark" : "light"} data-testid="api-docs-page">
       <header className="docs-topbar">
         <div className="docs-topbar-inner">
           <button
@@ -732,7 +769,7 @@ console.log(order.id);`;
             <section id="introduction" className="docs-section docs-intro" data-testid="section-introduction">
               <div className="docs-eyebrow"><span /> {copy.introKicker}</div>
               <h1>{copy.introTitle}</h1>
-              <p className="docs-intro-lede">{copy.introBody}</p>
+              {copy.introBody.map((paragraph) => <p className="docs-intro-lede" key={paragraph}>{paragraph}</p>)}
               <div className="docs-notice"><CircleAlert size={17} aria-hidden="true" /><span>{copy.introNote}</span></div>
               <div className="docs-base-url">
                 <span><Globe2 size={15} aria-hidden="true" /> {copy.baseUrl}</span>
@@ -899,6 +936,32 @@ console.log(order.id);`;
               errors={["400 — the request is invalid for the order state.", "401 — the Bearer API key is missing or invalid.", "404 — the order is not found for the current account.", "409 — the order cannot be canceled in its current state.", "503 — refund is pending."]}
             />
 
+            <section id="refunds" className="docs-section" data-testid="section-refunds">
+              <div className="docs-section-heading">
+                <div className="docs-section-icon docs-section-icon-orange"><ShieldCheck size={18} aria-hidden="true" /></div>
+                <div><p className="docs-kicker">03 · {copy.accountOrders}</p><h2>{copy.refundsTitle}</h2></div>
+                <a className="docs-anchor" href="/api-docs#refunds" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.refundsTitle}`}>#</a>
+              </div>
+              <p className="docs-lede">{copy.refundsBody}</p>
+              <div className="docs-pricing-grid">
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><X size={14} aria-hidden="true" /> {copy.refundManualTitle}</div>
+                  <code>POST /v1/cancel/{"{orderId}"}</code>
+                  <p>{copy.refundManualBody}</p>
+                </article>
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><CircleAlert size={14} aria-hidden="true" /> {copy.refundTimeoutTitle}</div>
+                  <code>GET /v1/check/{"{orderId}"}</code>
+                  <p>{copy.refundTimeoutBody}</p>
+                </article>
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><ShieldCheck size={14} aria-hidden="true" /> {copy.refundPendingTitle}</div>
+                  <code>refundPending: true · HTTP 503</code>
+                  <p>{copy.refundPendingBody}</p>
+                </article>
+              </div>
+            </section>
+
             <Endpoint
               id="finish"
               lang={lang}
@@ -912,10 +975,49 @@ console.log(order.id);`;
               errors={["401 — the Bearer API key is missing or invalid.", "404 — the order is not found for the current account.", "409 — the order is not RECEIVED or cannot be finished.", "502 — the order could not be finished."]}
             />
 
+            <section id="webhooks" className="docs-section" data-testid="section-webhooks">
+              <div className="docs-section-heading">
+                <div className="docs-section-icon docs-section-icon-orange"><Webhook size={18} aria-hidden="true" /></div>
+                <div><p className="docs-kicker">04 · {copy.reference}</p><h2>{copy.webhooksTitle}</h2></div>
+                <a className="docs-anchor" href="/api-docs#webhooks" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.webhooksTitle}`}>#</a>
+              </div>
+              <p className="docs-lede">{copy.webhooksBody}</p>
+              <div className="docs-pricing-grid">
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><FileJson size={14} aria-hidden="true" /> {copy.webhooksPayloadTitle}</div>
+                  <code>order.created · order.updated</code>
+                  <p>id, externalId, phone, service, serviceName, country, countryName, status, smsCode, smsText, priceUsd, priceFcfa, currency, createdAt, updatedAt</p>
+                </article>
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><ShieldCheck size={14} aria-hidden="true" /> {copy.webhooksHeadersTitle}</div>
+                  <code>X-ZyNum-Event · X-ZyNum-Delivery · X-ZyNum-Signature</code>
+                  <p>{copy.webhooksHeadersBody}</p>
+                </article>
+                <article className="docs-detail-card">
+                  <div className="docs-detail-label"><CircleAlert size={14} aria-hidden="true" /> {copy.webhooksRetryTitle}</div>
+                  <code>HTTP 2xx · up to 12 attempts</code>
+                  <p>{copy.webhooksRetryBody}</p>
+                </article>
+              </div>
+              <CodeBlock
+                label="webhook-payload"
+                sampleKey="webhook-payload"
+                lang={lang}
+                code={`{\n  "type": "order.updated",\n  "createdAt": "2026-09-25T12:00:00.000Z",\n  "data": {\n    "order": {\n      "id": "123",\n      "externalId": "456",\n      "phone": "+221…",\n      "service": "telegram",\n      "serviceName": "Telegram",\n      "country": "senegal",\n      "countryName": "Sénégal",\n      "status": "RECEIVED",\n      "smsCode": "12345",\n      "smsText": "Your verification code is 12345",\n      "priceUsd": 0.42,\n      "priceFcfa": 260,\n      "currency": "USD",\n      "createdAt": "2026-09-25T11:59:00.000Z",\n      "updatedAt": "2026-09-25T12:00:00.000Z"\n    }\n  }\n}`}
+              />
+              <p className="docs-footnote"><KeyRound size={14} aria-hidden="true" /> {copy.webhooksKeyWarning}</p>
+              <CodeBlock
+                label="webhook-signature"
+                sampleKey="webhook-signature"
+                lang={lang}
+                code={`import { createHmac, timingSafeEqual } from "node:crypto";\n\nconst expected = "sha256=" + createHmac(\n  "sha256",\n  process.env.ZYNUM_API_KEY,\n).update(rawRequestBody).digest("hex");\nconst received = request.headers["x-zynum-signature"] ?? "";\nconst valid = received.length === expected.length\n  && timingSafeEqual(Buffer.from(received), Buffer.from(expected));`}
+              />
+            </section>
+
             <section id="ai-agents" className="docs-section" data-testid="section-ai-agents">
               <div className="docs-section-heading">
                 <div className="docs-section-icon docs-section-icon-orange"><Code2 size={18} aria-hidden="true" /></div>
-                <div><p className="docs-kicker">04 · {copy.reference}</p><h2>{copy.aiTitle}</h2></div>
+                <div><p className="docs-kicker">05 · {copy.reference}</p><h2>{copy.aiTitle}</h2></div>
                 <a className="docs-anchor" href="/api-docs#ai-agents" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.aiTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.aiBody}</p>
@@ -941,7 +1043,7 @@ console.log(order.id);`;
             <section id="errors" className="docs-section" data-testid="section-errors">
               <div className="docs-section-heading">
                 <div className="docs-section-icon docs-section-icon-red"><CircleAlert size={18} aria-hidden="true" /></div>
-                <div><p className="docs-kicker">05 · {copy.reference}</p><h2>{copy.errorsTitle}</h2></div>
+                <div><p className="docs-kicker">06 · {copy.reference}</p><h2>{copy.errorsTitle}</h2></div>
                 <a className="docs-anchor" href="/api-docs#errors" aria-label={`${ENDPOINT_UI[lang].linkTo} ${copy.errorsTitle}`}>#</a>
               </div>
               <p className="docs-lede">{copy.errorsBody}</p>
