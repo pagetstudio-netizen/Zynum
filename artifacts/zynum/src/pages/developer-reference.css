@@ -235,12 +235,33 @@
 
 .zynum-developer-details {
   margin-top: 20px;
-  padding: 14px;
+  padding: 18px;
+  border: 1px solid #e8ebee;
   border-radius: 10px;
   background: #f7f8f9;
   color: #78838d;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
+}
+
+.zynum-developer-details h2 {
+  margin: 0;
+  color: #303841;
+  font-size: clamp(18px, 4vw, 22px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.zynum-developer-details-intro {
+  margin: 7px 0 0;
+}
+
+.zynum-developer-details h3 {
+  margin: 15px 0 0;
+  color: #303841;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .zynum-developer-details strong {
@@ -255,10 +276,35 @@
   padding-left: 17px;
 }
 
+.zynum-developer-details li {
+  padding-left: 2px;
+}
+
 .zynum-developer-details code {
   color: #52606b;
   font-size: 10px;
   font-weight: 700;
+}
+
+.zynum-developer-details-note {
+  margin: 13px 0 0;
+}
+
+.zynum-developer-details-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  color: #168dd2;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.zynum-developer-details-link:hover,
+.zynum-developer-details-link:focus-visible {
+  color: #0875b5;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .zynum-developer-skeleton {
@@ -339,6 +385,10 @@
   .zynum-developer-card {
     margin-top: 12px;
     padding: 22px 11px 24px;
+  }
+
+  .zynum-developer-details {
+    padding: 15px 13px;
   }
 
   .zynum-developer-card-title {

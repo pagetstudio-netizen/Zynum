@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Check, Eye, EyeOff, RefreshCw, Send, X } from "lucide-react";
 import linkMark from "@assets/20260710_225432_1790349955510.png";
 import { useLanguage } from "@/hooks/use-language";
+import { DEVELOPER_DOCS_URL } from "@/lib/urls";
 import "./developer-reference.css";
 
 type WebhookResponse = {
@@ -41,6 +42,16 @@ type RequestCopy = {
   testFailure: string;
   copyFailure: string;
   keyRotationFailure: string;
+  integrationTitle: string;
+  integrationDescription: string;
+  eventsTitle: string;
+  orderCreated: string;
+  orderUpdated: string;
+  requestHeaders: string;
+  and: string;
+  signatureVerification: string;
+  persistentDelivery: string;
+  docsLink: string;
 };
 
 const copyFor = (lang: string): RequestCopy =>
@@ -67,6 +78,16 @@ const copyFor = (lang: string): RequestCopy =>
         testFailure: "Le test webhook n’a pas été accepté par votre endpoint.",
         copyFailure: "Impossible de copier la clé dans le presse-papiers.",
         keyRotationFailure: "Impossible de régénérer la clé API.",
+        integrationTitle: "Intégration développeur",
+        integrationDescription: "Configurez le webhook de votre compte et gérez votre clé API unique.",
+        eventsTitle: "Événements envoyés",
+        orderCreated: "Nouvelle commande créée",
+        orderUpdated: "Statut ou données SMS modifiés",
+        requestHeaders: "Chaque requête inclut",
+        and: "et",
+        signatureVerification: "Vérifiez le HMAC-SHA256 du corps brut avec votre clé API.",
+        persistentDelivery: "Livraison persistante : reprise automatique avec délai progressif, jusqu’à 12 tentatives. Répondez avec un statut HTTP 2xx pour confirmer la réception.",
+        docsLink: "Voir le contrat webhook dans la documentation API",
       }
     : {
         webhook: "webhook settings",
@@ -90,6 +111,16 @@ const copyFor = (lang: string): RequestCopy =>
         testFailure: "Your endpoint did not accept the webhook test.",
         copyFailure: "Could not copy the key to the clipboard.",
         keyRotationFailure: "Could not regenerate the API key.",
+        integrationTitle: "Developer integration",
+        integrationDescription: "Configure your account webhook and manage your unique API key.",
+        eventsTitle: "Events sent",
+        orderCreated: "New order created",
+        orderUpdated: "Status or SMS data changed",
+        requestHeaders: "Each request includes",
+        and: "and",
+        signatureVerification: "Verify the HMAC-SHA256 of the raw body with your API key.",
+        persistentDelivery: "Persistent delivery: automatic retries with progressive backoff, up to 12 attempts. Respond with an HTTP 2xx status to acknowledge receipt.",
+        docsLink: "View the webhook contract in the API documentation",
       };
 
 function authHeaders(json = false): HeadersInit {
@@ -349,6 +380,37 @@ export default function DeveloperPage() {
               {rotatingApiKey ? "…" : labels.rotate}
             </button>
           </div>
+        </section>
+
+        <section
+          className="zynum-developer-details"
+          aria-labelledby="developer-integration-title"
+          data-testid="developer-integration-info"
+        >
+          <h2 id="developer-integration-title">{labels.integrationTitle}</h2>
+          <p className="zynum-developer-details-intro">{labels.integrationDescription}</p>
+
+          <h3>{labels.eventsTitle}</h3>
+          <ul>
+            <li><code>order.created</code> — {labels.orderCreated}</li>
+            <li><code>order.updated</code> — {labels.orderUpdated}</li>
+          </ul>
+
+          <p className="zynum-developer-details-note">
+            {labels.requestHeaders}{" "}
+            <code>X-ZyNum-Event</code>, <code>X-ZyNum-Delivery</code> {labels.and}{" "}
+            <code>X-ZyNum-Signature</code>. {labels.signatureVerification}
+          </p>
+          <p className="zynum-developer-details-note">{labels.persistentDelivery}</p>
+
+          <a
+            className="zynum-developer-details-link"
+            href={`${DEVELOPER_DOCS_URL}#webhooks`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {labels.docsLink}
+          </a>
         </section>
       </div>
     </main>
