@@ -2,7 +2,11 @@ openapi: 3.1.0
 info:
   title: Api
   version: 0.1.0
-  description: ZyNum API - Virtual Numbers Platform
+  description: >-
+    ZyNum API - Virtual Numbers Platform.
+    All API routes may return HTTP 429 when the client IP exceeds 180 requests
+    per 60-second window or is temporarily blocked. Honor the Retry-After
+    response header and retryAfterSeconds response field.
 servers:
   - url: /api
     description: Base API path
@@ -256,6 +260,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Purchase could not be persisted; provider cancellation was confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Provider catalog could not be retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "503":
           description: Purchase persistence failed and provider cancellation could not be confirmed; do not retry blindly
           content:
@@ -268,6 +284,10 @@ paths:
       operationId: checkSms
       tags: [numbers]
       summary: Check SMS for an order
+      description: >-
+        If the order is more than six minutes old, is PENDING or RECEIVED, and
+        has no SMS code, this request starts an automatic cancellation and
+        refund attempt. A pending refund is not a confirmed balance credit.
       security:
         - bearerAuth: []
         - sessionCookieAuth: []
@@ -322,11 +342,14 @@ paths:
           in: query
           schema:
             type: integer
+            minimum: 1
             default: 1
         - name: limit
           in: query
           schema:
             type: integer
+            minimum: 1
+            maximum: 100
             default: 20
       responses:
         "200":
@@ -335,6 +358,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrderHistoryResponse"
+        "400":
+          description: Page or limit is outside the allowed range
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
           content:
@@ -542,6 +571,9 @@ components:
         requiredUsd:
           type: number
           description: Required account balance in USD, returned for INSUFFICIENT_BALANCE.
+        retryAfterSeconds:
+          type: integer
+          description: Seconds to wait before retrying a rate-limited or temporarily blocked request.
       required:
         - error
         - message

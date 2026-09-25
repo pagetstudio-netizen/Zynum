@@ -264,10 +264,23 @@ export async function securityMiddleware(req: Request, res: Response, next: Next
   const state = attemptCache.get(ip);
   if (state && now - state.windowStartedAt < REQUEST_WINDOW_MS && state.requestCount >= MAX_REQUESTS_PER_WINDOW) {
     await countSecurityFailure(req, res, null);
+    const newlyBlocked = await activeIpBlock(ip);
+    if (newlyBlocked) {
+      const retryAfter = Math.max(1, Math.ceil((newlyBlocked.blockedUntil.getTime() - Date.now()) / 1000));
+      res.setHeader("Retry-After", String(retryAfter));
+      res.status(429).json({
+        error: "IP_BLOCKED",
+        message: `Trop de tentatives. Veuillez réessayer dans ${Math.ceil(retryAfter / 60)} minute(s).`,
+        retryAfterSeconds: retryAfter,
+      });
+      return;
+    }
+    const retryAfterSeconds = Math.max(1, Math.ceil((state.windowStartedAt + REQUEST_WINDOW_MS - now) / 1000));
+    res.setHeader("Retry-After", String(retryAfterSeconds));
     res.status(429).json({
       error: "RATE_LIMITED",
       message: "Trop de requêtes. Veuillez réessayer plus tard.",
-      retryAfterSeconds: Math.ceil((state.windowStartedAt + REQUEST_WINDOW_MS - now) / 1000),
+      retryAfterSeconds,
     });
     return;
   }

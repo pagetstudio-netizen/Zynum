@@ -140,17 +140,17 @@ const ENDPOINT_COPY: Record<string, Record<Lang, EndpointTranslation>> = {
   buy: {
     en: {
       title: "Buy a number",
-      description: "Spend the account balance on a virtual-number purchase. The returned order.id is the id used by subsequent order routes.",
+      description: "Spend the account balance on a virtual-number purchase. The response includes order.id and order.phone; use order.id for subsequent order routes.",
       auth: "Bearer API key required.",
       request: "JSON body: service (string, required), country (string, required), currency (USD or FCFA, optional, defaults to USD), operator (string, optional), discountCode (string, optional).",
-      errors: ["400 — validation/purchase error; INSUFFICIENT_BALANCE includes balanceUsd and requiredUsd.", "401 — the Bearer API key is missing or invalid.", "409 — NUMBER_UNAVAILABLE.", "503 — provider cancellation could not be confirmed after a failed purchase; do not retry blindly."],
+      errors: ["400 — validation or purchase error; INSUFFICIENT_BALANCE includes balanceUsd and requiredUsd.", "401 — the Bearer API key is missing or invalid.", "409 — NUMBER_UNAVAILABLE.", "500 — purchase could not be saved, but provider cancellation was confirmed.", "502 — the provider catalog could not be retrieved.", "503 — purchase cleanup is pending because provider cancellation is unconfirmed; do not retry blindly."],
     },
     fr: {
       title: "Acheter un numéro",
-      description: "Dépensez le solde du compte pour acheter un numéro virtuel. Le order.id retourné est l’identifiant utilisé par les routes de commande suivantes.",
+      description: "Dépensez le solde du compte pour acheter un numéro virtuel. La réponse contient order.id et order.phone ; utilisez order.id dans les routes de commande suivantes.",
       auth: "Clé API Bearer requise.",
       request: "Corps JSON : service (string, requis), country (string, requis), currency (USD ou FCFA, optionnel, USD par défaut), operator (string, optionnel), discountCode (string, optionnel).",
-      errors: ["400 — erreur de validation ou d’achat ; INSUFFICIENT_BALANCE inclut balanceUsd et requiredUsd.", "401 — la clé API Bearer est absente ou invalide.", "409 — NUMBER_UNAVAILABLE.", "503 — l’annulation fournisseur n’est pas confirmée après un échec ; ne relancez pas l’achat à l’aveugle."],
+      errors: ["400 — erreur de validation ou d’achat ; INSUFFICIENT_BALANCE inclut balanceUsd et requiredUsd.", "401 — la clé API Bearer est absente ou invalide.", "409 — NUMBER_UNAVAILABLE.", "500 — l’achat n’a pas pu être enregistré, mais l’annulation fournisseur a été confirmée.", "502 — le catalogue fournisseur n’a pas pu être récupéré.", "503 — le nettoyage de l’achat est en attente car l’annulation fournisseur n’est pas confirmée ; ne relancez pas l’achat à l’aveugle."],
     },
   },
   check: {
@@ -159,14 +159,14 @@ const ENDPOINT_COPY: Record<string, Record<Lang, EndpointTranslation>> = {
       description: "Read the current state and SMS data for an order owned by the authenticated account. If it is more than six minutes old with no SMS code, this request starts the cancellation and refund attempt.",
       auth: "Bearer API key required. Only the current account’s orders are visible.",
       request: "Path: orderId (required, the order.id returned by ZyNum). No request body.",
-      errors: ["401 — the Bearer API key is missing or invalid.", "404 — the order is not available to the current account.", "503 — provider cancellation is unconfirmed; check again later."],
+      errors: ["400 — invalid order identifier.", "401 — the Bearer API key is missing or invalid.", "404 — the order is not available to the current account.", "503 — provider cancellation is unconfirmed; check again later."],
     },
     fr: {
       title: "Vérifier une commande",
       description: "Consultez l’état actuel et les données SMS d’une commande appartenant au compte authentifié. Si elle a plus de six minutes et qu’aucun code n’est enregistré, cet appel lance une tentative d’annulation et de remboursement.",
       auth: "Clé API Bearer requise. Seules les commandes du compte courant sont visibles.",
       request: "Chemin : orderId (requis, le order.id retourné par ZyNum). Aucun corps de requête.",
-      errors: ["401 — la clé API Bearer est absente ou invalide.", "404 — la commande n’est pas disponible pour le compte courant.", "503 — l’annulation fournisseur n’est pas confirmée ; vérifiez de nouveau plus tard."],
+      errors: ["400 — identifiant de commande invalide.", "401 — la clé API Bearer est absente ou invalide.", "404 — la commande n’est pas disponible pour le compte courant.", "503 — l’annulation fournisseur n’est pas confirmée ; vérifiez de nouveau plus tard."],
     },
   },
   orders: {
@@ -174,15 +174,15 @@ const ENDPOINT_COPY: Record<string, Record<Lang, EndpointTranslation>> = {
       title: "List orders",
       description: "Return the authenticated account’s orders, newest first.",
       auth: "Bearer API key required.",
-      request: "Query: page (optional, number, defaults to 1), limit (optional, number, defaults to 20).",
-      errors: ["401 — the Bearer API key is missing or invalid."],
+      request: "Query: page (optional integer, minimum 1, defaults to 1), limit (optional integer, 1–100, defaults to 20).",
+      errors: ["400 — page must be at least 1 and limit must be between 1 and 100.", "401 — the Bearer API key is missing or invalid."],
     },
     fr: {
       title: "Lister les commandes",
       description: "Retourne les commandes du compte authentifié, de la plus récente à la plus ancienne.",
       auth: "Clé API Bearer requise.",
-      request: "Requête : page (optionnel, number, 1 par défaut), limit (optionnel, number, 20 par défaut).",
-      errors: ["401 — la clé API Bearer est absente ou invalide."],
+      request: "Requête : page (entier optionnel, minimum 1, 1 par défaut), limit (entier optionnel, de 1 à 100, 20 par défaut).",
+      errors: ["400 — page doit être au moins 1 et limit doit être compris entre 1 et 100.", "401 — la clé API Bearer est absente ou invalide."],
     },
   },
   cancel: {
@@ -434,17 +434,19 @@ const labels = {
     statusTitle: "Order statuses",
     statusBody: "Use the status returned in the order object to drive your integration. Timestamps are ISO 8601 strings.",
     errorsTitle: "Errors & status codes",
-    errorsBody: "Check response.ok before reading success data. Error responses commonly include an error code and a readable message; each endpoint above lists its documented status codes.",
+    errorsBody: "Check response.ok before reading success data. Error responses commonly include an error code and a readable message. All API routes may also return 429 for rate limits or temporary IP blocks; honor Retry-After and retryAfterSeconds.",
     errorStatusTitle: "HTTP error codes",
     errorStatusMeanings: {
       "400": "Invalid input or purchase rejected, including insufficient balance.",
       "401": "Authentication is missing or invalid.",
       "404": "The requested account resource or order was not found.",
       "409": "The number is unavailable or the order cannot change to the requested state.",
-      "502": "The order finish could not be confirmed; check the order before retrying.",
+      "429": "The client IP exceeded 180 requests in a 60-second window or was temporarily blocked. Wait for Retry-After (also returned as retryAfterSeconds).",
+      "500": "The request failed unexpectedly; use the endpoint's error code and message to decide what to do next.",
+      "502": "A provider-dependent operation failed; check the endpoint message and inspect the order before retrying a purchase.",
       "503": "A provider cancellation or refund is still unconfirmed; do not retry a purchase blindly, and check the order again later.",
     },
-    retryNote: "After an unclear timeout on POST /v1/buy, check GET /v1/orders before retrying to avoid duplicate purchases. For a pending refund, check the order again later and do not treat it as credited until confirmed.",
+    retryNote: "POST /v1/buy does not support an idempotency key, so repeating it can create another purchase. After an unclear timeout, check GET /v1/orders before retrying. For a pending refund, check the order again later and do not treat it as credited until confirmed.",
     security: "Security",
     integration: "Integration",
     catalog: "CATALOG",
@@ -526,17 +528,19 @@ const labels = {
     statusTitle: "Statuts des commandes",
     statusBody: "Utilisez le statut retourné dans l’objet order pour piloter votre intégration. Les dates sont au format ISO 8601.",
     errorsTitle: "Erreurs et codes de statut",
-    errorsBody: "Vérifiez response.ok avant de lire les données de succès. Les erreurs contiennent généralement un code et un message lisible ; les sections des endpoints listent leurs statuts documentés.",
+    errorsBody: "Vérifiez response.ok avant de lire les données de succès. Les erreurs contiennent généralement un code et un message lisible. Toutes les routes API peuvent aussi retourner 429 en cas de limite de requêtes ou de blocage temporaire d’adresse IP ; respectez Retry-After et retryAfterSeconds.",
     errorStatusTitle: "Codes d’erreur HTTP",
     errorStatusMeanings: {
       "400": "Entrée invalide ou achat refusé, notamment pour solde insuffisant.",
       "401": "Authentification absente ou invalide.",
       "404": "La ressource du compte ou la commande demandée est introuvable.",
       "409": "Le numéro est indisponible ou la commande ne peut pas passer à l’état demandé.",
-      "502": "La fin de commande n’a pas pu être confirmée ; vérifiez son état avant de réessayer.",
+      "429": "L’adresse IP a dépassé 180 requêtes en 60 secondes ou a été temporairement bloquée. Attendez Retry-After (également retourné dans retryAfterSeconds).",
+      "500": "La requête a échoué de façon inattendue ; consultez le code et le message de l’endpoint pour décider de la suite.",
+      "502": "Une opération dépendant du fournisseur a échoué ; consultez le message et vérifiez la commande avant de relancer un achat.",
       "503": "L’annulation fournisseur ou le remboursement n’est pas confirmé ; ne relancez pas un achat à l’aveugle et vérifiez de nouveau la commande plus tard.",
     },
-    retryNote: "Après un délai incertain sur POST /v1/buy, vérifiez GET /v1/orders avant de réessayer pour éviter un double achat. Pour un remboursement en attente, vérifiez la commande plus tard et ne considérez pas le solde comme crédité avant confirmation.",
+    retryNote: "POST /v1/buy ne prend pas en charge de clé d’idempotence : une répétition peut créer un autre achat. Après un délai incertain, vérifiez GET /v1/orders avant de réessayer. Pour un remboursement en attente, vérifiez la commande plus tard et ne considérez pas le solde comme crédité avant confirmation.",
     security: "Sécurité",
     integration: "Intégration",
     catalog: "CATALOGUE",
@@ -647,7 +651,7 @@ export default function ApiDocs() {
     })).filter((group) => group.items.length);
   }, [query]);
 
-  const authHeader = "Authorization: Bearer zyn_<secret>";
+  const authHeader = "Bearer zyn_<secret>";
   const response = (body: string) => body;
   const sdkCode = `const BASE_URL = "${BASE_URL}";
 const apiKey = process.env.ZYNUM_API_KEY; // configure on your server
@@ -680,11 +684,24 @@ const { operators } = await zynum(
 const selected = operators[0];
 console.log(selected.priceUsd, selected.priceFcfa);
 
+const { balance } = await zynum("/v1/balance");
+if (balance.balance < selected.priceUsd) {
+  throw new Error("Insufficient balance");
+}
+
 const { order } = await zynum("/v1/buy", {
   method: "POST",
-  body: { service: "telegram", country: "senegal", currency: "FCFA" },
+  body: {
+    service: "telegram",
+    country: "senegal",
+    currency: "FCFA",
+    operator: selected.name,
+  },
 });
-console.log(order.id);`;
+console.log(order.id, order.phone, order.status);
+
+const { order: current } = await zynum(\`/v1/check/\${order.id}\`);
+console.log(current.status, current.smsCode);`;
 
   return (
     <div className="docs-shell" data-theme={isDark ? "dark" : "light"} data-testid="api-docs-page">
@@ -912,10 +929,16 @@ console.log(order.id);`;
               description="Spend the account balance on a virtual-number purchase. The returned order id is used by subsequent order endpoints."
               auth="Bearer API key required."
               request="JSON body: service (string, required), country (string, required), currency (USD or FCFA, optional, defaults to USD), operator (string, optional), discountCode (string, optional)."
-              response={response(`{\n  "order": {\n    "id": "<orderId>",\n    "status": "PENDING",\n    "createdAt": "2025-01-15T10:30:00.000Z"\n  }\n}`)}
-              errors={["400 — validation, purchase, or balance error.", "401 — the Bearer API key is missing or invalid.", "409 — NUMBER_UNAVAILABLE."]}
+              response={response(`{\n  "order": {\n    "id": "<orderId>",\n    "phone": "+221…",\n    "status": "PENDING",\n    "createdAt": "2025-01-15T10:30:00.000Z"\n  }\n}`)}
+              errors={["400 — validation or purchase error; INSUFFICIENT_BALANCE includes balanceUsd and requiredUsd.", "401 — the Bearer API key is missing or invalid.", "409 — NUMBER_UNAVAILABLE.", "500 — purchase could not be saved, but provider cancellation was confirmed.", "502 — the provider catalog could not be retrieved.", "503 — provider cancellation is unconfirmed; do not retry blindly."]}
             >
               <CodeBlock label="request-body" lang={lang} code={`{\n  "service": "telegram",\n  "country": "senegal",\n  "currency": "USD",\n  "operator": "operator-id",\n  "discountCode": "WELCOME"\n}`} />
+              <CodeBlock
+                label="error-response"
+                sampleKey="buy-insufficient-balance"
+                lang={lang}
+                code={`{\n  "error": "INSUFFICIENT_BALANCE",\n  "message": "Solde insuffisant. Veuillez recharger votre compte.",\n  "balanceUsd": 1.25,\n  "requiredUsd": 2.50\n}`}
+              />
             </Endpoint>
 
             <Endpoint
@@ -924,11 +947,11 @@ console.log(order.id);`;
               title="Check an order"
               method="GET"
               path="/v1/check/{orderId}"
-              description="Read the current state and SMS data for an order owned by the authenticated account."
+              description="Read the current state and SMS data for an order owned by the authenticated account. After more than six minutes without an SMS code, this request starts a cancellation and refund attempt."
               auth="Bearer API key required. Only the current account’s orders are visible."
               request="Path: orderId (required, the id returned by ZyNum). No request body."
               response={response(`{\n  "order": {\n    "id": "<orderId>",\n    "status": "RECEIVED",\n    "createdAt": "2025-01-15T10:30:00.000Z",\n    "smsCode": "<sms-code>",\n    "smsText": "<sms-text>"\n  },\n  "autocanceled": false,\n  "refundPending": false\n}`)}
-              errors={["401 — the Bearer API key is missing or invalid.", "404 — the order is not available to the current account.", "503 — refund is pending."]}
+              errors={["400 — invalid order identifier.", "401 — the Bearer API key is missing or invalid.", "404 — the order is not available to the current account.", "503 — provider cancellation is unconfirmed; check again later."]}
             />
 
             <Endpoint
@@ -939,9 +962,9 @@ console.log(order.id);`;
               path="/v1/orders?page=1&limit=20"
               description="Return the authenticated account’s orders, newest first."
               auth="Bearer API key required."
-              request="Query: page (optional, number, defaults to 1), limit (optional, number, defaults to 20)."
+              request="Query: page (optional integer, minimum 1, defaults to 1), limit (optional integer, 1–100, defaults to 20)."
               response={response(`{\n  "orders": [\n    { "id": "<orderId>", "status": "FINISHED", "createdAt": "2025-01-15T10:30:00.000Z" }\n  ],\n  "total": 1,\n  "page": 1,\n  "limit": 20\n}`)}
-              errors={["401 — the Bearer API key is missing or invalid."]}
+              errors={["400 — page must be at least 1 and limit must be between 1 and 100.", "401 — the Bearer API key is missing or invalid."]}
             />
 
             <Endpoint
