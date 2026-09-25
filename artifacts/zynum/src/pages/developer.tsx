@@ -63,7 +63,7 @@ const copyFor = (lang: string): RequestCopy =>
         save: "Enregistrer",
         test: "Tester",
         testing: "Test…",
-        apiKey: "Votre clé API ZyNum",
+        apiKey: "Clé API ZyNum",
         show: "Afficher la clé API",
         hide: "Masquer la clé API",
         copy: "Copier la clé API",
@@ -96,7 +96,7 @@ const copyFor = (lang: string): RequestCopy =>
         save: "Save",
         test: "Test",
         testing: "Testing…",
-        apiKey: "Your ZyNum API key",
+        apiKey: "ZyNum API key",
         show: "Show API key",
         hide: "Hide API key",
         copy: "Copy API key",
@@ -343,7 +343,7 @@ export default function DeveloperPage() {
 
         <section className="zynum-developer-card" data-testid="card-developer-api-key">
           <div className="zynum-developer-card-header">
-            <h2 className="zynum-developer-card-title">{labels.apiKey}</h2>
+            <h2 className="zynum-developer-card-title zynum-developer-card-title-api-key">{labels.apiKey}</h2>
           </div>
 
           <div className="zynum-developer-input-shell" data-testid="text-developer-api-key">

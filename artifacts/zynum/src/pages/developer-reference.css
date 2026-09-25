@@ -52,6 +52,10 @@
   opacity: 0.72;
 }
 
+.zynum-developer-card-title.zynum-developer-card-title-api-key {
+  font-size: 18px;
+}
+
 .zynum-developer-input-shell {
   display: flex;
   align-items: center;
