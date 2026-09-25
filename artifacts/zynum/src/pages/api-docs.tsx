@@ -1087,9 +1087,14 @@ console.log(order.id);`;
               <p className="docs-footnote">{copy.statusBody}</p>
             </section>
 
-            <footer className="docs-footer">
-              <span>{copy.footer}</span>
-              <a href="https://zynum.net" target="_blank" rel="noreferrer" data-testid="link-zynum-home">zynum.net <ExternalLink size={13} aria-hidden="true" /></a>
+            <footer className="docs-footer" id="docs-footer">
+              <div className="docs-footer-copy">
+                <span className="docs-footer-title">{copy.footer}</span>
+                <a href="https://zynum.net" target="_blank" rel="noreferrer" data-testid="link-zynum-home">
+                  zynum.net <ExternalLink size={13} aria-hidden="true" />
+                </a>
+              </div>
+              <img className="docs-footer-mark" src="/docs-zynum-icon.png" alt="" />
             </footer>
           </div>
         </main>

@@ -572,8 +572,11 @@ html.light .auth-shell .text-white {
 .docs-status-header { color: var(--docs-text); background: var(--docs-surface-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .docs-status-row code { color: var(--docs-accent); font-size: 10px; font-weight: 800; }
 .docs-mini-heading { margin: 31px 0 0; color: var(--docs-text); font-size: 17px; }
-.docs-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 28px; color: var(--docs-muted); font-size: 11px; }
-.docs-footer a { display: inline-flex; align-items: center; gap: 5px; color: var(--docs-blue); text-decoration: none; }
+.docs-footer { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 20px; padding: 34px 0 10px; color: var(--docs-muted); border-top: 1px solid var(--docs-border); text-align: center; }
+.docs-footer-copy { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.docs-footer-title { color: var(--docs-text); font-size: clamp(16px, 2.2vw, 20px); font-weight: 750; letter-spacing: -.025em; line-height: 1.3; }
+.docs-footer-mark { display: block; width: 58px; height: 58px; flex: 0 0 auto; object-fit: contain; }
+.docs-footer a { display: inline-flex; align-items: center; gap: 5px; color: var(--docs-blue); font-size: 13px; text-decoration: none; }
 .docs-footer a:hover, .docs-footer a:focus-visible { text-decoration: underline; }
 .docs-ai-actions { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; margin-top: 22px; }
 .docs-ai-download { display: inline-flex; align-items: center; gap: 8px; width: fit-content; min-height: 38px; padding: 0 13px; color: #fff; background: var(--docs-accent); border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; box-shadow: 0 7px 16px color-mix(in srgb, var(--docs-accent) 18%, transparent); }
@@ -611,7 +614,7 @@ html.light .auth-shell .text-white {
   .docs-ai-download { width: 100%; justify-content: center; }
   .docs-path-row code { flex: 1 1 0; min-width: 0; overflow-x: auto; white-space: nowrap; }
   .docs-path-row .docs-copy-button { flex: 0 0 auto; }
-  .docs-footer { align-items: flex-start; flex-direction: column; }
+  .docs-footer { gap: 12px; }
 }
 @media (max-width: 420px) {
   .docs-topbar-inner { padding: 0 10px; }

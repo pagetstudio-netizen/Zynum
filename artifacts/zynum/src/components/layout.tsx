@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Menu, X, Phone,
+  Menu, X, Code2,
   MessageSquare, Globe2, Shield, HelpCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [isMobileMenuOpen]);
 
   const navLinks = [
-    { href: "/login",   label: t("nav_services"), icon: <Phone         className="w-4 h-4 mr-2" /> },
+    { href: "/api-docs", label: t("nav_developer_docs"), icon: <Code2 className="w-4 h-4 mr-2" /> },
     { href: "/login",   label: t("nav_pricing"),  icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
     { href: "/aide",    label: t("nav_help"),     icon: <HelpCircle    className="w-4 h-4 mr-2" /> },
     { href: "/about",   label: t("nav_about"),    icon: <MessageSquare className="w-4 h-4 mr-2" /> },

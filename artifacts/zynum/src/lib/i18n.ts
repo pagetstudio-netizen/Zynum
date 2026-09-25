@@ -5,7 +5,7 @@ export const translations = {
     // ── Nav ──────────────────────────────────────────────────────────
     nav_home: "Accueil",
     nav_buy: "Acheter",
-    nav_services: "Services",
+    nav_developer_docs: "Documentation développeurs",
     nav_pricing: "Tarifs",
     nav_help: "Aide",
     nav_about: "À propos",
@@ -677,7 +677,7 @@ export const translations = {
     // ── Nav ──────────────────────────────────────────────────────────
     nav_home: "Home",
     nav_buy: "Buy",
-    nav_services: "Services",
+    nav_developer_docs: "Developer docs",
     nav_pricing: "Pricing",
     nav_help: "Help",
     nav_about: "About",
