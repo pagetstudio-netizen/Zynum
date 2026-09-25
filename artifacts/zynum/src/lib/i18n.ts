@@ -15,6 +15,11 @@ export const translations = {
     nav_dashboard: "Mon Dashboard",
     nav_logout: "Déconnexion",
     nav_start_free: "Commencer gratuitement",
+    not_found_eyebrow: "ERREUR 404",
+    not_found_title: "Oups, cette page est introuvable.",
+    not_found_description: "Le lien que vous avez suivi est peut-être incorrect ou cette page a été déplacée.",
+    not_found_home: "Retourner à la page d’accueil",
+    not_found_image_alt: "Illustration d’une équipe qui résout un problème informatique",
 
     // ── Mobile menu ───────────────────────────────────────────────────
     menu_language: "Langue",
@@ -687,6 +692,11 @@ export const translations = {
     nav_dashboard: "My Dashboard",
     nav_logout: "Log out",
     nav_start_free: "Get started free",
+    not_found_eyebrow: "404 ERROR",
+    not_found_title: "Oops, this page can’t be found.",
+    not_found_description: "The link may be incorrect, or this page may have been moved.",
+    not_found_home: "Return to the homepage",
+    not_found_image_alt: "Illustration of a team fixing a computer problem",
 
     // ── Mobile menu ───────────────────────────────────────────────────
     menu_language: "Language",
