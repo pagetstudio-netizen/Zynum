@@ -8,7 +8,7 @@ import {
   Package, ChevronRight,
   Check, Menu, X, Shield,
   Eye, EyeOff, Lock, KeyRound, Globe2,
-  LayoutDashboard, History, WalletCards, UsersRound,
+  LayoutDashboard, History, WalletCards, UsersRound, Code2,
 } from "lucide-react";
 import iconCardSolde   from "@assets/internet_15229770_1774888657109.png";
 import iconAchat       from "@assets/freepik__icônes_produits_ou_achat_1774888657188.png";
@@ -21,6 +21,7 @@ import iconAffiliateStats from "@assets/statss_1790062014731.png";
 import iconAffiliateMenu from "@assets/téléchargement_(97)_1790085870730.png";
 import iconSupportClient from "@assets/téléchargement_(95)_1790085871155.png";
 import iconHelpCenter from "@assets/téléchargement_(67)_1790085975534.png";
+import iconDeveloperMenu from "@assets/2165004_1790349891082.png";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -42,9 +43,10 @@ import Recharge from "./recharge";
 import AdminPanel from "./admin";
 import AffiliatePage from "./affiliate";
 import ProfilePage from "./profile";
+import DeveloperPage from "./developer";
 import "./dashboard-reference.css";
 
-type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "affiliate" | "admin";
+type Tab = "overview" | "buy" | "history" | "recharge" | "profile" | "affiliate" | "developer" | "admin";
 type UserWithAdmin = { id: number; name: string; email: string; isAdmin?: boolean; isBanned?: boolean; createdAt: string };
 type DashboardNavItem = {
   id: Tab;
@@ -611,6 +613,7 @@ export default function Dashboard() {
     { id: "recharge",   label: t("dash_tab_recharge"), icon: WalletCards,   image: iconMenuRecharge },
     { id: "affiliate",  label: "Affiliation",          icon: UsersRound,    image: iconAffiliateMenu },
     { id: "profile",    label: t("dash_tab_profile"),  icon: User,          image: iconProfile },
+    { id: "developer",  label: t("dash_tab_developers"), icon: Code2, image: iconDeveloperMenu },
     ...(user?.isAdmin ? [{ id: "admin" as Tab, label: "Administration", icon: Shield }] : []),
   ];
 
@@ -785,6 +788,7 @@ export default function Dashboard() {
               {activeTab === "recharge"   && <Recharge />}
               {activeTab === "affiliate"  && <AffiliatePage />}
               {activeTab === "profile"    && <ProfilePage user={user} />}
+              {activeTab === "developer"  && <DeveloperPage />}
               {activeTab === "admin"      && user?.isAdmin && <AdminPanel />}
             </motion.div>
           </AnimatePresence>
