@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import type { LookupAddress } from "node:dns";
 import type { LookupFunction } from "node:net";
@@ -41,6 +41,13 @@ export function normalizeWebhookUrl(input: unknown): string {
   }
 
   return parsed.toString();
+}
+
+export class WebhookTestError extends Error {
+  constructor(message: string, public readonly statusCode: number) {
+    super(message);
+    this.name = "WebhookTestError";
+  }
 }
 
 function isPublicAddress(address: string): boolean {
@@ -130,6 +137,44 @@ function postWebhook(
     request.once("error", reject);
     request.end(body);
   });
+}
+
+export async function sendWebhookTest(userId: number): Promise<{ ok: true; statusCode: number }> {
+  const [user] = await db
+    .select({ apiKey: usersTable.apiKey, webhookUrl: usersTable.webhookUrl })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+
+  if (!user) throw new WebhookTestError("Utilisateur introuvable.", 401);
+  if (!user.webhookUrl) throw new WebhookTestError("Enregistrez une URL de webhook avant de la tester.", 400);
+  if (!user.apiKey) throw new WebhookTestError("Aucune clé API n’est disponible pour signer le test.", 400);
+
+  const endpoint = normalizeWebhookUrl(user.webhookUrl);
+  const target = await resolvePublicWebhookTarget(endpoint);
+  const deliveryId = `test-${randomUUID()}`;
+  const body = JSON.stringify({
+    type: "webhook.test",
+    test: true,
+    createdAt: new Date().toISOString(),
+    data: {
+      message: "Test de connexion ZyNum. Aucun SMS ni aucune commande réelle ne sont inclus.",
+    },
+  });
+  const signature = createHmac("sha256", user.apiKey).update(body).digest("hex");
+  const statusCode = await postWebhook(endpoint, target, body, {
+    "Content-Type": "application/json",
+    "X-ZyNum-Event": "webhook.test",
+    "X-ZyNum-Delivery": deliveryId,
+    "X-ZyNum-Signature": `sha256=${signature}`,
+    "X-ZyNum-Test": "true",
+  });
+
+  if (statusCode < 200 || statusCode >= 300) {
+    throw new WebhookTestError(`Le serveur webhook a répondu HTTP ${statusCode}.`, 502);
+  }
+
+  return { ok: true, statusCode };
 }
 
 async function claimNextDelivery(): Promise<ClaimedDelivery | null> {

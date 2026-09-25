@@ -1,0 +1,456 @@
+.zynum-developer-page {
+  --developer-blue: #2da9ed;
+  --developer-blue-dark: #168dd2;
+  --developer-ink: #10141c;
+  --developer-muted: #7f8994;
+  --developer-canvas: #f1f3f5;
+  --developer-line: #e8ebee;
+  min-height: 100dvh;
+  padding: 26px 16px 48px;
+  background:
+    radial-gradient(circle at 18% -10%, rgba(45, 169, 237, 0.1), transparent 34%),
+    var(--developer-canvas);
+  color: var(--developer-ink);
+  font-family: "Plus Jakarta Sans", "Satoshi", sans-serif;
+}
+
+.zynum-developer-page *,
+.zynum-developer-page *::before,
+.zynum-developer-page *::after {
+  box-sizing: border-box;
+}
+
+.zynum-developer-frame {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.zynum-developer-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 45px;
+  margin: 0 0 16px;
+}
+
+.zynum-developer-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 6px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #d9efff;
+  box-shadow: 0 7px 18px rgba(22, 141, 210, 0.12);
+}
+
+.zynum-developer-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.zynum-developer-kicker {
+  margin: 0 0 2px;
+  color: #8a949f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.zynum-developer-heading {
+  margin: 0;
+  font-size: clamp(24px, 5.5vw, 31px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.zynum-developer-card {
+  position: relative;
+  margin-top: 18px;
+  padding: 26px 22px 25px;
+  overflow: hidden;
+  border: 1px solid rgba(224, 228, 232, 0.9);
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(35, 49, 63, 0.035);
+  animation: developer-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.zynum-developer-card:nth-of-type(2) {
+  animation-delay: 0.08s;
+}
+
+.zynum-developer-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.zynum-developer-card-title {
+  margin: 0;
+  font-size: clamp(28px, 8vw, 42px);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1.03;
+}
+
+.zynum-developer-card-copy {
+  max-width: 545px;
+  margin: 9px 0 0;
+  color: var(--developer-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.zynum-developer-section-icon {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: #eef8fe;
+  color: var(--developer-blue);
+}
+
+.zynum-developer-section-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.zynum-developer-field-label {
+  display: block;
+  margin: 21px 0 8px 4px;
+  color: #606b76;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+}
+
+.zynum-developer-input-shell {
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 4px 10px 4px 18px;
+  border: 7px solid var(--developer-blue);
+  border-radius: 36px;
+  background: #fff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.zynum-developer-input-shell:focus-within {
+  border-color: var(--developer-blue-dark);
+  box-shadow: 0 0 0 4px rgba(45, 169, 237, 0.12);
+}
+
+.zynum-developer-input-shell input,
+.zynum-developer-input-shell code {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--developer-ink);
+  font-family: "Plus Jakarta Sans", "Satoshi", sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.zynum-developer-input-shell input::placeholder {
+  color: #aab1b8;
+  opacity: 1;
+}
+
+.zynum-developer-input-shell code {
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zynum-developer-key-action {
+  display: grid;
+  place-items: center;
+  width: 41px;
+  height: 41px;
+  flex: 0 0 auto;
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #080c0c;
+  cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.zynum-developer-key-action:hover,
+.zynum-developer-key-action:focus-visible {
+  background: #121b1c;
+  transform: scale(1.04);
+}
+
+.zynum-developer-key-action img {
+  width: 27px;
+  height: 27px;
+  object-fit: contain;
+}
+
+.zynum-developer-key-action svg {
+  width: 18px;
+  height: 18px;
+  color: #fff;
+}
+
+.zynum-developer-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.zynum-developer-primary,
+.zynum-developer-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.zynum-developer-primary {
+  min-width: 145px;
+  padding: 0 23px;
+  border: 1px solid var(--developer-blue);
+  background: var(--developer-blue);
+  color: #fff;
+}
+
+.zynum-developer-primary:hover:not(:disabled),
+.zynum-developer-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.zynum-developer-primary:hover:not(:disabled) {
+  background: var(--developer-blue-dark);
+  border-color: var(--developer-blue-dark);
+}
+
+.zynum-developer-secondary {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #dfe4e8;
+  background: #fff;
+  color: #73808b;
+  font-size: 12px;
+}
+
+.zynum-developer-secondary svg,
+.zynum-developer-primary svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 7px;
+}
+
+.zynum-developer-primary:disabled,
+.zynum-developer-secondary:disabled,
+.zynum-developer-key-action:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.zynum-developer-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eff8fd;
+  color: #2379a9;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.zynum-developer-status.is-error {
+  background: #fff1f1;
+  color: #b63d48;
+}
+
+.zynum-developer-status svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.zynum-developer-details {
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f7f8f9;
+  color: #78838d;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.zynum-developer-details strong {
+  color: #303841;
+  font-size: 12px;
+}
+
+.zynum-developer-details ul {
+  display: grid;
+  gap: 5px;
+  margin: 9px 0 0;
+  padding-left: 17px;
+}
+
+.zynum-developer-details code {
+  color: #52606b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.zynum-developer-skeleton {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.zynum-developer-skeleton-line,
+.zynum-developer-skeleton-block {
+  position: relative;
+  overflow: hidden;
+  background: #e6eaee;
+}
+
+.zynum-developer-skeleton-line::after,
+.zynum-developer-skeleton-block::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  content: "";
+  animation: developer-shimmer 1.15s ease-in-out infinite;
+}
+
+.zynum-developer-skeleton-line {
+  width: 190px;
+  height: 32px;
+  margin: 0 0 22px;
+  border-radius: 8px;
+}
+
+.zynum-developer-skeleton-block {
+  height: 250px;
+  margin-top: 18px;
+  border-radius: 2px;
+}
+
+.zynum-developer-skeleton-block:last-child {
+  height: 290px;
+}
+
+.zynum-developer-footer-note {
+  margin: 17px 3px 0;
+  color: #8b949c;
+  font-size: 11px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+@keyframes developer-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes developer-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 480px) {
+  .zynum-developer-page {
+    padding: 16px 8px 34px;
+  }
+
+  .zynum-developer-topbar {
+    margin-bottom: 11px;
+  }
+
+  .zynum-developer-card {
+    margin-top: 12px;
+    padding: 22px 11px 24px;
+  }
+
+  .zynum-developer-card-title {
+    font-size: clamp(27px, 9vw, 35px);
+  }
+
+  .zynum-developer-card-copy {
+    font-size: 11px;
+  }
+
+  .zynum-developer-section-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .zynum-developer-input-shell {
+    min-height: 54px;
+    padding-left: 13px;
+    border-width: 6px;
+  }
+
+  .zynum-developer-input-shell input {
+    font-size: 15px;
+  }
+
+  .zynum-developer-input-shell code {
+    font-size: 11px;
+  }
+
+  .zynum-developer-card-actions {
+    margin-top: 14px;
+  }
+
+  .zynum-developer-primary {
+    min-width: 137px;
+    min-height: 44px;
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zynum-developer-card,
+  .zynum-developer-skeleton-line::after,
+  .zynum-developer-skeleton-block::after {
+    animation: none;
+  }
+
+  .zynum-developer-primary,
+  .zynum-developer-secondary,
+  .zynum-developer-key-action {
+    transition: none;
+  }
+}

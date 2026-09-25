@@ -3,7 +3,7 @@ import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth, type AuthRequest } from "../middlewares/authMiddleware.js";
 import { generateApiKey } from "../lib/auth.js";
-import { normalizeWebhookUrl } from "../lib/webhooks.js";
+import { normalizeWebhookUrl, sendWebhookTest, WebhookTestError } from "../lib/webhooks.js";
 
 const router: IRouter = Router();
 
@@ -87,6 +87,22 @@ router.put("/v1/developer/webhook", requireAuth, async (req: AuthRequest, res): 
   }
 
   res.json({ webhookUrl: user.webhookUrl, events: ["order.created", "order.updated"] });
+});
+
+router.post("/v1/developer/webhook/test", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  try {
+    res.json(await sendWebhookTest(req.userId!));
+  } catch (error) {
+    if (error instanceof WebhookTestError) {
+      res.status(error.statusCode).json({ error: "Webhook test failed", message: error.message });
+      return;
+    }
+
+    res.status(502).json({
+      error: "Webhook test failed",
+      message: error instanceof Error ? error.message : "Impossible d’envoyer le test du webhook.",
+    });
+  }
 });
 
 export default router;
