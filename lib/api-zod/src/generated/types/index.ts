@@ -28,6 +28,7 @@ export * from './operator';
 export * from './operatorsResponse';
 export * from './order';
 export * from './orderHistoryResponse';
+export * from './orderPurchaseSource';
 export * from './orderResponse';
 export * from './orderStatus';
 export * from './registerRequest';

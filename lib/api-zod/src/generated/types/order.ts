@@ -5,6 +5,7 @@
  * ZyNum API - Virtual Numbers Platform
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderPurchaseSource } from './orderPurchaseSource';
 import type { OrderStatus } from './orderStatus';
 
 export interface Order {
@@ -26,6 +27,7 @@ export interface Order {
   priceUsd: number;
   priceFcfa: number;
   currency: string;
+  purchaseSource: OrderPurchaseSource;
   createdAt: string;
   updatedAt: string;
 }

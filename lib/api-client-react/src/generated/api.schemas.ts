@@ -131,6 +131,14 @@ export const OrderStatus = {
   CANCELED: 'CANCELED',
 } as const;
 
+export type OrderPurchaseSource = typeof OrderPurchaseSource[keyof typeof OrderPurchaseSource];
+
+
+export const OrderPurchaseSource = {
+  web: 'web',
+  api: 'api',
+} as const;
+
 export interface Order {
   id: string;
   /** Opaque reference; use id for ZyNum order routes. */
@@ -150,6 +158,7 @@ export interface Order {
   priceUsd: number;
   priceFcfa: number;
   currency: string;
+  purchaseSource: OrderPurchaseSource;
   createdAt: string;
   updatedAt: string;
 }

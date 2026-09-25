@@ -164,6 +164,7 @@ export const BuyNumberResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
+  "purchaseSource": zod.enum(['web', 'api']),
   "createdAt": zod.string().datetime({"offset":true}),
   "updatedAt": zod.string().datetime({"offset":true})
 })
@@ -194,6 +195,7 @@ export const CheckSmsResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
+  "purchaseSource": zod.enum(['web', 'api']),
   "createdAt": zod.string().datetime({"offset":true}),
   "updatedAt": zod.string().datetime({"offset":true})
 }),
@@ -230,6 +232,7 @@ export const GetOrderHistoryResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
+  "purchaseSource": zod.enum(['web', 'api']),
   "createdAt": zod.string().datetime({"offset":true}),
   "updatedAt": zod.string().datetime({"offset":true})
 })),
@@ -263,6 +266,7 @@ export const CancelOrderResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
+  "purchaseSource": zod.enum(['web', 'api']),
   "createdAt": zod.string().datetime({"offset":true}),
   "updatedAt": zod.string().datetime({"offset":true})
 }),
@@ -294,6 +298,7 @@ export const FinishOrderResponse = zod.object({
   "priceUsd": zod.number(),
   "priceFcfa": zod.number(),
   "currency": zod.string(),
+  "purchaseSource": zod.enum(['web', 'api']),
   "createdAt": zod.string().datetime({"offset":true}),
   "updatedAt": zod.string().datetime({"offset":true})
 })
