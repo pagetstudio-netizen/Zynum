@@ -5,7 +5,7 @@ import { fr, enUS } from "date-fns/locale";
 import {
   History, RefreshCcw, Lock, ChevronLeft, ChevronRight,
   Package, CheckCircle2, Clock, XCircle, Copy, Check,
-  X, Loader2,
+  X, Loader2, Code2,
 } from "lucide-react";
 
 import iconEmpty from "@assets/no_1774828481941.png";
@@ -25,6 +25,20 @@ function ServiceLogo({ icon, color, name, size = 36 }: { icon?: string; color?: 
         : <img src={icon} alt={name} style={{ width: size * 0.62, height: size * 0.62, objectFit: "contain" }} onError={() => setFailed(true)} />
       }
     </div>
+  );
+}
+
+function ApiSourceBadge() {
+  const { t } = useLanguage();
+  return (
+    <span
+      className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold leading-none text-blue-700"
+      aria-label={t("history_api_origin_label")}
+      data-testid="badge-order-source-api"
+    >
+      <Code2 className="h-3 w-3" aria-hidden="true" />
+      {t("history_api_badge")}
+    </span>
   );
 }
 
@@ -125,7 +139,10 @@ function OrderCard({ order, formatPrice, refetch }: { order: any; formatPrice: (
         <div className="flex items-center gap-2.5 min-w-0">
           <ServiceLogo icon={order.serviceIcon} color={order.serviceColor} name={order.serviceName} size={38} />
           <div className="min-w-0">
-            <p className="font-semibold text-gray-900 text-sm truncate">{order.serviceName}</p>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <p className="font-semibold text-gray-900 text-sm truncate">{order.serviceName}</p>
+              {order.purchaseSource === "api" && <ApiSourceBadge />}
+            </div>
             <p className="text-xs text-gray-400">{order.countryName}</p>
           </div>
         </div>
@@ -284,7 +301,10 @@ export default function OrderHistory() {
                         <td className="px-5 py-3.5 whitespace-nowrap">
                           <div className="flex items-center gap-2.5">
                             <ServiceLogo icon={order.serviceIcon} color={order.serviceColor} name={order.serviceName} size={30} />
-                            <span className="text-sm font-semibold text-gray-900">{order.serviceName}</span>
+                            <div className="flex min-w-0 flex-col items-start gap-1">
+                              <span className="text-sm font-semibold text-gray-900">{order.serviceName}</span>
+                              {order.purchaseSource === "api" && <ApiSourceBadge />}
+                            </div>
                           </div>
                         </td>
                         <td className="px-5 py-3.5 whitespace-nowrap text-sm text-gray-600">{order.countryName}</td>

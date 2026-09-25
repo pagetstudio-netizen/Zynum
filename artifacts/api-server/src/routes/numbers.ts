@@ -53,6 +53,7 @@ function formatOrder(order: typeof ordersTable.$inferSelect) {
     priceUsd: order.priceUsd,
     priceFcfa: order.priceFcfa,
     currency: order.currency,
+    purchaseSource: order.purchaseSource,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   };
@@ -204,6 +205,7 @@ export function createBuyNumberHandler(services: BuyNumberServices = defaultBuyN
         status: mapFiveSimStatus(fiveSimOrder.status),
         priceUsd, priceFcfa,
         currency: currency ?? "USD",
+        purchaseSource: req.userApiKey ? "api" : "web",
       }).returning();
 
       if (discountResult?.discountId !== null && discountResult?.discountId !== undefined) {

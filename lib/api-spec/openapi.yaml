@@ -821,6 +821,9 @@ components:
           type: number
         currency:
           type: string
+        purchaseSource:
+          type: string
+          enum: [web, api]
         createdAt:
           type: string
           format: date-time
@@ -843,6 +846,7 @@ components:
         - priceUsd
         - priceFcfa
         - currency
+        - purchaseSource
         - createdAt
         - updatedAt
 

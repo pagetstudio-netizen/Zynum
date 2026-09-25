@@ -18,6 +18,7 @@ export const ordersTable = pgTable("orders", {
   priceUsd: real("price_usd").notNull().default(0),
   priceFcfa: real("price_fcfa").notNull().default(0),
   currency: text("currency").notNull().default("USD"),
+  purchaseSource: text("purchase_source").notNull().default("web"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

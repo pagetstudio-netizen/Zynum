@@ -144,6 +144,27 @@ test("refuse un solde insuffisant sans appeler 5SIM", async () => {
   assert.equal(orders.length, 0);
 });
 
+test("enregistre et retourne l'origine API des achats faits avec une clé API", async () => {
+  const user = await createUser(5);
+  const handler = createBuyNumberHandler(baseServices({
+    buyNumber: async () => providerOrder(900_000_030, 0.42),
+  }));
+  const { response, result } = makeResponse();
+  const request = makeRequest(user.id);
+  request.userApiKey = "zyn_test_api_key";
+
+  await handler(request, response);
+
+  assert.equal(result.status, 200);
+  const returnedOrder = (result.body as { order: { purchaseSource: string } }).order;
+  assert.equal(returnedOrder.purchaseSource, "api");
+
+  const orders = await db.select().from(ordersTable).where(eq(ordersTable.userId, user.id));
+  createdOrderIds.push(...orders.map((order) => order.id));
+  assert.equal(orders.length, 1);
+  assert.equal(orders[0].purchaseSource, "api");
+});
+
 test("deux achats concurrents ne peuvent débiter le compte qu'une fois", async () => {
   const discount = await createDiscount();
   const basePrice = applyTieredPricing(0.42);
