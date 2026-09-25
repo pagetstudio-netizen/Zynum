@@ -174,6 +174,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<string | null>(null);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
+  const [expiredOrderId, setExpiredOrderId] = useState<Order["id"] | null>(null);
   const [buyCount, setBuyCount] = useState(0);
 
   // ── Persistence de la commande active ───────────────────────────────────────
@@ -797,6 +798,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
     const isPending = activeOrder.status === "PENDING" || (activeOrder.status === "RECEIVED" && !activeOrder.smsCode);
     const isSuccess = (activeOrder.status === "RECEIVED" || activeOrder.status === "FINISHED") && !!activeOrder.smsCode;
     const isFailed  = ["TIMEOUT", "BANNED", "CANCELED"].includes(activeOrder.status);
+    const showWaitingVideo = isPending && expiredOrderId !== activeOrder.id && !cancelMutation.isPending;
 
     return (
       <AnimatePresence mode="wait">
@@ -837,11 +839,20 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
               <div className="px-6 py-8">
                 {isPending && (
                   <div className="flex flex-col items-center text-center gap-4">
-                    <div className="relative w-14 h-14">
-                      <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
-                      <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-                      <Smartphone className="absolute inset-0 m-auto w-5 h-5 text-primary" />
-                    </div>
+                    {showWaitingVideo && (
+                      <video
+                        key={activeOrder.id}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="auto"
+                        aria-hidden="true"
+                        className="h-28 w-28 rounded-2xl object-contain sm:h-32 sm:w-32"
+                      >
+                        <source src="/videos/otp-waiting.mp4" type="video/mp4" />
+                      </video>
+                    )}
                     <div>
                       <p className="font-bold text-gray-900 text-lg mb-1">{t("buy_waiting_sms")}</p>
                       <p className="text-sm text-gray-500 max-w-xs">
@@ -851,6 +862,7 @@ export default function BuyNumber({ isEmbedded = false }: { isEmbedded?: boolean
                     <CountdownRing
                       createdAt={activeOrder.createdAt}
                       onExpired={() => {
+                        setExpiredOrderId(activeOrder.id);
                         if (!cancelMutation.isPending) {
                           cancelMutation.mutate({ orderId: activeOrder.id });
                           toast({ title: t("buy_autocanceled_title"), description: t("buy_autocanceled_desc"), variant: "destructive" });

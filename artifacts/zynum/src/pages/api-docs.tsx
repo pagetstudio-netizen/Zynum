@@ -577,6 +577,10 @@ export default function ApiDocs() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
+    document.getElementById("docs-video-preloader")?.remove();
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem("zynum-docs-theme", isDark ? "dark" : "light");
   }, [isDark]);
 
